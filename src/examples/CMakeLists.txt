@@ -7,7 +7,7 @@ if (BCSIM_ENABLE_CUDA AND BCSIM_BUILD_UTILS)
     set(Boost_USE_STATIC_LIBS OFF CACHE BOOL "Use static linking with Boost")
     set(Boost_USE_MULTITHREADED ON CACHE BOOL "Use multithreaded Boost")
     set(Boost_USE_STATIC_RUNTIME OFF CACHE BOOL "Use static Boost runtime")
-    find_package(Boost COMPONENTS program_options REQUIRED)
+    find_package(Boost COMPONENTS program_options filesystem REQUIRED)
 
     # GPU algorithm example 1: fixed scatterers
     add_executable(GpuExample1 gpu_example1.cpp examples_common.hpp)
@@ -16,10 +16,11 @@ if (BCSIM_ENABLE_CUDA AND BCSIM_BUILD_UTILS)
                           BCSimCUDA
                           Boost::boost
                           Boost::program_options
+                          Boost::filesystem
                           LibBCSimUtils
                           )
     install(TARGETS GpuExample1 DESTINATION bin)
-    
+
     # GPU algorithm example 2: spline scatterers
     add_executable(GpuExample2 gpu_example2.cpp examples_common.hpp)
     target_link_libraries(GpuExample2
@@ -27,6 +28,7 @@ if (BCSIM_ENABLE_CUDA AND BCSIM_BUILD_UTILS)
                           BCSimCUDA
                           Boost::boost
                           Boost::program_options
+                          Boost::filesystem
                           LibBCSimUtils
                           )
     install(TARGETS GpuExample2 DESTINATION bin)

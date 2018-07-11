@@ -76,7 +76,11 @@ When building boost (from source)
   -- Make sure to set the flag in the "b2" program to build shared libraries
 
     .\bootstrap v12
-    .\b2 link=shared --with-program_options --with-python --with-system
+    .\b2 link=shared --with-program_options --with-python --with-system --with-filesystem -j8 address-model=64
+
+    Note: --with-filesystem is just used in the GPU examples
+
+    Built in about 1 min
 
   -- When the libraries are built, they probably inside $(BOOST_ROOT)/stage/lib.
   I moved them to $(BOOST_ROOT)/lib. (Might not be necessary but whatever.)

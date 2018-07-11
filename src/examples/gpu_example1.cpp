@@ -33,6 +33,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdexcept>
 #include <string>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include "../core/LibBCSim.hpp"
 #include "../utils/GaussPulse.hpp"
 #include "examples_common.hpp"
@@ -171,7 +172,9 @@ void example(int argc, char** argv) {
 			for (int i = 0; i<sim_res.size(); i++) // actually unnecessary, since only 1 line is simulated
 			{
 				auto line_no = std::to_string(i);
-				auto filename = "GpuExample1_line" + line_no + ".txt";
+				if (!boost::filesystem::exists("GpuExample1"))
+					boost::filesystem::create_directory("GpuExample1");
+				auto filename = "GpuExample1/line" + line_no + ".txt";
 				dump_rf_line(filename, sim_res[i]);
 			}
             break;

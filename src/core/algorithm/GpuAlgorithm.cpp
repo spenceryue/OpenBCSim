@@ -439,7 +439,11 @@ void GpuAlgorithm::set_scan_sequence(ScanSequence::s_ptr new_scan_sequence) {
         const auto device_iq_line_bytes = sizeof(complex)*m_num_time_samples;
         const auto host_iq_line_bytes   = sizeof(std::complex<float>)*m_num_time_samples;
 
-        m_log_object->write(ILog::INFO, "Reallocating HOST and DEVICE memory");
+		m_log_object->write(ILog::INFO, "Reallocating HOST (" +
+			std::to_string(host_iq_line_bytes >> 10) +
+			" MB) and DEVICE (" +
+			std::to_string(host_iq_line_bytes >> 10) +
+			" MB) memory");
         m_device_time_proj = DeviceBufferRAII<complex>::u_ptr ( new DeviceBufferRAII<complex>(device_iq_line_bytes*num_beams));
 
         // allocate host memory for all RF lines

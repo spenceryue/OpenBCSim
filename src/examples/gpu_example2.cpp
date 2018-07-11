@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <chrono>
 #include <stdexcept>
 #include <boost/program_options.hpp>
+#include <boost/filesystem.hpp>
 #include "../core/LibBCSim.hpp"
 #include "../utils/GaussPulse.hpp"
 #include "examples_common.hpp"
@@ -177,8 +178,14 @@ void example(int argc, char** argv) {
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(temp-start).count()/1000.0;
         if (elapsed >= num_seconds) {
             std::cout << "sim_res.size() = " << sim_res.size() << std::endl;
-            dump_rf_line("GpuExample2_OUTPUT_first_line.txt", sim_res[0]);
-            dump_rf_line("GpuExample2_OUTPUT_last_line.txt", sim_res[sim_res.size()-1]);
+			for (int i = 0; i<sim_res.size(); i++) // actually unnecessary, since only 1 line is simulated
+			{
+				auto line_no = std::to_string(i);
+				if (!boost::filesystem::exists("GpuExample2"))
+					boost::filesystem::create_directory("GpuExample2");
+				auto filename = "GpuExample2/line" + line_no + ".txt";
+				dump_rf_line(filename, sim_res[i]);
+			}
             break;
         }
         // reconfigure scan sequence in preparation for next batch
