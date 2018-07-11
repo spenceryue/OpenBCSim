@@ -47,12 +47,14 @@ GpuAlgorithm::GpuAlgorithm()
     : m_param_cuda_device_no(0),
       m_can_change_cuda_device(true),
       m_param_num_cuda_streams(2), // TODO: What if this value is bigger than max num streams...
-      m_num_time_samples(8192),  // TODO: remove this limitation
+      m_num_time_samples(16384),  // TODO: remove this limitation
       m_num_beams_allocated(-1),
       m_param_threads_per_block(128),
       m_store_kernel_details(false),
       m_device_random_buffer(nullptr)
 {
+	m_log_object = std::make_shared<StdoutLog>();
+
     // ensure that CUDA device properties is stored
     save_cuda_device_properties();
 

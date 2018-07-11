@@ -3,16 +3,17 @@
 #include <cuda_runtime_api.h>
 #include <cuComplex.h>
 #include <cufft.h>
+#include "../export_macros.hpp"
 
 // Headers for all CUDA functionality accessible from C++
 
-struct LUTProfileGeometry {
+struct DLL_PUBLIC LUTProfileGeometry {
     float r_min, r_max;
     float l_min, l_max;
     float e_min, e_max;
 };
 
-struct FixedAlgKernelParams {
+struct DLL_PUBLIC FixedAlgKernelParams {
     float* point_xs;            // pointer to device memory x components
     float* point_ys;            // pointer to device memory y components
     float* point_zs;            // pointer to device memory z components
@@ -33,7 +34,7 @@ struct FixedAlgKernelParams {
     LUTProfileGeometry lut;
 };
 
-struct SplineAlgKernelParams {
+struct DLL_PUBLIC SplineAlgKernelParams {
     float* control_xs;                  // pointer to device memory x components
     float* control_ys;                  // pointer to device memory y components
     float* control_zs;                  // pointer to device memory z components
@@ -58,22 +59,22 @@ struct SplineAlgKernelParams {
 };
 
 template <typename T>
-void launch_MemsetKernel(int grid_size, int block_size, cudaStream_t stream, T* ptr, T value, int num_elements);
+void DLL_PUBLIC launch_MemsetKernel(int grid_size, int block_size, cudaStream_t stream, T* ptr, T value, int num_elements);
 
-void launch_MultiplyFftKernel(int grid_size, int block_size, cudaStream_t stream, cufftComplex* time_proj_fft, const cufftComplex* filter_fft, int num_samples);
+void DLL_PUBLIC launch_MultiplyFftKernel(int grid_size, int block_size, cudaStream_t stream, cufftComplex* time_proj_fft, const cufftComplex* filter_fft, int num_samples);
 
-void launch_DemodulateKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* signal, float w, int num_samples);
+void DLL_PUBLIC launch_DemodulateKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* signal, float w, int num_samples);
 
-void launch_ScaleSignalKernel(int grid_size, int block_size, cudaStream_t stream, cufftComplex* signal, float factor, int num_samples);
+void DLL_PUBLIC launch_ScaleSignalKernel(int grid_size, int block_size, cudaStream_t stream, cufftComplex* signal, float factor, int num_samples);
 
 template <bool A, bool B, bool C>
-void launch_FixedAlgKernel(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+void DLL_PUBLIC launch_FixedAlgKernel(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
 
 // Upload data to constant memory [workaround the fact that constant memory cannot be allocated dynamically]
 // Returns false on error.
-bool splineAlg1_updateConstantMemory(float* src_ptr, size_t num_bytes);
+bool DLL_PUBLIC splineAlg1_updateConstantMemory(float* src_ptr, size_t num_bytes);
 
-void launch_RenderSplineKernel(int grid_size, int block_size, cudaStream_t stream,
+void DLL_PUBLIC launch_RenderSplineKernel(int grid_size, int block_size, cudaStream_t stream,
                                const float* control_xs,
                                const float* control_ys,
                                const float* control_zs,
@@ -84,7 +85,7 @@ void launch_RenderSplineKernel(int grid_size, int block_size, cudaStream_t strea
                                int cs_idx_end,
                                int NUM_SPLINES);
 
-void launch_SliceLookupTable(int grid_size0, int grid_size1, int block_size, cudaStream_t stream,
+void DLL_PUBLIC launch_SliceLookupTable(int grid_size0, int grid_size1, int block_size, cudaStream_t stream,
                              float3 origin,
                              float3 dir0,
                              float3 dir1,
@@ -92,9 +93,9 @@ void launch_SliceLookupTable(int grid_size0, int grid_size1, int block_size, cud
                              cudaTextureObject_t lut_tex);
 
 // Returns false on error.
-bool splineAlg2_updateConstantMemory(float* src, size_t count, size_t offset, cudaMemcpyKind kind, cudaStream_t stream);
+bool DLL_PUBLIC splineAlg2_updateConstantMemory(float* src, size_t count, size_t offset, cudaMemcpyKind kind, cudaStream_t stream);
 
 template <bool A, bool B, bool C>
-void launch_SplineAlgKernel(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+void DLL_PUBLIC launch_SplineAlgKernel(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
 
-void launch_AddNoiseKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* noise, cuComplex* signal, int num_samples);
+void DLL_PUBLIC launch_AddNoiseKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* noise, cuComplex* signal, int num_samples);

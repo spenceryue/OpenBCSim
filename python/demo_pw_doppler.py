@@ -42,10 +42,10 @@ if __name__ == "__main__":
     
     # Create and configure
     if args.use_gpu:
-        print "Using GPU"
+        print("Using GPU")
         sim = RfSimulator("gpu")
     else:
-        print "Using CPU"
+        print("Using CPU")
         sim = RfSimulator("cpu")
         sim.set_parameter("num_cpu_cores", "all")
     sim.set_parameter("verbose", "0")
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         spline_degree  = int(f["spline_degree"].value)
         
     sim.add_spline_scatterers(spline_degree, knot_vector, control_points, amplitudes)
-    print "Number of scatterers: %d" % control_points.shape[0]
+    print("Number of scatterers: %d" % control_points.shape[0])
     
     # Define excitation signal
     t_vector = np.arange(-16/args.fc, 16/args.fc, 1.0/args.fs)
@@ -99,23 +99,23 @@ if __name__ == "__main__":
         origins[beam_no, :]      = [0.0, 0.0, 0.0]
         directions[beam_no, :]   = [0.0, 0.0, 1.0]
         lateral_dirs[beam_no, :] = [1.0, 0.0, 0.0]
-    timestamps = np.array(range(args.num_beams), dtype="float32")/args.prf
+    timestamps = np.array(list(range(args.num_beams)), dtype="float32")/args.prf
     sim.set_scan_sequence(origins, directions, args.line_length, lateral_dirs, timestamps)
 
     # Set the beam profile
     sim.set_analytical_beam_profile(args.sigma_lateral, args.sigma_elevational)
 
     # Do the simulation
-    print "Simulating IQ data"
+    print("Simulating IQ data")
     start_time = time()
     iq_lines = sim.simulate_lines()
     end_time = time()
-    print "Simulation took %f sec" % (end_time-start_time)
+    print("Simulation took %f sec" % (end_time-start_time))
     
     # get slow-time samples
     num_samples = iq_lines.shape[0]
     sample_idx = int(args.sample_pos*(num_samples-1))
-    print "Sample index is %d" % sample_idx
+    print("Sample index is %d" % sample_idx)
 
     slowtime_samples = iq_lines[sample_idx, :]
     
@@ -185,6 +185,6 @@ if __name__ == "__main__":
         
         audio_file = "pw_audio.wav"
         write(audio_file, fs_wav, new_samples)
-        print "Audio written to %s" % audio_file
+        print("Audio written to %s" % audio_file)
     
  

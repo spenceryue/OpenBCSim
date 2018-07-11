@@ -13,7 +13,7 @@ endif()
 include_directories(${NumPy_INCLUDE_DIR})
 
 # Handle Boost.Python
-find_package(Boost REQUIRED COMPONENTS python system)
+find_package(Boost REQUIRED COMPONENTS python36 system)
 
 add_library(pyrfsim
             SHARED
@@ -23,7 +23,7 @@ add_library(pyrfsim
             )
 target_link_libraries(pyrfsim
                       ${PYTHON_LIBRARIES}
-                      Boost::python
+                      Boost::python36
                       Boost::system
                       LibBCSim
                       )
@@ -32,7 +32,7 @@ if (TARGET hdf5-shared AND TARGET hdf5_cpp-shared)
 else()
     target_link_libraries(pyrfsim ${HDF5_LIBRARIES})
 endif()
-                      
+
 set_target_properties(pyrfsim PROPERTIES PREFIX "")
 if (WIN32)
 set_target_properties(pyrfsim PROPERTIES SUFFIX ".pyd")

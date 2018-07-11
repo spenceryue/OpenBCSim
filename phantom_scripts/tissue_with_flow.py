@@ -29,7 +29,7 @@ def create_fixed_scatterers(args, h5_f):
     ampls = ampls[keep_inds]
     
     data = np.vstack([xs, ys, zs, ampls]).transpose()
-    print "Final number of tissue scatterers: %d " % data.shape[0]
+    print("Final number of tissue scatterers: %d " % data.shape[0])
     
     h5_f["data"] = np.array(data, dtype="float32")
     
@@ -47,11 +47,11 @@ def create_spline_scatterers(args, h5_f):
     rs = rs[keep_inds]
 
     num_scatterers = len(rs)
-    print "Number of flow scatterers after first filtering: %d" % num_scatterers
+    print("Number of flow scatterers after first filtering: %d" % num_scatterers)
     
     x_min = -0.5*args.tissue_length - args.peak_velocity*args.end_time
     x_max = 0.5*args.tissue_length
-    print "All x-components in [%f, %f]" % (x_min, x_max)
+    print("All x-components in [%f, %f]" % (x_min, x_max))
     xs = np.random.uniform(low=x_min, high=x_max, size=(num_scatterers,))
 
     # compute velocity along x-axis for all scatterers
@@ -93,7 +93,7 @@ def create_spline_scatterers(args, h5_f):
         f["control_points"] = control_points
         f["amplitudes"]     = np.array(ampls, dtype="float32")
 
-    print "Final number of flow scatterers: %d" % num_scatterers
+    print("Final number of flow scatterers: %d" % num_scatterers)
 def create_phantom(args):
     with h5py.File(args.h5_file, "w") as f:
         create_fixed_scatterers(args, f)

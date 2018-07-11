@@ -76,7 +76,7 @@ class CarotidArteryBifurcartionPhantom:
         """
         plaque_balls = self.plaque_balls
         
-        if not plaque_balls.has_key(phantom_part):
+        if phantom_part not in plaque_balls:
             raise RuntimeError("Illegal model part")
         
         plaque_balls[phantom_part].append(plaque_ball)
@@ -122,7 +122,7 @@ class CarotidArteryBifurcartionPhantom:
             # The scatterers inside of plaque ball should be excluded from the lumen
             # scatterers.
             temp_inds = np.logical_and(temp_inds, np.logical_not(plaque_interior_inds))
-            print len(xs[plaque_interior_inds])
+            print(len(xs[plaque_interior_inds]))
 
         interior_inds.append(temp_inds)
     
@@ -232,7 +232,7 @@ def create_phantom(args):
     scatterers[:,3] = ampls
     with h5py.File(args.h5_file, 'w') as f:
         f["data"] = scatterers
-    print 'Wrote %d scatterers to %s' % (final_num_scatterers, args.h5_file)
+    print('Wrote %d scatterers to %s' % (final_num_scatterers, args.h5_file))
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)

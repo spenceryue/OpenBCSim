@@ -1,0 +1,105 @@
+CMake Paths Needed:
+  C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0
+
+  C:\Users\syue\AppData\Local\Continuum\anaconda3\pkgs\numpy-base-1.14.3-py36h555522e_1\Lib\site-packages\numpy\core\include
+      or
+  C:\Users\spenc\Anaconda3\pkgs\numpy-base-1.14.3-py36h555522e_1\Lib\site-packages\numpy\core\include
+
+  C:\Users\spenc\Desktop\OpenBCSim\ExternalLibs\boost_1_67_0
+  C:\Users\spenc\Desktop\OpenBCSim\ExternalLibs\hdf5-1.8.13
+
+  C:\Qt\5.10.1\msvc2013_64\lib\cmake\Qt5Core
+  C:/Qt/5.10.1/msvc2013_64/lib/cmake/Qt5Gui
+  C:\Qt\5.10.1\msvc2013_64\lib\cmake\Qt5OpenGL
+  C:\Qt\5.10.1\msvc2013_64\lib\cmake\Qt5Widgets
+
+
+Tip: Beware of long path names. Can cause "file does not exist" errors in compiler and linker.
+Intellisense can find the file but the compiler/linker can't.
+  -- Place repository in C:\ or C:\Users\spenc\Desktop\
+
+
+DLLs...
+  -- Copy LibBCSim.dll, and boost_python36_<version stuff>.dll to python project release folder. and BCSimCUDA.dll
+
+  -- Copy the Qt and zlib/szip/hdf5 DLLs into the GUI project folder, like the installation README instructs.
+
+  -- Copy LibBCSim.dll, LibBCSimUtils.dll, and boost_program_options-<version>.dll to the
+  examples project release folder. And any others a System Error prompt asks for.
+
+  -- Or just use the INSTALL visual studio target to automatically copy the DLLs that are built by this project.
+  (still have to copy hdf5,boost,qt DLLs)
+
+  -- Tip: Can use the "Dependencies" tool to diagnose missing DLL errors.
+    https://github.com/lucasg/Dependencies
+
+
+Source and CMake file changes:
+  -- Added "DLL_PUBLIC" to explicit template specializations in CUDA interface C++ file (cuda_kernels_c_interface.cu).
+  -- Added LibBCSim target under link libraries for utils project (src/utils/CMakeLists.txt).
+  -- Added install DESTINATION to the bin/ folder for core and utils projects (CMakeLists.txt files).
+  -- Changed DumbyLog to StdoutLog, so I could see the logs (BaseAlgorithm.cpp, BCSimConfig.hpp).
+  -- Changed hardcoded m_num_time_samples value to 16384 instead of 8192.
+  -- Replaced string "gpu_fixed" with "gpu" in gpu_example1.cpp. (Same for gpu_example2.cpp)
+     "cpu" and "gpu" are the only valid options according to LibBCSim.cpp
+  -- Used 2to3 to convert all python files from Python 2 to Python 3.
+  -- Changed output of gpu_example1.cpp. Wrote small Python plotting script.
+
+
+Python...
+  -- Note: The python project produces the output file pyrfsim.pyd.
+    This is just a DLL with the special file extension Python is looking for.
+
+  -- Make an environment variable PYTHONPATH with the path to pyrfsim.pyd.
+    Python searches this environment variable first.
+    i.e. then run `python -c "import pyrfsim"` in the terminal.
+    Try also `python -vv [...]` if problems occur.
+
+  -- To use Python 3.6 (instead of Python 2.7),
+    -- I had to go into some boost header and change
+      the __MAJOR_VERSION__ and __MINOR_VERSION__ macro variables
+      to a hardcoded "36".
+
+    -- boost\python\detail\config.hpp was the header.
+
+    -- I also had to change one of the CMake files to look for the "python36"
+      library instead of "python". The CMake function just literally looks for
+      "boost_<libname>_<version-compiler stuff>.lib".
+
+    -- src/python/CMakeLists.txt was the CMake file.
+
+
+Tip: Build and configure everything in Visual Studio in Release x64 mode.
+
+
+When building boost (from source)
+  -- Make sure to set the flag in the "b2" program to build shared libraries
+
+    .\bootstrap v12
+    .\b2 link=shared --with-program_options --with-python --with-system
+
+  -- When the libraries are built, they probably inside $(BOOST_ROOT)/stage/lib.
+  I moved them to $(BOOST_ROOT)/lib. (Might not be necessary but whatever.)
+
+
+Versions...
+  -- Boost 1.67.0
+
+  -- When downloading Qt, only need to select the version for MSVC 2013 x64.
+    -- I used Qt 5.10.1
+
+  -- I used HDF5 version 1.8.13. When I tried to build a newer version from source,
+  I couldn't get CMake/Visual Studio to find it.
+    -- I wonder if it was a path length problem.
+    -- GitHub repository mentions the HDF5 CMake script instructions are not obvious.
+
+
+Tip: There's no need to close CMake or Visual Studio while configuring all the CMake variables and options.
+  -- Also, there's no need to build each component separately, though it helps at first to isolate problems.
+  -- There is a warning in CMake about not being able to "find imported HDF5 targets". It doesn't matter.
+
+
+Tip: The numpy include folder was in
+  C:\Users\syue\AppData\Local\Continuum\anaconda3\pkgs\numpy-base-1.14.3-py36h555522e_1\Lib\site-packages\numpy\core\include
+  for me with an Anaconda Python installation.
+

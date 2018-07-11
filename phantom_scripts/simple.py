@@ -16,7 +16,7 @@ def create_phantom(args):
     
     with h5py.File(args.h5_file, "w") as f:
         f["data"] = data
-    print "Dataset written to %s" % args.h5_file
+    print("Dataset written to %s" % args.h5_file)
         
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)

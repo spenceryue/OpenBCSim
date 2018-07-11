@@ -79,7 +79,7 @@ if __name__ == "__main__":
         iq_lines = sim.simulate_lines()
         end_time = time()
         elapsed_time = end_time-start_time
-        print "Simulation took %f sec @ %d scatterers." % (elapsed_time, num_scatterers)
+        print("Simulation took %f sec @ %d scatterers." % (elapsed_time, num_scatterers))
         
         # store time per IQ-line
         sim_times.append(elapsed_time/args.num_lines)

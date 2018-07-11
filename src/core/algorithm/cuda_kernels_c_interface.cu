@@ -27,17 +27,17 @@ void launch_FixedAlgKernel(int grid_size, int block_size, cudaStream_t stream, F
 }
 
 // explicit function template instantiations for required datatypes
-template void launch_MemsetKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* ptr, cuComplex value, int num_samples);
+template void DLL_PUBLIC launch_MemsetKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* ptr, cuComplex value, int num_samples);
 
 // fixed algorithm explicit function template instantiations - all combinations
-template void launch_FixedAlgKernel<false, false, false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void launch_FixedAlgKernel<false, false,  true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void launch_FixedAlgKernel<false, true,  false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void launch_FixedAlgKernel<false, true,   true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void launch_FixedAlgKernel<true,  false, false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void launch_FixedAlgKernel<true,  false,  true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void launch_FixedAlgKernel<true,  true,  false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void launch_FixedAlgKernel<true,  true,   true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, false, false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, false, true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, true, false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, true, true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, false, false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, false, true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, true, false>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, true, true>(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
 
 bool splineAlg1_updateConstantMemory(float* src_ptr, size_t num_bytes) {
     return splineAlg1_updateConstantMemory_internal(src_ptr, num_bytes);
@@ -78,14 +78,14 @@ void launch_SplineAlgKernel(int grid_size, int block_size, cudaStream_t stream, 
 }
 
 // spline algorithm2 explicit function template instantiations - all combinations
-template void launch_SplineAlgKernel<false, false, false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
-template void launch_SplineAlgKernel<false, false, true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
-template void launch_SplineAlgKernel<false, true,  false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
-template void launch_SplineAlgKernel<false, true,  true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
-template void launch_SplineAlgKernel<true,  false, false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
-template void launch_SplineAlgKernel<true,  false, true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
-template void launch_SplineAlgKernel<true,  true,  false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
-template void launch_SplineAlgKernel<true,  true,  true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<false, false, false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<false, false, true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<false, true, false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<false, true, true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<true, false, false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<true, false, true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<true, true, false>(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
+template void DLL_PUBLIC launch_SplineAlgKernel<true, true, true >(int grid_size, int block_size, cudaStream_t stream, SplineAlgKernelParams params);
 
 void launch_AddNoiseKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* noise, cuComplex* signal, int num_samples) {
     AddNoiseKernel<<<grid_size, block_size, 0, stream>>>(signal, noise, num_samples);

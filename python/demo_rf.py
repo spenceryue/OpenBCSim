@@ -39,7 +39,7 @@ else:
 with h5py.File(args.h5_file, "r") as f:
     scatterers_data = f["data"].value
 sim.add_fixed_scatterers(scatterers_data)
-print "The number of scatterers is %d" % scatterers_data.shape[0]
+print("The number of scatterers is %d" % scatterers_data.shape[0])
 
 # configure simulation parameters
 sim.set_parameter("sound_speed", "1540.0")
@@ -91,10 +91,10 @@ rf_lines = rf_lines/np.max(abs(rf_lines.flatten()))
 
 # Make nice RF-line image
 num_samples, num_beams = rf_lines.shape
-print "Number of samples: %d" % num_samples
-print "Number of RF lines: %d" % num_beams
+print("Number of samples: %d" % num_samples)
+print("Number of RF lines: %d" % num_beams)
 rf_width = 0.70*(args.x1-args.x0)/num_beams
-common_times = 1e6*np.array(range(num_samples))/fs
+common_times = 1e6*np.array(list(range(num_samples)))/fs
 for beam_no,x_pos in enumerate(np.linspace(args.x0, args.x1, num_beams)):
     scaled_samples = rf_lines[:, beam_no]*rf_width
     plt.plot(scaled_samples + x_pos, common_times, c="blue", linewidth=0.5)

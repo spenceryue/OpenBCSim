@@ -70,16 +70,16 @@ void MakeGaussianExcitation(T fc, T bw, T fs,
 }
 
 // explicit template instantiations
-template float  GaussianPulse(float t, float fc, float bw, float bwr);
+template float DLL_PUBLIC GaussianPulse(float t, float fc, float bw, float bwr);
 
-template double GaussianPulse(double t, double fc, double bw, double bwr);
+template double DLL_PUBLIC GaussianPulse(double t, double fc, double bw, double bwr);
 
-template void   MakeGaussianExcitation(float fc, float bw, float fs,
+template void DLL_PUBLIC MakeGaussianExcitation(float fc, float bw, float fs,
                                        std::vector<float>& /*out*/ times,
                                        std::vector<float>& /*out*/ samples,
                                        int& /*out*/ center_index);
 
-template void   MakeGaussianExcitation(double fc, double bw, double fs,
+template void DLL_PUBLIC MakeGaussianExcitation(double fc, double bw, double fs,
                                        std::vector<double>& /*out*/ times,
                                        std::vector<double>& /*out*/ samples,
                                        int& /*out*/ center_index);

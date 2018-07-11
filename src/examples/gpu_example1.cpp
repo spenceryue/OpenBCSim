@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <random>
 #include <chrono>
 #include <stdexcept>
+#include <string>
 #include <boost/program_options.hpp>
 #include "../core/LibBCSim.hpp"
 #include "../utils/GaussPulse.hpp"
@@ -93,7 +94,8 @@ void example(int argc, char** argv) {
     std::cout << "Calls to simulate_lines() enables?: " << enable_simulate_lines << std::endl;
 
     // create an instance of the fixed-scatterer GPU algorithm
-    auto sim = bcsim::Create("gpu_fixed");
+    // auto sim = bcsim::Create("gpu_fixed");
+	auto sim = bcsim::Create("gpu");
     sim->set_parameter("verbose", "0");
     
     // use an analytical Gaussian beam profile
@@ -165,12 +167,17 @@ void example(int argc, char** argv) {
         // done?
         auto temp = std::chrono::high_resolution_clock::now();
         elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(temp-start).count()/1000.0;
-        if (elapsed >= num_seconds) {
-            dump_rf_line("GpuExample1_OUTPUT.txt", sim_res[0]);
+		if (elapsed >= num_seconds) {
+			for (int i = 0; i<sim_res.size(); i++) // actually unnecessary, since only 1 line is simulated
+			{
+				auto line_no = std::to_string(i);
+				auto filename = "GpuExample1_line" + line_no + ".txt";
+				dump_rf_line(filename, sim_res[i]);
+			}
             break;
         }
     }
-    std::cout << "Done. Processed " << num_beams << " in " << elapsed << " seconds.\n";
+    std::cout << "Done. Processed " << num_beams << " beams in " << elapsed << " seconds.\n";
     const auto prf = num_beams / elapsed;
     std::cout << "Achieved a PRF of " << prf << " Hz.\n";
     

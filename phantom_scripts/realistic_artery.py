@@ -93,8 +93,8 @@ def create_phantom(args):
     # the cross-sectional curves are assumed to be in the yz-plane,
     # while the long axis is the x-axis.
     y_min, y_max, z_min, z_max = artery_model.get_limits()
-    print 'Scatterer extent: x=%f..%f, y=%f...%f, z=%f..%f'\
-            % (args.x_min, args.x_max, y_min, y_max, z_min, z_max)
+    print('Scatterer extent: x=%f..%f, y=%f...%f, z=%f..%f'\
+            % (args.x_min, args.x_max, y_min, y_max, z_min, z_max))
     
     y_length = y_max-y_min
     z_length = z_max-z_min
@@ -116,7 +116,7 @@ def create_phantom(args):
         curve_pts = artery_model.evaluate_curve(x)
 
         if scatterer_no % 20000 == 0:
-            print 'Processed scatterer %d of %d' % (scatterer_no, args.num_scatterers)
+            print('Processed scatterer %d of %d' % (scatterer_no, args.num_scatterers))
         
         # convert 2d array to list of (x,y)
         polygon = [(curve_pts[i,0],curve_pts[i,1]) for i in range(curve_pts.shape[0])]
@@ -136,7 +136,7 @@ def create_phantom(args):
     
     with h5py.File(args.h5_out, 'w') as f:
         f["data"] = data
-    print 'Data written to %s' % args.h5_out
+    print('Data written to %s' % args.h5_out)
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)

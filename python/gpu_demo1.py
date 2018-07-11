@@ -72,14 +72,14 @@ sim.set_analytical_beam_profile(1e-3, 1e-3)
 start_time = time()
 for frame_no in range(args.num_frames):
     rf_lines = sim.simulate_lines()
-    print "Simulated frame %d" % frame_no
+    print("Simulated frame %d" % frame_no)
 end_time = time()
 elapsed_time = end_time-start_time
-print "\n=== Summary ==="
-print "Number of point-scatterers was %d" % args.num_scatterers
-print "Used %f seconds in total." % elapsed_time
-print "Time pr. frame: %f [ms]" % (1000.0*elapsed_time/args.num_frames)
-print "Time pr. RF line: %f [ms]" % (1000.0*elapsed_time/(args.num_frames*args.num_lines))
+print("\n=== Summary ===")
+print("Number of point-scatterers was %d" % args.num_scatterers)
+print("Used %f seconds in total." % elapsed_time)
+print("Time pr. frame: %f [ms]" % (1000.0*elapsed_time/args.num_frames))
+print("Time pr. RF line: %f [ms]" % (1000.0*elapsed_time/(args.num_frames*args.num_lines)))
     
 if args.save_pdf or args.visualize:
     import matplotlib as mpl
@@ -95,7 +95,7 @@ if args.save_pdf or args.visualize:
 if args.visualize:
     plt.show()
 if args.save_pdf:
-    print "Image written to disk."
+    print("Image written to disk.")
 
 if args.store_kernel_debug:
     keys = ["kernel_memset_ms", "kernel_projection_ms", "kernel_forward_fft_ms",\
@@ -106,5 +106,5 @@ if args.store_kernel_debug:
         N = len(value_list)
         mean_val = np.mean(value_list)
         std_val = np.std(value_list)
-        print "%s: N=%d,  mean +- std = %f +- %f [ms]" % (key, N, mean_val, std_val)
+        print("%s: N=%d,  mean +- std = %f +- %f [ms]" % (key, N, mean_val, std_val))
         

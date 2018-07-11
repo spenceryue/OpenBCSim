@@ -21,7 +21,7 @@ def create_phantom(args):
     ampls = ampls[keep_inds]
     points = np.array(np.vstack([xs, ys, zs]), dtype="float32")
     num_scatterers = points.shape[1]
-    print "After filtering: %d scatterers." % num_scatterers
+    print("After filtering: %d scatterers." % num_scatterers)
     
     # the total number of control points should be num_cs,
     # num_cs - degree different control points are needed.

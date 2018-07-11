@@ -51,13 +51,13 @@ def create_phantom(args):
     assert(len(ys) == len(xs) and len(zs) == len(xs))
     num_scatterers = len(xs)
     
-    print 'Total number of scatterers: %d' % num_scatterers
+    print('Total number of scatterers: %d' % num_scatterers)
 
     # Decide which scaling function to use
     if args.scale_h5_file != None:
         start_time, end_time, scale_fn = load_scale_function(args.scale_h5_file)
-        print 'Loaded scaling function on [%f, %f]' % (start_time, end_time)
-        print 'Hacking args.t0 and args.t1'
+        print('Loaded scaling function on [%f, %f]' % (start_time, end_time))
+        print('Hacking args.t0 and args.t1')
         args.t0 = start_time
         args.t1 = end_time
     else:
@@ -77,7 +77,7 @@ def create_phantom(args):
 
     control_points = np.zeros( (num_scatterers, args.num_cs, 3), dtype='float32')
     for cs_i, t_star in enumerate(knot_avgs):
-        print 'Computing control points for knot average %d of %d' % (cs_i+1, args.num_cs)
+        print('Computing control points for knot average %d of %d' % (cs_i+1, args.num_cs))
 
         s = scale_fn(t_star)
 
@@ -100,7 +100,7 @@ def create_phantom(args):
         f['control_points'] = control_points
         f['amplitudes'] = np.array(_as, dtype="float32")
     
-    print 'Spline scatterer dataset written to %s' % args.h5_file
+    print('Spline scatterer dataset written to %s' % args.h5_file)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)

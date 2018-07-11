@@ -28,7 +28,7 @@ def create_phantom(args):
 
     
     for control_point_i, t_star in enumerate(knot_avgs):    
-        print 't=%f' % t_star
+        print('t=%f' % t_star)
         x_angle = args.x_angular_velocity*t_star
         y_angle = args.y_angular_velocity*t_star
         z_angle = args.z_angular_velocity*t_star

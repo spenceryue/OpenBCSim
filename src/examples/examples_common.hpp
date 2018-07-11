@@ -11,3 +11,13 @@ inline void dump_rf_line(const std::string& filename,  std::vector<T>& samples) 
     }
     out_file << std::endl;
 }
+
+template <>
+inline void dump_rf_line(const std::string& filename, std::vector<std::complex<float>>& samples) {
+	std::ofstream out_file(filename);
+	for (const auto& x : samples)
+	{
+		out_file << x.real() << "," << x.imag() << "\n";
+	}
+	out_file << std::endl;
+}

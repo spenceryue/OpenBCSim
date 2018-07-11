@@ -15,17 +15,17 @@ def create_phantom(args):
 
     # Load scaling function
     start_time, end_time, scale_fn = load_scale_function(args.h5_scale)
-    print 'Loaded scale function on [%f, %f] sec.' % (start_time, end_time)
+    print('Loaded scale function on [%f, %f] sec.' % (start_time, end_time))
     
     # Generate scatterers in a box
     xs = np.random.uniform(low=-args.r0, high=args.r0, size=(args.num_scatterers,))
     ys = np.random.uniform(low=-args.r0, high=args.r0, size=(args.num_scatterers,))
     zs = np.random.uniform(low=0.0, high=args.z0, size=(args.num_scatterers,))
-    pts = zip(xs, ys, zs)
+    pts = list(zip(xs, ys, zs))
 
     # Discard scatterers outside of cylinder
-    pts = filter(lambda (x,y,z): x**2+y**2 <= args.r0**2, pts)
-    xs, ys, zs = map(np.array, zip(*pts))
+    pts = [x_y_z for x_y_z in pts if x_y_z[0]**2+x_y_z[1]**2 <= args.r0**2]
+    xs, ys, zs = list(map(np.array, list(zip(*pts))))
     num_scatterers = len(xs)
     
     # Create random amplitudes
@@ -49,7 +49,7 @@ def create_phantom(args):
         f["control_points"] = control_points
         f["amplitudes"] = np.array(amplitudes, dtype="float32")
         f["knot_vector"] = np.array(knots, dtype='float32')    
-    print 'Spline scatterer dataset written to %s' % args.h5_out
+    print('Spline scatterer dataset written to %s' % args.h5_out)
     
     
 

@@ -25,7 +25,7 @@ def load_spline(filename):
         spline_data['y']       = read_vector(f, 'y')
         spline_data['t0']      = read_float(f, 't0')
         spline_data['t1']      = read_float(f, 't1')
-    spline_data['cs'] = np.array(zip(spline_data['x'], spline_data['y']))
+    spline_data['cs'] = np.array(list(zip(spline_data['x'], spline_data['y'])))
     return spline_data
 
 def evaluate_spline(spline_data, ts):

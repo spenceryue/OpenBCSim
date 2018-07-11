@@ -18,7 +18,7 @@ def create_phantom(args):
         f["amplitudes"] = np.array(amplitudes, dtype="float32")
         f["spline_degree"] = args.spline_degree
         f["knot_vector"] = np.array(bsplines.uniform_regular_knot_vector(args.num_cs, args.spline_degree, t0=0.0, t1=1.001), dtype='float32')
-    print 'Dataset written to %s' % args.h5_file
+    print('Dataset written to %s' % args.h5_file)
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)

@@ -20,12 +20,13 @@ list(APPEND UTILS_LIBRARY_SOURCE_FILES
      CSVReader.hpp
      CSVReader.cpp
      HardwareAutodetection.hpp
-     HardwareAutodetection.cpp 
+     HardwareAutodetection.cpp
      )
 
 add_library(LibBCSimUtils ${UTILS_LIBRARY_SOURCE_FILES})
 target_link_libraries(LibBCSimUtils
                       Boost::boost
+                      LibBCSim
                       )
 
 if (TARGET hdf5-shared AND TARGET hdf5_cpp-shared)
@@ -33,19 +34,20 @@ if (TARGET hdf5-shared AND TARGET hdf5_cpp-shared)
 else()
     target_link_libraries(LibBCSimUtils ${HDF5_LIBRARIES})
 endif()
-                      
+
 if (BCSIM_ENABLE_CUDA)
     # Needed because we're going to interact with the CUDA runtime API
     # to query the number and type of available GPUs.
     target_include_directories(LibBCSimUtils PRIVATE ${CUDA_INCLUDE_DIRS})
     target_link_libraries(LibBCSimUtils ${CUDA_LIBRARIES})
 endif()
-                      
+
 if (BCSIM_BUILD_UNITTEST)
     add_subdirectory(unittest)
 endif()
 
 install(TARGETS LibBCSimUtils DESTINATION lib)
+install(TARGETS LibBCSimUtils DESTINATION bin)
 install(FILES HDFConvenience.hpp    DESTINATION include)
 install(FILES GaussPulse.hpp        DESTINATION include)
 install(FILES BCSimConvenience.hpp  DESTINATION include)

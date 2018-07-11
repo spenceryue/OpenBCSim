@@ -87,7 +87,8 @@ void example(int argc, char** argv) {
     std::cout << "Simulations will run for " << num_seconds << " seconds." << std::endl;
 
     // create an instance of the fixed-scatterer GPU algorithm
-    auto sim = bcsim::Create("gpu_spline2");
+    // auto sim = bcsim::Create("gpu_spline2");
+	auto sim = bcsim::Create("gpu");
     sim->set_parameter("verbose", "0");
     
     // use an analytical Gaussian beam profile

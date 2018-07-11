@@ -22,7 +22,7 @@ def simulate_doppler_frame(args, timestamp, sim, origin):
     Create scan sequence for one frame where all RF-lines have the same
     timestamp.
     """
-    print "Timestamp is %f" % timestamp
+    print("Timestamp is %f" % timestamp)
     origins      = np.empty((args.num_lines, 3), dtype="float32")
     directions   = np.empty((args.num_lines, 3), dtype="float32")
     lateral_dirs = np.empty((args.num_lines, 3), dtype="float32")
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         knot_vector    = f["knot_vector"].value
         spline_degree  = f["spline_degree"].value
     num_cs = control_points.shape[1]
-    print "Loaded spline phantom with %d control points" % num_cs
+    print("Loaded spline phantom with %d control points" % num_cs)
     
     # create and configure
     sim = RfSimulator("gpu")

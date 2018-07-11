@@ -16,7 +16,7 @@ def create_phantom(args):
     z_max = 90e-3
     area = (x_max-x_min)*(z_max-z_min)
     num_scatterers = int(args.density*area*1e6)
-    print 'Number of scatterers is %d' % num_scatterers
+    print('Number of scatterers is %d' % num_scatterers)
     
     xs = np.random.uniform(low=x_min, high=x_max, size=(num_scatterers,))
     ys = np.zeros((num_scatterers,))
@@ -38,7 +38,7 @@ def create_phantom(args):
         f["data"][:, 1] = ys
         f["data"][:, 2] = zs
         f["data"][:, 3] = ampls
-    print 'Scatterers written to %s' % args.h5_file
+    print('Scatterers written to %s' % args.h5_file)
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)

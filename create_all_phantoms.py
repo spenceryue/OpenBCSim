@@ -9,25 +9,25 @@ class Args:
     pass
 
 out_dir = "generated_phantoms"
-    
+
 def verify_correct_path():
     dirs = [entry for entry in os.listdir('.') if os.path.isdir(entry)]
     if "phantom_scripts" in dirs and "phantom_data" in dirs: return
-        
-    print "This script must be run from the project root directory."
+
+    print("This script must be run from the project root directory.")
     exit()
 
 def ensure_output_folder_exists():
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-    
+
 def create_artery_phantom():
     """
     Stack cross-sectional splines and interpolate shape
     in between.
     """
     from realistic_artery import create_phantom
-    
+
     args = Args()
     args.x_min = -0.06
     args.x_max = 0.06
@@ -44,7 +44,7 @@ def create_artery_phantom():
     args.inside_factor = 0.1
     args.outside_factor = 1.0
     args.space_factor = 0.5
-                         
+
     create_phantom(args)
 
 def create_carotid_bifurcation_phantoms():
@@ -156,7 +156,7 @@ def create_random_spline_noise_phantom():
     args.num_scatterers = 100000
     args.x_min = -0.04
     args.x_max = 0.04
-    args.y_min = -0.04 
+    args.y_min = -0.04
     args.y_max = 0.04
     args.z_min = 0.01
     args.z_max = 0.08
@@ -251,11 +251,11 @@ def create_tissue_flow_phantom():
     args.end_time = 1.0
     args.exponent = 20 # approximate constant flow
     create_phantom(args)
-    
+
     args.exponent = 2
     args.h5_file = os.path.join(out_dir, "tissue_with_parabolic_flow.h5")
     create_phantom(args)
-    
+
 def create_spinning_disk_phantom():
     from spinning_disc import create_phantom
     args = Args()
@@ -267,7 +267,7 @@ def create_spinning_disk_phantom():
     args.z0 = 0.025
     args.radius = 2e-2
     create_phantom(args)
-    
+
 if __name__ == '__main__':
     verify_correct_path()
     ensure_output_folder_exists()
@@ -282,6 +282,5 @@ if __name__ == '__main__':
     create_simple_phantom()
     create_tissue_flow_phantom()
     create_spinning_disk_phantom()
-    print 'NOTE: This is the last script and may take a while to finish...'
+    print('NOTE: This is the last script and may take a while to finish...')
     create_artery_phantom()
-    

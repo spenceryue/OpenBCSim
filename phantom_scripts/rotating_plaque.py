@@ -30,7 +30,7 @@ def create_phantom(args):
     plaque_ampls[plaque_xs**2 + plaque_zs**2 >= args.plaque_radius**2] = 0.0
     
     num_scatterers = num_tissue_scatterers + args.num_plaque_scatterers
-    print 'Total number of scatterers: %d' % num_scatterers
+    print('Total number of scatterers: %d' % num_scatterers)
     
     # knot vector for the approximation
     knot_vector = bsplines.uniform_regular_knot_vector(args.num_cs, args.spline_degree, t0=0.0, t1=1.0)

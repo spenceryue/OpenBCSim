@@ -41,11 +41,11 @@ if __name__ == "__main__":
         t.start()
         threads.append(t)
 
-    print "Waiting for all threads to finish...",
+    print("Waiting for all threads to finish...", end=' ')
     for thread in threads:
         thread.join()
-    print "Done."
+    print("Done.")
     end_time = time.time()
     elapsed_time = end_time-start_time
-    print "Total time elapsed: %f sec." % elapsed_time
-    print "Time per device: %f sec" % (elapsed_time/args.num_devices)
+    print("Total time elapsed: %f sec." % elapsed_time)
+    print("Time per device: %f sec" % (elapsed_time/args.num_devices))

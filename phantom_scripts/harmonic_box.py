@@ -22,7 +22,7 @@ def create_phantom(args):
     control_points = np.empty( (args.num_scatterers, args.num_control_points, 3), dtype='float32')        
     amplitudes = np.random.uniform(low=0.0, high=1.0, size=(args.num_scatterers,))
     for scatterer_i in range(args.num_scatterers):
-        print 'Scatterer %d of %d' % (scatterer_i, args.num_scatterers)
+        print('Scatterer %d of %d' % (scatterer_i, args.num_scatterers))
         # generate random start point
         x0 = random.uniform(args.x_min, args.x_max)
         y0 = random.uniform(args.y_min, args.y_max)
@@ -40,8 +40,8 @@ def create_phantom(args):
         f["file_format_version"] = "1"
         f["knot_vector"] = knot_vector
 
-    print 'Scatterer dataset written to %s' % args.h5_file
-    print 'knot vector: %s' % knot_vector
+    print('Scatterer dataset written to %s' % args.h5_file)
+    print('knot vector: %s' % knot_vector)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=description)

@@ -325,7 +325,9 @@ protected:
 BOOST_PYTHON_MODULE(pyrfsim) {
     using namespace boost::python;
 
-    import_array();
+	if (_import_array() < 0) {
+		PyErr_Print(); PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import"); return;
+	}
 
     numpy_boost_python_register_type<float, 1>();
     numpy_boost_python_register_type<float, 2>();

@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 #include <stdexcept>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -66,6 +67,12 @@ class DummyLog : public ILog {
     virtual void write(LogType type, const std::string& msg) override {
         // do nothing
     }
+};
+
+class StdoutLog : public ILog {
+	virtual void write(LogType type, const std::string& msg) override {
+		std::cout << msg << std::endl;
+	}
 };
 
 struct Interval {

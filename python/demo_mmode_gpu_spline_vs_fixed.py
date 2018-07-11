@@ -38,7 +38,7 @@ def create_fixed_datasets(args, control_points, amplitudes, spline_degree, knot_
     num_cs = control_points.shape[1]
     fixed_scatterers = []
     for time in timestamps:
-        print "Pre-computing fixed scatterers for timestep %f" % time
+        print("Pre-computing fixed scatterers for timestep %f" % time)
         p = np.zeros_like(control_points[:,0,:])
         for j in range(num_cs):
             p += bsplines.B(j, spline_degree, time, knot_vector)*control_points[:,j,:]
@@ -85,7 +85,7 @@ def run_fixed_simulation(sim_fixed, origin, direction, lateral_dir, line_length,
     return iq_lines, elapsed_time
 
 def make_mmode_image(iq_lines, gain=0.6, dyn_range=30):
-    print "iq_lines has shape %s" % str(iq_lines.shape)
+    print("iq_lines has shape %s" % str(iq_lines.shape))
     mmode_img = np.array(abs(iq_lines), dtype="float32")
     normalize_factor = np.max(mmode_img.flatten())
     mmode_img = 20*np.log10(gain*(mmode_img+1e-6)/normalize_factor)
@@ -151,11 +151,11 @@ if __name__ == "__main__":
     sim_fixed.set_parameter("radial_decimation", "5");  sim_spline.set_parameter("radial_decimation", "5")
     
     num_gpus = int(sim_fixed.get_parameter("num_cuda_devices"))
-    print "System has %d CUDA devices" % num_gpus
+    print("System has %d CUDA devices" % num_gpus)
     sim_fixed.set_parameter("gpu_device", "%d" % args.gpu_device_no)
     sim_spline.set_parameter("gpu_device", "%d" % args.gpu_device_no)
-    print "Fixed simulator uses %s" % sim_fixed.get_parameter("cur_device_name")
-    print "Spline simulator uses %s" % sim_spline.get_parameter("cur_device_name")
+    print("Fixed simulator uses %s" % sim_fixed.get_parameter("cur_device_name"))
+    print("Spline simulator uses %s" % sim_spline.get_parameter("cur_device_name"))
     
     # define excitation signal
     t_vector = np.arange(-16/args.fc, 16/args.fc, 1.0/args.fs)

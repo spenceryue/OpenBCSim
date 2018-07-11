@@ -80,7 +80,7 @@ def simulate_with_timing(sim, num_rep, png_file=None):
     
 def ns_per_scatterer(frame_times, num_scatterers, num_lines):
     """ Return mean, std sim time in ns per scatterer per line """
-    ns_per_scatterer = map(lambda time_sec: 1e9*time_sec/(num_lines*num_scatterers), frame_times)
+    ns_per_scatterer = [1e9*time_sec/(num_lines*num_scatterers) for time_sec in frame_times]
     ns_mean = np.mean(ns_per_scatterer)
     ns_std  = np.std(ns_per_scatterer)
     return ns_mean, ns_std
@@ -91,7 +91,7 @@ class ResultBuffer(object):
         
     def add_msg(self, msg):
         self.lines.append("%s\n"%msg)
-        print "*** %s" % msg
+        print("*** %s" % msg)
     
     def write(self, out_file):
         with open(out_file, "w") as f:

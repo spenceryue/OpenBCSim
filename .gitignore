@@ -12,6 +12,7 @@
 *.so
 *.dylib
 *.dll
+*.pyd
 
 # Fortran module files
 *.mod
@@ -36,4 +37,5 @@ build
 build32
 build64
 generated_phantoms
-
+ExternalLibs
+install
