@@ -7,7 +7,7 @@ from time import time
 description="""
     Demo program showing how to use the fixed-scatterer GPU
     implementation from Python.
-    
+
     Also useful to measure the running time of the GPU
     implementations.
 """
@@ -52,7 +52,7 @@ tc = 1.0/fc
 t_vector = np.arange(-16*tc, 16*tc, ts)
 bw = 0.2
 samples = np.array(gausspulse(t_vector, bw=bw, fc=fc), dtype="float32")
-center_index = int(len(t_vector)/2) 
+center_index = int(len(t_vector)/2)
 sim.set_excitation(samples, center_index, fs, fc)
 
 # define the scan sequence
@@ -80,17 +80,17 @@ print("Number of point-scatterers was %d" % args.num_scatterers)
 print("Used %f seconds in total." % elapsed_time)
 print("Time pr. frame: %f [ms]" % (1000.0*elapsed_time/args.num_frames))
 print("Time pr. RF line: %f [ms]" % (1000.0*elapsed_time/(args.num_frames*args.num_lines)))
-    
+
 if args.save_pdf or args.visualize:
     import matplotlib as mpl
-    mpl.use("Agg")
+    # mpl.use("Agg")
     import matplotlib.pyplot as plt
     num_samples, num_lines = rf_lines.shape
     plt.figure(1)
-    plt.plot(rf_lines[:, num_lines/2])
+    plt.plot(rf_lines[:, num_lines//2].real)
     if args.save_pdf: plt.savefig("frame1-out.pdf")
     plt.figure(2)
-    plt.imshow(rf_lines, aspect="auto")
+    plt.imshow(abs (rf_lines), aspect="auto")
     if args.save_pdf: plt.savefig("frame2-out.pdf")
 if args.visualize:
     plt.show()
@@ -107,4 +107,4 @@ if args.store_kernel_debug:
         mean_val = np.mean(value_list)
         std_val = np.std(value_list)
         print("%s: N=%d,  mean +- std = %f +- %f [ms]" % (key, N, mean_val, std_val))
-        
+

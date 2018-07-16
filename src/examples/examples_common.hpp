@@ -19,5 +19,5 @@ inline void dump_rf_line(const std::string& filename, std::vector<std::complex<f
 	{
 		out_file << x.real() << "," << x.imag() << "\n";
 	}
-	out_file << std::endl;
+	out_file << std::flush;
 }

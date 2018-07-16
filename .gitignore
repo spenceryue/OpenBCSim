@@ -38,3 +38,4 @@ build32
 build64
 generated_phantoms
 ExternalLibs/boost_1_67_0/*
+install
