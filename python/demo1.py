@@ -10,20 +10,25 @@ from scipy.signal import gausspulse
 import numpy as np
 
 # Create and configure CPU simulator
-sim = RfSimulator("cpu")
+device = 'cpu'
+device = 'gpu'
+
+sim = RfSimulator(device)
 sim.set_parameter("verbose", "1")
 sim.set_print_debug(True)
 
 # Set general simulation parameters
 sim.set_parameter("sound_speed", "1540.0")
-sim.set_parameter("num_cpu_cores", "all")
+if device == 'cpu': sim.set_parameter("num_cpu_cores", "all")
 sim.set_parameter("radial_decimation", "20")
 
 # Set scatterers
 num_scatterers = 16
 scatterers_data = np.zeros((num_scatterers, 4), dtype="float32")
+scatterers_data[:,0] = np.linspace(-.02, 0.02, num_scatterers)
 scatterers_data[:,2] = np.linspace(0.01, 0.16, num_scatterers)
 scatterers_data[:,3] = np.ones((num_scatterers,))
+# scatterers_data[:,3] = np.arange (1, num_scatterers + 1)
 sim.add_fixed_scatterers(scatterers_data)
 
 # Define excitation signal
@@ -35,16 +40,17 @@ t_vector = np.arange(-16*tc, 16*tc, ts)
 bw = 0.5
 plt.figure(1)
 samples = np.array(gausspulse(t_vector, bw=bw, fc=fc), dtype="float32")
-center_index = int(len(t_vector)/2) 
+center_index = int(len(t_vector)/2)
 plt.plot(t_vector, samples);
 plt.title("Excitation signal")
 plt.xlabel("Time [s]")
 plt.ylabel("Exitation")
-plt.show()
+# plt.show()
 sim.set_excitation(samples, center_index, fs, fc)
 
 # Define a scan sequence
-num_lines = 12
+# num_lines = 12
+num_lines = 2000
 origins = np.zeros((num_lines, 3), dtype="float32")
 origins[:,0] = np.linspace(-0.04, 0.04, num_lines)
 
@@ -62,6 +68,7 @@ sim.set_scan_sequence(origins, directions, length, lateral_dirs, timestamps)
 
 # Set the beam profile
 sigma_lateral = 1e-3
+sigma_lateral = 2e-3
 sigma_elevational = 1e-3
 sim.set_analytical_beam_profile(sigma_lateral, sigma_elevational)
 
@@ -72,8 +79,9 @@ rf_lines = sim.simulate_lines()
 rf_lines = np.real(abs(rf_lines))
 
 # Env.detection and log-compression.
-plt.figure(2);
+plt.figure(2, figsize=(12,12));
 dyn_range = 50;
 gain = 30;
 plt.imshow(rf_lines, interpolation="nearest", cmap=cm.Greys_r, aspect="auto");
+plt.grid ()
 plt.show()

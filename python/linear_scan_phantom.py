@@ -26,7 +26,7 @@ def do_simulation(args):
     sim.set_parameter("verbose", "0")
 
     with h5py.File(args.h5_file, "r") as f:
-        scatterers_data = f["data"].value
+        scatterers_data = f["data"].value # TODO: inspect type
     sim.add_fixed_scatterers(scatterers_data)
     print("The number of scatterers is %d" % scatterers_data.shape[0])
 
@@ -81,45 +81,48 @@ def do_simulation(args):
     if args.pdf_file != "" or args.visualize:
         num_samples, num_lines = iq_lines.shape
 
-        # Clip to 525 lines for this run (carotid no plaque)
-        iq_lines = iq_lines[:525]
         center_data = abs (iq_lines[:, num_lines//2].real)
         data = abs (iq_lines)
-        data = 20 * np.log10(1e-2 + data / data.mean ())
+        # data = 20 * np.log10(1e-2 + data / data.mean ())
 
         import matplotlib.pyplot as plt
 
         print ('iq_lines.shape = (num_samples: {}, num_lines: {})'.format (num_samples, num_lines))
-        fig = plt.figure(1, figsize=(9, 6))
+        fig = plt.figure(1, figsize=(24, 12))
+        # fig = plt.figure(1, figsize=(9, 6))
         ax = plt.subplot(1,2,1)
         plt.plot(center_data, color=(153/255,102/255,204/255))
         plt.xlabel ('Depth', fontsize=14, labelpad=15)
         plt.ylabel ('Amplitude', fontsize=14, labelpad=15)
         plt.yticks ([])
+        plt.grid ()
         plt.title ('Middle RF-Line', fontsize=16, pad=15)
 
         for side in ['top', 'right', 'left']:
             ax.spines[side].set_visible (False)
 
         ax = plt.subplot(1,2,2)
-        image = plt.imshow (data, cmap='gray', aspect='equal', interpolation="nearest")
-        cbar = fig.colorbar (image)
-        cbar.set_label ('  (dB)', fontsize=12)
+        image = plt.imshow (data, cmap='gray', aspect=2, interpolation="nearest")
+        # cbar = fig.colorbar (image)
+        # cbar.set_label ('  (dB)', fontsize=12)
         plt.xlabel ('Width', fontsize=14, labelpad=15)
         plt.ylabel ('Depth', fontsize=14, labelpad=15)
-        plt.title ('Simulated Carotid', fontsize=16, pad=15)
+        from os import path
+        name = path.basename (args.h5_file).split ('.')[0].replace ('_', ' ').title ()
+        plt.title ('Simulated "{}"'.format (name), fontsize=16, pad=15)
+        plt.grid ()
         plt.tick_params (axis='both', which='both', bottom=True, top=False,
                         labelbottom=True, left=True, right=False, labelleft=True)
-        cbar.ax.tick_params (axis='y', which='both', bottom=False, top=False,
-                        labelbottom=False, left=False, right=False, labelright=True)
+        # cbar.ax.tick_params (axis='y', which='both', bottom=False, top=False,
+                        # labelbottom=False, left=False, right=False, labelright=True)
 
-        for side in ['top', 'right', 'bottom', 'left']:
-            cbar.ax.spines[side].set_visible (False)
+        # for side in ['top', 'right', 'bottom', 'left']:
+            # cbar.ax.spines[side].set_visible (False)
 
         for side in ['top', 'right', 'bottom', 'left']:
             ax.spines[side].set_visible (False)
 
-        plt.xticks (tuple (np.arange (0, num_lines, 50)) + (num_lines,))
+        # plt.xticks (tuple (np.arange (0, num_lines, 50)) + (num_lines,))
 
         for side in ['bottom', 'left']:
             ax.spines[side].set_position(('outward', 1))

@@ -11,7 +11,7 @@ description="""
     Example for simulating a tissue Doppler frame
     using the autocorrelation method. The scan type
     is a sector scan.
-    
+
     Will simulate a number of frames equal to the
     packet size and draw color-coded velocities.
     The Doppler power is used for thresholding.
@@ -39,7 +39,7 @@ def simulate_doppler_frame(args, timestamp, sim, origin):
 
     iq_lines = sim.simulate_lines()
     return iq_lines
-    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--scatterer_file", help="Scatterer dataset (spline)", default="../generated_phantoms/contracting_cylinder_spline.h5")
@@ -57,19 +57,19 @@ if __name__ == "__main__":
     parser.add_argument("--sim_time", help="Scan timestamp", type=float, default=0.5)
     parser.add_argument("--normalized_power_threshold", type=float, default=0.0001)
     args = parser.parse_args()
-    
+
     c0 = 1540.0
     prt = 1.0/args.prf
     origin = np.array([0.0, 0.0, -5e-3])  # beam origin
-    
+
     with h5py.File(args.scatterer_file, "r") as f:
         control_points = f["control_points"].value
         amplitudes     = f["amplitudes"].value
         knot_vector    = f["knot_vector"].value
-        spline_degree  = f["spline_degree"].value
+        spline_degree  = int (f["spline_degree"].value) # C++ interface expects strictly int type
     num_cs = control_points.shape[1]
     print("Loaded spline phantom with %d control points" % num_cs)
-    
+
     # create and configure
     sim = RfSimulator("gpu")
     sim.set_parameter("verbose", "0")
@@ -90,18 +90,18 @@ if __name__ == "__main__":
 
     # set spline scatterers
     sim.add_spline_scatterers(spline_degree, knot_vector, control_points, amplitudes)
-    
+
     # simulate one packet
     iq_frames = []
     for i in range(args.packet_size):
         frame = simulate_doppler_frame(args, args.sim_time+i*prt, sim, origin)
         iq_frames.append(frame)
-        
+
     # compute autocorrelation frame at lag 0 (for power)
     power_frame = np.zeros(iq_frames[0].shape, dtype="float32")
     for i in range(args.packet_size):
         power_frame += abs(iq_frames[i])**2
-        
+
     # compute autocorrelation frame at lag 1 (for velocity)
     acf_frame = np.zeros(iq_frames[0].shape, dtype="complex64")
     for i in range(args.packet_size-1):
@@ -115,16 +115,16 @@ if __name__ == "__main__":
     inds = power_frame > args.normalized_power_threshold
     mask_frame[inds] = 1.0
     mask_frame[np.logical_not(inds)] = 0.0
-    
+
     velocity_frame = velocity_frame*mask_frame
     num_samples, num_beams = velocity_frame.shape
-    
+
     thetas = np.linspace(-0.5*args.width, 0.5*args.width, num_beams)
     ranges = np.linspace(0.0, args.line_length, num_samples)
     tt,rr = np.meshgrid(thetas, ranges)
     xx = rr*np.sin(tt)
     yy = rr*np.cos(tt)
-    
+
     # visualize the results
     plt.figure(1)
     plt.pcolor(xx, yy, mask_frame, cmap="Greys_r")
@@ -136,10 +136,10 @@ if __name__ == "__main__":
     plt.figure(2)
     plt.pcolor(xx, yy, velocity_frame, cmap="seismic", vmin=-v_nyq, vmax=v_nyq)
     plt.colorbar()
-    plt.title("Time: %f, VNyquist is %f m/s" % (args.sim_time, v_nyq)) 
+    plt.title("Time: %f, VNyquist is %f m/s" % (args.sim_time, v_nyq))
     plt.gca().set_aspect("equal")
     plt.gca().invert_yaxis()
-    
+
     plt.figure(3)
     gain = 1.0
     dyn_range = 60
@@ -153,6 +153,5 @@ if __name__ == "__main__":
     plt.title("Log-power image")
     plt.gca().set_aspect("equal")
     plt.gca().invert_yaxis()
-    
+
     plt.show()
-    

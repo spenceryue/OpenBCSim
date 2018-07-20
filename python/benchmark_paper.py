@@ -11,7 +11,7 @@ import os
 
 description="""
     Benchmark performance on a collection of the generated
-    phantoms. Will compare different configurations of 
+    phantoms. Will compare different configurations of
     CPU- and GPU algorithms.
 """
 x_axis = np.array([1.0, 0.0, 0.0], dtype="float32")
@@ -66,38 +66,40 @@ def simulate_with_timing(sim, num_rep, png_file=None):
         start_time = time()
         iq_lines = sim.simulate_lines()
         frame_times.append(time() - start_time)
-        
+
     if png_file != None:
         import matplotlib
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         plt.figure()
         img = np.real(abs(iq_lines))
-        plt.imshow(img, cmap=plt.get_cmap("Greys_r"), aspect="auto", interpolation="nearest")
+        # img = 20 * np.log10(img / img.mean ())
+        plt.imshow(img, cmap=plt.get_cmap("Greys_r"), aspect="equal", interpolation="nearest")
+        plt.grid ()
         plt.savefig(png_file)
 
     return frame_times
-    
+
 def ns_per_scatterer(frame_times, num_scatterers, num_lines):
     """ Return mean, std sim time in ns per scatterer per line """
     ns_per_scatterer = [1e9*time_sec/(num_lines*num_scatterers) for time_sec in frame_times]
     ns_mean = np.mean(ns_per_scatterer)
     ns_std  = np.std(ns_per_scatterer)
     return ns_mean, ns_std
- 
+
 class ResultBuffer(object):
     def __init__(self):
         self.lines = []
-        
+
     def add_msg(self, msg):
         self.lines.append("%s\n"%msg)
         print("*** %s" % msg)
-    
+
     def write(self, out_file):
         with open(out_file, "w") as f:
             for l in self.lines:
                 f.write(l)
- 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("res_file", help="Text file to write results")
@@ -110,6 +112,7 @@ if __name__ == "__main__":
     parser.add_argument("--fc", help="Pulse center freq [Hz]", type=float, default=2.5e6)
     parser.add_argument("--bw", help="Pulse bandwidth", type=float, default=0.1)
     parser.add_argument("--phantom_folder", default="../generated_phantoms")
+    parser.add_argument("--output_figures_to", default=".")
     parser.add_argument("--arc_proj", choices=["on", "off"], default="on")
     parser.add_argument("--phase_delay", choices=["on", "off"], default="on")
     parser.add_argument("--enable_cpu", help="Also time CPU impl (slow)", action="store_true")
@@ -117,11 +120,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     res_buffer = ResultBuffer()
-    
+
     sim_types = ["gpu"]
     if args.enable_cpu:
         sim_types.append("cpu")
-    
+
     for sim_type in sim_types:
         sim = RfSimulator(sim_type)
         device_name = ""
@@ -138,7 +141,7 @@ if __name__ == "__main__":
         res_buffer.add_msg("Arc projection: %s" % args.arc_proj)
         sim.set_parameter("phase_delay", args.phase_delay)
         res_buffer.add_msg("Complex phase delay: %s" % args.phase_delay)
-            
+
         # configure the RF excitation
         ts = 1.0/args.fs
         tc = 1.0/args.fc
@@ -147,7 +150,7 @@ if __name__ == "__main__":
         center_index = int(len(t_vector)/2)
         f_demod = args.fc
         sim.set_excitation(samples, center_index, args.fs, f_demod)
-    
+
         # configure the beam profile
         if args.lut_file != "":
             with h5py.File(args.lut_file, "r") as lut_f:
@@ -167,17 +170,17 @@ if __name__ == "__main__":
         num_scatterers = reconfigure_scatterers(sim, os.path.join(args.phantom_folder, "carotid_plaque.h5"))
         assert num_scatterers==sim.get_total_num_scatterers()
         configure_linear_scan(sim, 0.0, 1.0, args.num_lines)
-        rep_times = simulate_with_timing(sim, args.num_rep, "benchmark_carotid_plaque_%s.png"%sim_type)
+        rep_times = simulate_with_timing(sim, args.num_rep, "%s/benchmark_carotid_plaque_%s.png"%(args.output_figures_to, sim_type))
         ns_mean, ns_std = ns_per_scatterer(rep_times, num_scatterers, args.num_lines)
         res_buffer.add_msg("   Number of scatterers: %d" % num_scatterers)
         res_buffer.add_msg("   %3.3f +- %3.3f nanosec per scatterer per line [N=%d]" % (ns_mean, ns_std, len(rep_times)))
         res_buffer.add_msg("   (%s)" % str(rep_times))
-        
+
         res_buffer.add_msg("CASE 2: Tissue with flow phantom")
         num_scatterers = reconfigure_scatterers(sim, os.path.join(args.phantom_folder, "tissue_with_parabolic_flow.h5"))
         assert num_scatterers==sim.get_total_num_scatterers()
         configure_linear_scan(sim, 0.0, 1.0, args.num_lines)
-        rep_times = simulate_with_timing(sim, args.num_rep, "benchmark_tissue_with_parabolic_flow_%s.png"%sim_type)
+        rep_times = simulate_with_timing(sim, args.num_rep, "%s/benchmark_tissue_with_parabolic_flow_%s.png"%(args.output_figures_to, sim_type))
         ns_mean, ns_std = ns_per_scatterer(rep_times, num_scatterers, args.num_lines)
         res_buffer.add_msg("   Number of scatterers: %d" % num_scatterers)
         res_buffer.add_msg("   %3.3f +- %3.3f nanosec per scatterer per line [N=%d]" % (ns_mean, ns_std, len(rep_times)))
@@ -187,7 +190,7 @@ if __name__ == "__main__":
         num_scatterers = reconfigure_scatterers(sim, os.path.join(args.phantom_folder, "contracting_cylinder_spline.h5"))
         assert num_scatterers==sim.get_total_num_scatterers()
         configure_sector_scan(sim, 0.0, 0.99, args.num_lines)
-        rep_times = simulate_with_timing(sim, args.num_rep, "benchmark_contracting_cylinder_spline_%s.png"%sim_type)
+        rep_times = simulate_with_timing(sim, args.num_rep, "%s/benchmark_contracting_cylinder_spline_%s.png"%(args.output_figures_to, sim_type))
         ns_mean, ns_std = ns_per_scatterer(rep_times, num_scatterers, args.num_lines)
         res_buffer.add_msg("   Number of scatterers: %d" % num_scatterers)
         res_buffer.add_msg("   %3.3f +- %3.3f nanosec per scatterer per line [N=%d]" % (ns_mean, ns_std, len(rep_times)))
@@ -197,7 +200,7 @@ if __name__ == "__main__":
         num_scatterers = reconfigure_scatterers(sim, os.path.join(args.phantom_folder, "lv_spline_model.h5"))
         assert num_scatterers==sim.get_total_num_scatterers()
         configure_sector_scan(sim, 0.0, 0.99, args.num_lines)
-        rep_times = simulate_with_timing(sim, args.num_rep, "benchmark_lv_spline_model_%s.png"%sim_type)
+        rep_times = simulate_with_timing(sim, args.num_rep, "%s/benchmark_lv_spline_model_%s.png"%(args.output_figures_to, sim_type))
         ns_mean, ns_std = ns_per_scatterer(rep_times, num_scatterers, args.num_lines)
         res_buffer.add_msg("   Number of scatterers: %d" % num_scatterers)
         res_buffer.add_msg("   %3.3f +- %3.3f nanosec per scatterer per line [N=%d]" % (ns_mean, ns_std, len(rep_times)))
@@ -207,21 +210,21 @@ if __name__ == "__main__":
         num_scatterers = reconfigure_scatterers(sim, os.path.join(args.phantom_folder, "rot_cube.h5"))
         assert num_scatterers==sim.get_total_num_scatterers()
         configure_sector_scan(sim, 0.0, 0.99, args.num_lines)
-        rep_times = simulate_with_timing(sim, args.num_rep, "benchmark_rot_cube_%s.png"%sim_type)
+        rep_times = simulate_with_timing(sim, args.num_rep, "%s/benchmark_rot_cube_%s.png"%(args.output_figures_to, sim_type))
         ns_mean, ns_std = ns_per_scatterer(rep_times, num_scatterers, args.num_lines)
         res_buffer.add_msg("   Number of scatterers: %d" % num_scatterers)
         res_buffer.add_msg("   %3.3f +- %3.3f nanosec per scatterer per line [N=%d]" % (ns_mean, ns_std, len(rep_times)))
         res_buffer.add_msg("   (%s)" % str(rep_times))
-        
+
         res_buffer.add_msg("CASE 6: Simple linear scatterers")
         num_scatterers = reconfigure_scatterers(sim, os.path.join(args.phantom_folder, "simple.h5"))
         assert num_scatterers==sim.get_total_num_scatterers()
         configure_sector_scan(sim, 0.0, 0.99, args.num_lines)
-        rep_times = simulate_with_timing(sim, args.num_rep, "benchmark_simple_%s.png"%sim_type)
+        rep_times = simulate_with_timing(sim, args.num_rep, "%s/benchmark_simple_%s.png"%(args.output_figures_to, sim_type))
         ns_mean, ns_std = ns_per_scatterer(rep_times, num_scatterers, args.num_lines)
         res_buffer.add_msg("   Number of scatterers: %d" % num_scatterers)
         res_buffer.add_msg("   %3.3f +- %3.3f nanosec per scatterer per line [N=%d]" % (ns_mean, ns_std, len(rep_times)))
         res_buffer.add_msg("   (%s)" % str(rep_times))
-        
+
     res_buffer.write(args.res_file)
-    
+
