@@ -4,5 +4,26 @@
 		{
 			"path": "."
 		}
-	]
+	],
+  "settings":
+  {
+    "ecc_common_flags":
+    [
+      "-I$project_base_path",
+      "-isystem $project_base_path/ExternalLibs/boost_1_67_0",
+      "-isystem $project_base_path/ExternalLibs/hdf5-1.8.13/include",
+      "-isystem C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v9.0\\include",
+      "-I$project_base_path/src/core",
+      "-I$project_base_path/src/core/algorithm",
+      "-I$project_base_path/src/examples",
+      "-I$project_base_path/src/python",
+      "-I$project_base_path/src/qt5gui",
+      "-I$project_base_path/src/qt5gui/scanseq",
+      "-I$project_base_path/src/qt5gui/trainglemesh3d",
+      "-I$project_base_path/src/utils",
+      "-I$project_base_path/src/utils/cartesianator",
+
+    ],
+    "default_line_ending": "unix",
+  },
 }

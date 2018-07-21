@@ -89,6 +89,8 @@ protected:
     int get_num_cuda_devices() const;
     
     void save_cuda_device_properties();
+
+	void record_hardware_constraints();
         
     // to ensure that calls to device beam profile RAII wrapper does not cause segfault.
     void create_dummy_lut_profile();
