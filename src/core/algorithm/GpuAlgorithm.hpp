@@ -28,15 +28,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #ifdef BCSIM_ENABLE_CUDA
 #pragma once
-#include <vector>
-#include <memory>
 #include <cuda.h>
 #include <cufft.h>
+#include <memory>
+#include <tuple>
+#include <vector>
+#include "BaseAlgorithm.hpp"
 #include "cuda_helpers.h"
 #include "cufft_helpers.h"
-#include "BaseAlgorithm.hpp"
-#include "GpuScatterers.hpp"
 #include "curand_helpers.h"
+#include "GpuScatterers.hpp"
 
 namespace bcsim {
 
@@ -54,18 +55,18 @@ public:
         // occur most likely when RAII-wrappers go out of scope and
         // tries to free CUDA resources..
     }
-    
+
     virtual void set_parameter(const std::string& key, const std::string& value)        override;
 
     virtual std::string get_parameter(const std::string& key) const                     override;
 
     virtual void simulate_lines(std::vector<std::vector<std::complex<float>> >&  /*out*/ rf_lines) override;
-    
+
     // NOTE: currently requires that set_excitation is called first!
     virtual void set_scan_sequence(ScanSequence::s_ptr new_scan_sequence)               override;
 
     virtual void set_excitation(const ExcitationSignal& new_excitation)                 override;
-    
+
     virtual void set_analytical_profile(IBeamProfile::s_ptr beam_profile) override;
 
     virtual void set_lookup_profile(IBeamProfile::s_ptr beam_profile) override;
@@ -81,17 +82,22 @@ public:
     virtual size_t get_total_num_scatterers() const                                     override;
 
 protected:
-    // Debug functionality: slice the 3D texture and write as RAW file to disk.    
+    // Debug functionality: slice the 3D texture and write as RAW file to disk.
     void dump_orthogonal_lut_slices(const std::string& raw_path);
 
     void create_cuda_stream_wrappers(int num_streams);
-    
+
     int get_num_cuda_devices() const;
-    
+
     void save_cuda_device_properties();
 
-	void record_hardware_constraints();
-        
+    void record_hardware_constraints();
+
+    // Initialize only once both scan sequence and excitation have been configured.
+    void init_excitation_if_possible ();
+    void init_scan_sequence_if_possible ();
+    void throw_if_not_configured ();
+
     // to ensure that calls to device beam profile RAII wrapper does not cause segfault.
     void create_dummy_lut_profile();
 
@@ -99,35 +105,41 @@ protected:
 
     void spline_projection_kernel(int stream_no, const Scanline& scanline, int num_blocks, cuComplex* res_buffer, DeviceSplineScatterers::s_ptr dataset);
 
+
 protected:
     typedef cufftComplex complex;
-    
+
     std::vector<CudaStreamRAII::s_ptr>                  m_stream_wrappers;
 
-    ScanSequence::s_ptr                                 m_scan_seq;
+    ScanSequence::s_ptr                                 m_scan_sequence;
     ExcitationSignal                                    m_excitation;
 
     // number of samples in the time-projection lines [should be a power of two]
-    size_t                                              m_num_time_samples;
+    size_t                                              m_rf_line_num_samples;
+
+    // Configuration flags needed to ensure everything is configured
+    // before doing the simulations.
+    bool                                                m_scan_sequence_configured;
+    bool                                                m_excitation_configured;
 
     // The cuFFT plan used for all transforms.
     CufftBatchedPlanRAII::u_ptr                         m_fft_plan;
 
-    DeviceBufferRAII<complex>::u_ptr                    m_device_time_proj;   
+    DeviceBufferRAII<complex>::u_ptr                    m_device_time_proj;
     std::vector<HostPinnedBufferRAII<std::complex<float>>::u_ptr>     m_host_rf_lines;
 
     // precomputed excitation FFT with Hilbert mask applied.
     DeviceBufferRAII<complex>::u_ptr                    m_device_excitation_fft;
 
-    // The number of RF lines memory is allocated for, and also cuFFT batched
-    // transform plan is configure for. The value -1 means not allocated yet.
-    int                                                 m_num_beams_allocated;
-    
+    // Pair of (m_rf_line_num_samples, m_scan_sequence->get_num_lines ()).
+    // Used to determine cuFFT batched transform plan.
+    std::pair<size_t, int>                              m_num_samples_allocated;
+
     // it is only possible to change CUDA device before any operations
     // that involve the GPU
     bool                                                m_can_change_cuda_device;
-    
-    // parameters that are comon to all GPU algorithms
+
+    // parameters that are common to all GPU algorithms
     int                                                 m_param_cuda_device_no;
     int                                                 m_param_num_cuda_streams;
     int                                                 m_param_threads_per_block;
@@ -143,7 +155,7 @@ protected:
     float   m_analytical_sigma_lat;
     float   m_analytical_sigma_ele;
 
-    // TEMPORARY: Cached lookup profile data 
+    // TEMPORARY: Cached lookup profile data
     float   m_lut_r_min;
     float   m_lut_r_max;
     float   m_lut_l_min;
@@ -162,7 +174,7 @@ protected:
     CurandGeneratorRAII                 m_device_rng;
     DeviceBufferRAII<float>::u_ptr      m_device_random_buffer;
 };
-    
+
 }   // end namespace
 
 #endif  // BCSIM_ENABLE_CUDA

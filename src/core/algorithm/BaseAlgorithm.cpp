@@ -26,81 +26,137 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include <stdexcept>
 #include "BaseAlgorithm.hpp"
 #include "../BeamConvolver.hpp"
+#include <stdexcept>
 
+namespace bcsim
+{
 
-namespace bcsim {
-    
-BaseAlgorithm::BaseAlgorithm()
-    : m_param_verbose(0),
-      m_param_sound_speed(1540.0f),
-      m_param_noise_amplitude(0.0f),
-      m_param_use_arc_projection(true),
-      m_radial_decimation(1),
-      m_enable_phase_delay(false),
-      m_cur_beam_profile_type(BeamProfileType::NOT_CONFIGURED),
-      m_log_object(std::make_shared<DummyLog>())
+BaseAlgorithm::BaseAlgorithm ()
+    : m_param_verbose (0),
+      m_param_sound_speed (1540.0f),
+      m_param_noise_amplitude (0.0f),
+      m_param_use_arc_projection (true),
+      m_radial_decimation (1),
+      m_enable_phase_delay (false),
+      m_cur_beam_profile_type (BeamProfileType::NOT_CONFIGURED),
+      m_log_object (std::make_shared<StdoutLog> ())
 {
 }
 
-void BaseAlgorithm::set_parameter(const std::string& key, const std::string& value) {
-    if (key == "verbose") {
-        const auto verbose = std::stoi(value);
-        m_param_verbose = verbose;
-    } else if (key == "sound_speed") {
-        const auto new_speed = std::stof(value);
-        if (new_speed <= 0) {
-            throw std::runtime_error("illegal sound speed");
-        }
-        m_param_sound_speed = new_speed;
-    } else if (key == "noise_amplitude") {
-        const auto new_amplitude = std::stof(value);
-        m_param_noise_amplitude = new_amplitude;
-    } else if (key == "use_arc_projection") {
-        if (value == "on" || value == "true") {
-            m_param_use_arc_projection = true;
-        } else if (value == "off" || value == "false") {
-            m_param_use_arc_projection = false;
-        } else {
-            throw std::runtime_error("invalid boolean value");
-        }
-    } else if (key == "radial_decimation") {
-        const auto new_radial_decimation = std::stoi(value);
-        if (new_radial_decimation <= 0) {
-            throw std::runtime_error("illegal radial decimation value");
-        }
-        m_radial_decimation = new_radial_decimation;
-    } else if (key == "phase_delay") {
-        if (value == "on" || value == "true") {
-            m_enable_phase_delay = true;
-        } else if (value == "off" || value == "false") {
-            m_enable_phase_delay = false;
-        } else { 
-            throw std::runtime_error("invalid boolean value");
-        }
-    } else {
-        const auto err_msg = std::string("illegal parameter name: '") + key + std::string("'");
-        throw std::runtime_error(err_msg);
+void BaseAlgorithm::set_parameter (const std::string &key, const std::string &value)
+{
+  if (key == "verbose")
+  {
+    const auto verbose = std::stoi (value);
+    m_param_verbose = verbose;
+  }
+  else if (key == "sound_speed")
+  {
+    const auto new_speed = std::stof (value);
+    if (new_speed <= 0)
+    {
+      throw std::runtime_error ("illegal sound speed");
     }
-}
-
-std::vector<double> BaseAlgorithm::get_debug_data(const std::string& identifier) const {
-    if (m_debug_data.find(identifier) == std::end(m_debug_data)) {
-        throw std::runtime_error("invalid debug data key: " + identifier);
+    m_param_sound_speed = new_speed;
+  }
+  else if (key == "noise_amplitude")
+  {
+    const auto new_amplitude = std::stof (value);
+    m_param_noise_amplitude = new_amplitude;
+  }
+  else if (key == "use_arc_projection")
+  {
+    if (value == "on" || value == "true")
+    {
+      m_param_use_arc_projection = true;
     }
-    return m_debug_data.at(identifier);
+    else if (value == "off" || value == "false")
+    {
+      m_param_use_arc_projection = false;
+    }
+    else
+    {
+      throw std::runtime_error ("invalid boolean value");
+    }
+  }
+  else if (key == "radial_decimation")
+  {
+    const auto new_radial_decimation = std::stoi (value);
+    if (new_radial_decimation <= 0)
+    {
+      throw std::runtime_error ("illegal radial decimation value");
+    }
+    m_radial_decimation = new_radial_decimation;
+  }
+  else if (key == "phase_delay")
+  {
+    if (value == "on" || value == "true")
+    {
+      m_enable_phase_delay = true;
+    }
+    else if (value == "off" || value == "false")
+    {
+      m_enable_phase_delay = false;
+    }
+    else
+    {
+      throw std::runtime_error ("invalid boolean value");
+    }
+  }
+  else
+  {
+    const auto err_msg = std::string ("illegal parameter name: '") + key + std::string ("'");
+    throw std::runtime_error (err_msg);
+  }
 }
 
-std::string BaseAlgorithm::get_parameter(const std::string& key) const {
-    throw std::runtime_error("Illegal key: " + key);
+std::vector<double> BaseAlgorithm::get_debug_data (const std::string &identifier) const
+{
+  if (m_debug_data.find (identifier) == std::end (m_debug_data))
+  {
+    throw std::runtime_error ("invalid debug data key: " + identifier);
+  }
+  return m_debug_data.at (identifier);
 }
 
-void BaseAlgorithm::set_logger(ILog::ptr log_object) {
-    m_log_object = log_object;
+std::string BaseAlgorithm::get_parameter (const std::string &key) const
+{
+  if (key == "verbose")
+  {
+    return std::to_string (m_param_verbose);
+  }
+  else if (key == "sound_speed")
+  {
+    return std::to_string (m_param_sound_speed);
+  }
+  else if (key == "noise_amplitude")
+  {
+    return std::to_string (m_param_noise_amplitude);
+  }
+  else if (key == "use_arc_projection")
+  {
+    return std::to_string (m_param_use_arc_projection);
+  }
+  else if (key == "radial_decimation")
+  {
+    return std::to_string (m_radial_decimation);
+  }
+  else if (key == "phase_delay")
+  {
+    return std::to_string (m_enable_phase_delay);
+  }
+  else
+  {
+    const auto err_msg = std::string ("illegal parameter name: '") + key + std::string ("'");
+    throw std::runtime_error (err_msg);
+  }
 }
 
+void BaseAlgorithm::set_logger (ILog::ptr log_object)
+{
+  m_log_object = log_object;
+}
 
-}   // end namespace
-
+} // end namespace

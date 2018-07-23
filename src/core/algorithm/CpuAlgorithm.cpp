@@ -194,7 +194,11 @@ void CpuAlgorithm::projection_loop (SplineScatterers::s_ptr spline_scatterers, c
   }
 }
 
-CpuAlgorithm::CpuAlgorithm () : m_scan_sequence_configured (false), m_excitation_configured (false), m_omp_num_threads (1), m_param_sum_all_cs (false)
+CpuAlgorithm::CpuAlgorithm ()
+    : m_scan_sequence_configured (false),
+      m_excitation_configured (false),
+      m_omp_num_threads (1),
+      m_param_sum_all_cs (false)
 {
   // use all cores by default
   set_use_all_available_cores ();
@@ -283,20 +287,11 @@ void CpuAlgorithm::set_scan_sequence (ScanSequence::s_ptr new_scan_sequence)
 {
   if (!new_scan_sequence->is_valid ())
   {
-    throw std::runtime_error ("scan sequence is invalid");
-  }
-
-  if (!m_excitation_configured)
-  {
-    throw std::runtime_error ("Excitation must be configured before scan sequence");
+    throw std::runtime_error ("Scan sequence is invalid");
   }
 
   m_scan_sequence = new_scan_sequence;
   m_scan_sequence_configured = true;
-
-  const auto line_length = m_scan_sequence->line_length;
-  m_rf_line_num_samples = compute_num_rf_samples (m_param_sound_speed, line_length, m_excitation.sampling_frequency);
-
   configure_convolvers_if_possible ();
 }
 
@@ -416,6 +411,11 @@ void CpuAlgorithm::configure_convolvers_if_possible ()
 {
   if (m_scan_sequence_configured && m_excitation_configured)
   {
+    const auto line_length = m_scan_sequence->line_length;
+    const auto sampling_frequency = m_excitation.sampling_frequency;
+    // m_rf_line_num_samples depends on both line_length and sampling_frequency.
+    m_rf_line_num_samples = compute_num_rf_samples (m_param_sound_speed, line_length, sampling_frequency);
+
     convolvers.clear ();
     m_log_object->write (ILog::INFO, "Recreating convolvers");
     for (int i = 0; i < m_omp_num_threads; i++)
@@ -447,7 +447,7 @@ void CpuAlgorithm::throw_if_not_configured ()
   }
   if (m_scatterers_collection.total_num_scatterers () == 0)
   {
-    throw std::runtime_error ("no scatterers are configured");
+    throw std::runtime_error ("No scatterers are configured.");
   }
 }
 
