@@ -27,53 +27,59 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "cuda_kernels_c_interface.h" // for struct LUTProfileGeometry
+#include <assert.h>
+#include <cuComplex.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-#include <cuComplex.h>
 #include <cufft.h>
-#include "cuda_kernels_c_interface.h"   // for struct LUTProfileGeometry
 
 // initialize GPU memory with value
 template <typename T>
-__global__ void MemsetKernel(T* res, T value, int num_samples) {
-    const int global_idx = blockIdx.x*blockDim.x + threadIdx.x;
-    if (global_idx < num_samples) {
-        res[global_idx] = value;
-    }
+__global__ void MemsetKernel (T *res, T value, int num_samples)
+{
+  assert (0);
+  const int global_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (global_idx < num_samples)
+  {
+    res[global_idx] = value;
+  }
 }
 
 // Compute projection weight from Gaussian analytical beam profile.
-__device__ __inline__ float ComputeWeightAnalytical(float sigma_lateral,
-                                                    float sigma_elevational,
-                                                    float radial_dist,
-                                                    float lateral_dist,
-                                                    float elev_dist) {
-    const float two_sigma_lateral_squared     = 2.0f*sigma_lateral*sigma_lateral;
-    const float two_sigma_elevational_squared = 2.0f*sigma_elevational*sigma_elevational; 
-    return expf(-(lateral_dist*lateral_dist/two_sigma_lateral_squared + elev_dist*elev_dist/two_sigma_elevational_squared));
+__device__ __inline__ float ComputeWeightAnalytical (float sigma_lateral,
+                                                     float sigma_elevational,
+                                                     float radial_dist,
+                                                     float lateral_dist,
+                                                     float elev_dist)
+{
+  const float two_sigma_lateral_squared = 2.0f * sigma_lateral * sigma_lateral;
+  const float two_sigma_elevational_squared = 2.0f * sigma_elevational * sigma_elevational;
+  return expf (-(lateral_dist * lateral_dist / two_sigma_lateral_squared + elev_dist * elev_dist / two_sigma_elevational_squared));
 }
 
 // Compute projection weight from a 3D texture based beam profile.
-__device__ __inline__ float ComputeWeightLUT(cudaTextureObject_t lut_tex,
-                                             float radial_dist,
-                                             float lateral_dist, 
-                                             float elev_dist,
-                                             LUTProfileGeometry lut_geo) {
-    const auto r_normalized = (radial_dist-lut_geo.r_min)/(lut_geo.r_max-lut_geo.r_min);
-    const auto l_normalized = (lateral_dist-lut_geo.l_min)/(lut_geo.l_max-lut_geo.l_min);
-    const auto e_normalized = (elev_dist-lut_geo.e_min)/(lut_geo.e_max-lut_geo.e_min);
-    return tex3D<float>(lut_tex, l_normalized, e_normalized, r_normalized);
+__device__ __inline__ float ComputeWeightLUT (cudaTextureObject_t lut_tex,
+                                              float radial_dist,
+                                              float lateral_dist,
+                                              float elev_dist,
+                                              LUTProfileGeometry lut_geo)
+{
+  const auto r_normalized = (radial_dist - lut_geo.r_min) / (lut_geo.r_max - lut_geo.r_min);
+  const auto l_normalized = (lateral_dist - lut_geo.l_min) / (lut_geo.l_max - lut_geo.l_min);
+  const auto e_normalized = (elev_dist - lut_geo.e_min) / (lut_geo.e_max - lut_geo.e_min);
+  return tex3D<float> (lut_tex, l_normalized, e_normalized, r_normalized);
 }
 
 // used to multiply the FFTs
-__global__ void MultiplyFftKernel(cufftComplex* time_proj_fft, const cufftComplex* filter_fft, int num_samples);
+__global__ void MultiplyFftKernel (cufftComplex *time_proj_fft, const cufftComplex *filter_fft, int num_samples);
 
 // scale a signal (to avoid losing precision)
-__global__ void ScaleSignalKernel(cufftComplex* signal, float factor, int num_samples);
+__global__ void ScaleSignalKernel (cufftComplex *signal, float factor, int num_samples);
 
 // inplace IQ demodulation.
 // normalized_angular_freq = 2*pi*f_demod, where f_demod in [0.0, 0.5]
-__global__ void DemodulateKernel(cuComplex* signal, float normalized_angular_freq, int num_samples);
+__global__ void DemodulateKernel (cuComplex *signal, float normalized_angular_freq, int num_samples, int radial_decimation);
 
 // add noise to a signal
-__global__ void AddNoiseKernel(cuComplex* signal, cuComplex* noise, int num_samples);
+__global__ void AddNoiseKernel (cuComplex *signal, cuComplex *noise, int num_samples);

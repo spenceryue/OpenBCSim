@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/program_options.hpp>
 #include <boost/progress.hpp>
 #include <chrono>
-#include <iomanip> // setprecision
+#include <iomanip> // for setprecision
 #include <iostream>
 #include <random>
 #include <stdexcept>

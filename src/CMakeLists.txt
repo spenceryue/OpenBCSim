@@ -8,12 +8,17 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libs")
 
+set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE TYPE INTERNAL FORCE )
+IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  SET(CMAKE_INSTALL_PREFIX ../install CACHE PATH "The install directory is useful for automatically copying all built files of the project to one place for testing." FORCE)
+ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+
 option(BCSIM_ENABLE_OPENMP
        "Enable OpenMP support" ON)
 option(BCSIM_BUILD_UNITTEST
        "Build the main unit testing code" OFF)
 option(BCSIM_BUILD_UTILS
-       "Build misc. utilities" OFF) 
+       "Build misc. utilities" OFF)
 option(BCSIM_BUILD_EXAMPLES
        "Build C++ examples (requires BCSIM_BUILD_UTILS)" OFF)
 option(BCSIM_BUILD_PYTHON_INTERFACE
@@ -27,8 +32,8 @@ option(BCSIM_BUILD_BENCHMARK_CODE
 
 # The Qt5 GUI requires the "Utils" library.
 cmake_dependent_option(BCSIM_BUILD_QT5_GUI "Build interactive Qt5 GUI" OFF
-                       "BCSIM_BUILD_UTILS" OFF)       
-       
+                       "BCSIM_BUILD_UTILS" OFF)
+
 include_directories(${PROJECT_SOURCE_DIR})
 
 find_package(Boost REQUIRED)
@@ -39,7 +44,7 @@ if (BCSIM_BUILD_UTILS OR BCSIM_BUILD_QT5_GUI)
     find_package(HDF5 REQUIRED COMPONENTS C CXX)
     if (NOT TARGET hdf5-shared OR NOT TARGET hdf5_cpp-shared)
         message(WARNING "Could not find imported HDF5 targets. Using module-mode instead.")
-        include_directories(${HDF5_INCLUDE_DIRS}) 
+        include_directories(${HDF5_INCLUDE_DIRS})
     endif()
 endif()
 
@@ -69,9 +74,9 @@ endif ()
 
 if (BCSIM_ENABLE_CUDA)
     # default flags for JIT compilation targeting Kepler and Maxwell, with "fast-math" enabled.
-    set(CUDA_NVCC_FLAGS_DEFAULT "-gencode=arch=compute_30,code=compute_30;-gencode=arch=compute_50,code=compute_50;-use_fast_math") 
+    set(CUDA_NVCC_FLAGS_DEFAULT "-gencode=arch=compute_30,code=sm_30;-gencode=arch=compute_61,code=sm_61;-use_fast_math")
     if (CMAKE_COMPILER_IS_GNUCXX)
-        # must explicitly enable C++11 with GCC. Also, position independent code is 
+        # must explicitly enable C++11 with GCC. Also, position independent code is
         # required on 64-bit systems, but should also work on 32-bit.
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS_DEFAULT};-std=c++11;-Xcompiler -fPIC" CACHE STRING "")
     else()
@@ -94,7 +99,7 @@ if (BCSIM_BUILD_UTILS)
 endif()
 
 
-if (BCSIM_BUILD_EXAMPLES) 
+if (BCSIM_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 

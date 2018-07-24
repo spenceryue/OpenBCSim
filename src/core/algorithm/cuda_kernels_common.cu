@@ -27,46 +27,66 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "cuda_helpers.h"
+#include "cuda_kernels_common.cuh"
+#include "device_launch_parameters.h" // for removing annoying MSVC intellisense error messages
+#include <assert.h>
+#include <cuComplex.h>                // for cuCmulf()
 #include <cuda.h>
 #include <cufft.h>
 #include <math_functions.h> // for sincosf()
-#include <cuComplex.h> // for cuCmulf()
-#include "cuda_helpers.h"
-#include "device_launch_parameters.h" // for removing annoying MSVC intellisense error messages
-#include "cuda_kernels_common.cuh"
 
-__global__ void MultiplyFftKernel(cufftComplex* time_proj_fft, const cufftComplex* filter_fft, int num_samples) {
-    const int global_idx = blockIdx.x*blockDim.x + threadIdx.x;
-    if (global_idx < num_samples) {
-        cufftComplex a = time_proj_fft[global_idx];
-        cufftComplex b = filter_fft[global_idx];
-        time_proj_fft[global_idx] = make_float2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x); 
-    }
+__global__ void MultiplyFftKernel (cufftComplex *time_proj_fft, const cufftComplex *filter_fft, int num_samples)
+{
+  assert (0);
+  const int global_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (global_idx < num_samples)
+  {
+    cufftComplex a = time_proj_fft[global_idx];
+    cufftComplex b = filter_fft[global_idx];
+    time_proj_fft[global_idx] = make_float2 (a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x);
+    assert (!isnan (time_proj_fft[global_idx].x));
+    assert (!isnan (time_proj_fft[global_idx].y));
+    assert (!isnan (filter_fft[global_idx].x));
+    assert (!isnan (time_proj_fft[global_idx].y));
+  }
 }
 
-__global__ void ScaleSignalKernel(cufftComplex* signal, float factor, int num_samples) {
-    const int global_idx = blockIdx.x*blockDim.x + threadIdx.x;
-    if (global_idx < num_samples) {
-        cufftComplex c     = signal[global_idx];
-        signal[global_idx] = make_float2(c.x*factor, c.y*factor);
-    }
+__global__ void ScaleSignalKernel (cufftComplex *signal, float factor, int num_samples)
+{
+  assert (0);
+  const int global_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (global_idx < num_samples)
+  {
+    cufftComplex c = signal[global_idx];
+    signal[global_idx] = make_float2 (c.x * factor, c.y * factor);
+    assert (!isnan (signal[global_idx].x));
+    assert (!isnan (signal[global_idx].y));
+  }
 }
 
-__global__ void DemodulateKernel(cuComplex* signal, float w, int num_samples) {
-    const auto global_idx = blockIdx.x*blockDim.x + threadIdx.x;
-    if (global_idx < num_samples) {
-        // exp(-i*w*n) = cos(w*n) - i*sin(w*n)
-        float sin_value, cos_value;
-        sincosf(w*global_idx, &sin_value, &cos_value);
-        const auto c = make_cuComplex(cos_value, -sin_value);
+__global__ void DemodulateKernel (cuComplex *signal, float w, int num_samples, int radial_decimation)
+{
+  assert (0);
+  const auto global_idx = (blockIdx.x * blockDim.x + threadIdx.x) * radial_decimation;
+  if (global_idx < num_samples)
+  {
+    // exp(-i*w*n) = cos(w*n) - i*sin(w*n)
+    float sin_value, cos_value;
+    sincosf (w * global_idx, &sin_value, &cos_value);
+    const auto c = make_cuComplex (cos_value, -sin_value);
 
-        signal[global_idx] = cuCmulf(signal[global_idx], c);
-    }
+    signal[global_idx] = cuCmulf (signal[global_idx], c);
+    assert (!isnan (signal[global_idx].x));
+    assert (!isnan (signal[global_idx].y));
+  }
 }
 
-__global__ void AddNoiseKernel(cuComplex* signal, cuComplex* noise, int num_samples) {
-    const int global_idx = blockIdx.x*blockDim.x + threadIdx.x;
-    if (global_idx < num_samples) {
-        signal[global_idx] = make_cuComplex(signal[global_idx].x+noise[global_idx].x, signal[global_idx].y+noise[global_idx].y);
-    }
+__global__ void AddNoiseKernel (cuComplex *signal, cuComplex *noise, int num_samples)
+{
+  const int global_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (global_idx < num_samples)
+  {
+    signal[global_idx] = make_cuComplex (signal[global_idx].x + noise[global_idx].x, signal[global_idx].y + noise[global_idx].y);
+  }
 }

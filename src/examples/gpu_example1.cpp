@@ -153,7 +153,7 @@ void example (int argc, char **argv)
   size_t num_frames = 0;
 
   // Store the simulation results for a frame here. (Cleared by simulate_lines() with every call)
-  std::vector<std::vector<std::complex<float>>> bla;
+  std::vector<std::vector<std::complex<float>>> sim_res;
 
   std::cout << "  Simulating...";
   float elapsed;
@@ -171,14 +171,17 @@ void example (int argc, char **argv)
       sim->add_fixed_scatterers (scatterers);
     }
 
-    std::vector<std::vector<std::complex<float>>> sim_res;
+    sim->set_scan_sequence (scanseq);
+
     if (enable_simulate_lines)
     {
       sim->simulate_lines (sim_res);
     }
     std::cout << "  Beam " << num_frames << ":" << std::endl;
     for (int i=0; i<5; i++)
-      std::cout << "    " << sim_res[0][i].real() << ", " << sim_res[0][i].imag() << std::endl;
+    {
+      std::cout << "    " << sim_res[0][140 + i].real() << ", " << sim_res[0][140 + i].imag() << std::endl;
+    }
     num_frames++;
 
 
@@ -187,7 +190,6 @@ void example (int argc, char **argv)
     elapsed = std::chrono::duration_cast<std::chrono::milliseconds> (temp - start).count () / 1000.0;
     if (elapsed >= num_seconds)
     {
-      bla = sim_res;
       break;
     }
   }
@@ -200,12 +202,12 @@ void example (int argc, char **argv)
 
   // Dump last frame simulated to file.
   auto filename = "GpuExample1/line.txt";
-  std::cout << "  Saving last frame simulated to file: " << filename << std::endl;
+  std::cout << "  Saving last beam simulated to file: " << filename << std::endl;
   if (!boost::filesystem::exists ("GpuExample1"))
   {
     boost::filesystem::create_directory ("GpuExample1");
   }
-  dump_rf_line (filename, bla[0]);
+  dump_rf_line (filename, sim_res[0]);
 }
 
 int main (int argc, char **argv)

@@ -54,7 +54,7 @@ struct DLL_PUBLIC SplineAlgKernelParams {
     cuComplex* res;                     // the output buffer (complex projected amplitudes)
     size_t eval_basis_offset_elements;  // memory offset (for different CUDA streams)
     float  demod_freq;                  // complex demodulation frequency.
-    cudaTextureObject_t lut_tex;        // 3D texture object (for lookup-table beam profile) 
+    cudaTextureObject_t lut_tex;        // 3D texture object (for lookup-table beam profile)
     LUTProfileGeometry lut;
 };
 
@@ -63,11 +63,11 @@ void DLL_PUBLIC launch_MemsetKernel(int grid_size, int block_size, cudaStream_t 
 
 void DLL_PUBLIC launch_MultiplyFftKernel(int grid_size, int block_size, cudaStream_t stream, cufftComplex* time_proj_fft, const cufftComplex* filter_fft, int num_samples);
 
-void DLL_PUBLIC launch_DemodulateKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* signal, float w, int num_samples);
+void DLL_PUBLIC launch_DemodulateKernel(int grid_size, int block_size, cudaStream_t stream, cuComplex* signal, float w, int num_samples, int radial_decimation);
 
 void DLL_PUBLIC launch_ScaleSignalKernel(int grid_size, int block_size, cudaStream_t stream, cufftComplex* signal, float factor, int num_samples);
 
-template <bool A, bool B, bool C>
+template <bool A, bool B, bool C, bool D>
 void DLL_PUBLIC launch_FixedAlgKernel(int grid_size, int block_size, cudaStream_t stream, FixedAlgKernelParams params);
 
 // Upload data to constant memory [workaround the fact that constant memory cannot be allocated dynamically]

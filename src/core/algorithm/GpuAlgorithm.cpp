@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "GpuAlgorithm.hpp"
 #include "../bspline.hpp"
 #include "../discrete_hilbert_mask.hpp"
+#include "../fft.hpp" // for next_power_of_two
 #include "common_definitions.h" // for MAX_NUM_CUDA_STREAMS and MAX_SPLINE_DEGREE
 #include "common_utils.hpp"     // for compute_num_rf_samples
 #include "cuda_debug_utils.h"
@@ -39,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <complex>
 #include <cuda.h>
 #include <iostream>
-#include <iomanip> // setprecision
+#include <iomanip> // for setprecision
 #include <stdexcept>
 #include <tuple> // for std::tie
 
@@ -54,16 +55,18 @@ GpuAlgorithm::GpuAlgorithm ()
       // See: https://stackoverflow.com/q/27668269/3624264
       m_scan_sequence_configured (false),
       m_excitation_configured (false),
+      m_use_elev_hack (false),
       m_param_cuda_device_no (0),
       m_can_change_cuda_device (true),
       m_store_kernel_details (false),
       m_device_random_buffer (nullptr)
 {
-  // Record maximum number of threads per block and number of CUDA asynchronoous copy streams
-  record_hardware_constraints ();
-
   // ensure that CUDA device properties is stored
   save_cuda_device_properties ();
+
+  // Record maximum number of threads per block and number of CUDA asynchronoous copy streams
+  // Must be called AFTER save_cuda_device_properties()
+  init_from_hardware_constraints ();
 
   create_dummy_lut_profile ();
 }
@@ -113,6 +116,15 @@ void GpuAlgorithm::set_parameter (const std::string &key, const std::string &val
     {
       throw std::runtime_error ("invalid number of threads per block");
     }
+    else if (threads_per_block > m_cur_device_prop.maxThreadsPerBlock)
+    {
+      const std::string msg = "Requested threads per block (" +
+                              std::to_string (threads_per_block) +
+                              ") exceeds maximum allowed by device (" +
+                              std::to_string (m_cur_device_prop.maxThreadsPerBlock) +
+                              ").";
+      throw std::runtime_error (msg);
+    }
     m_param_threads_per_block = threads_per_block;
   }
   else if (key == "store_kernel_details")
@@ -134,6 +146,21 @@ void GpuAlgorithm::set_parameter (const std::string &key, const std::string &val
   {
     const auto verbose = std::stoi (value);
     m_param_verbose = m_log_object->verbose = verbose;
+  }
+  else if (key == "use_elev_hack")
+  {
+    if ((value == "on") || (value == "true"))
+    {
+      m_use_elev_hack = true;
+    }
+    else if ((value == "off") || (value == "false"))
+    {
+      m_use_elev_hack = false;
+    }
+    else
+    {
+      throw std::runtime_error ("invalid value");
+    }
   }
   else
   {
@@ -182,18 +209,10 @@ void GpuAlgorithm::save_cuda_device_properties ()
   m_log_object->write (ILog::INFO, ss.str ());
 }
 
-void GpuAlgorithm::record_hardware_constraints ()
+void GpuAlgorithm::init_from_hardware_constraints ()
 {
-  const auto num_devices = get_num_cuda_devices ();
-  if (m_param_cuda_device_no < 0 || m_param_cuda_device_no >= num_devices)
-  {
-    throw std::runtime_error ("illegal CUDA device number");
-  }
-  cudaErrorCheck (cudaGetDeviceProperties (&m_cur_device_prop, m_param_cuda_device_no));
-
-  const auto &p = m_cur_device_prop;
-  m_param_threads_per_block = p.maxThreadsPerBlock;
-  m_param_num_cuda_streams = p.asyncEngineCount;
+  m_param_threads_per_block = m_cur_device_prop.maxThreadsPerBlock;
+  m_param_num_cuda_streams = m_cur_device_prop.asyncEngineCount;
 }
 
 void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>> & /*out*/ rf_lines)
@@ -263,10 +282,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       event_timer->restart ();
     }
 
-    if (m_param_verbose)
-    {
-      m_log_object->write (ILog::DEBUG, "beam_no = " + std::to_string (beam_no) + ", stream_no = " + std::to_string (stream_no));
-    }
+    m_log_object->write (ILog::DEBUG, "beam_no = " + std::to_string (beam_no) + ", stream_no = " + std::to_string (stream_no));
 
     auto scanline = m_scan_sequence->get_scanline (beam_no);
     int threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
@@ -278,6 +294,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     {
       event_timer->restart ();
     }
+    std::cout << "launch_MemsetKernel to (" << complex_zero.x << ", " << complex_zero.y << ")" << std::endl;
     launch_MemsetKernel<cuComplex> (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, complex_zero, m_rf_line_num_samples);
 
     if (m_store_kernel_details)
@@ -297,6 +314,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       {
         throw std::runtime_error ("required number of x-blocks is larger than device supports (fixed scatterers)");
       }
+      std::cout << "fixed_projection_kernel..." << std::endl;
       fixed_projection_kernel (stream_no, scanline, num_blocks, rf_ptr, device_dataset);
 
       if (m_store_kernel_details)
@@ -390,7 +408,10 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
 
     // multiply with FFT of impulse response w/Hilbert transform
     int threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
+    std::cout << "launch_MultiplyFftKernel..." << std::endl;
     launch_MultiplyFftKernel (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, m_device_excitation_fft->data (), m_rf_line_num_samples);
+    std::cout << "launch_ScaleSignalKernel..." << std::endl;
+    launch_ScaleSignalKernel (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, 1.0f / m_rf_line_num_samples, m_rf_line_num_samples);
     if (m_store_kernel_details)
     {
       const auto elapsed_ms = static_cast<double> (event_timer->stop ());
@@ -404,7 +425,10 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     event_timer->restart ();
   }
   cudaErrorCheck (cudaDeviceSynchronize ());
+    std::cout << "cufftExecC2C..." << std::endl;
   cufftErrorCheck (cufftExecC2C (m_fft_plan->get (), m_device_time_proj->data (), m_device_time_proj->data (), CUFFT_INVERSE));
+    std::cout << "launch_ScaleSignalKernel..." << std::endl;
+  launch_ScaleSignalKernel (m_rf_line_num_samples * num_lines / m_param_threads_per_block, m_param_threads_per_block, 0, m_device_time_proj->data (), 1.0f / m_rf_line_num_samples, m_rf_line_num_samples * num_lines);
   if (m_store_kernel_details)
   {
     const auto elapsed_ms = static_cast<double> (event_timer->stop ());
@@ -412,6 +436,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
   }
   cudaErrorCheck (cudaDeviceSynchronize ());
 
+  rf_lines.clear ();
   for (int beam_no = 0; beam_no < num_lines; beam_no++)
   {
     size_t stream_no = beam_no % m_param_num_cuda_streams;
@@ -433,7 +458,16 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     const float norm_f_demod = f_demod / m_excitation.sampling_frequency;
     const float PI = static_cast<float> (4.0 * std::atan (1));
     const auto normalized_angular_freq = 2 * PI * norm_f_demod;
-    launch_DemodulateKernel (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, normalized_angular_freq, m_rf_line_num_samples);
+    const int num_blocks = round_up_div (m_rf_line_num_samples, m_radial_decimation * threads_per_line);
+    std::cout << "launch_DemodulateKernel..." << std::endl;
+    launch_DemodulateKernel (num_blocks,
+                             threads_per_line,
+                             cur_stream,
+                             rf_ptr,
+                             normalized_angular_freq,
+                             m_rf_line_num_samples,
+                             m_radial_decimation);
+
     if (m_store_kernel_details)
     {
       const auto elapsed_ms = static_cast<double> (event_timer->stop ());
@@ -441,9 +475,20 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       event_timer->restart ();
     }
 
-    // copy to host. Same memory layout?
-    const auto num_bytes_iq = sizeof (std::complex<float>) * m_rf_line_num_samples;
-    cudaErrorCheck (cudaMemcpyAsync (m_host_rf_lines[beam_no]->data (), rf_ptr, num_bytes_iq, cudaMemcpyDeviceToHost, cur_stream));
+    // Copy to host, accounting for radial decimation.
+    const auto delay_compensation_num_samples = static_cast<size_t> (m_excitation.center_index);
+    const auto size = round_up_div (m_rf_line_num_samples, m_radial_decimation);
+    rf_lines.emplace_back (size);
+    auto dest = rf_lines.back ().data () + delay_compensation_num_samples;
+    const auto dpitch = sizeof (std::complex<float>);
+    const auto src = rf_ptr;
+    const auto spitch = m_radial_decimation * dpitch;
+    const auto width = dpitch;
+    const auto height = size - delay_compensation_num_samples;
+
+    std::cout << "cudaMemcpy2DAsync..." << std::endl;
+    cudaErrorCheck (cudaMemcpy2DAsync (dest, dpitch, src, spitch, width, height, cudaMemcpyDeviceToHost, cur_stream));
+
     if (m_store_kernel_details)
     {
       const auto elapsed_ms = static_cast<double> (event_timer->stop ());
@@ -451,23 +496,6 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     }
   }
   cudaErrorCheck (cudaDeviceSynchronize ());
-
-  // no delay compenasation is needed when returning the projections only
-  size_t delay_compensation_num_samples = static_cast<size_t> (m_excitation.center_index);
-  const auto num_return_samples = compute_num_rf_samples (m_param_sound_speed, m_scan_sequence->line_length, m_excitation.sampling_frequency);
-
-  // TODO: eliminate unneccessary data copying: it would e.g. be better to
-  // only copy what is needed in the above kernel.
-  rf_lines.clear ();
-  for (size_t line_no = 0; line_no < num_lines; line_no++)
-  {
-    std::vector<std::complex<float>> temp_samples; // .reserve
-    for (size_t i = 0; i < num_return_samples; i += m_radial_decimation)
-    {
-      temp_samples.push_back (m_host_rf_lines[line_no]->data ()[i + delay_compensation_num_samples]);
-    }
-    rf_lines.push_back (temp_samples);
-  }
 }
 
 void GpuAlgorithm::set_excitation (const ExcitationSignal &new_excitation)
@@ -476,6 +504,7 @@ void GpuAlgorithm::set_excitation (const ExcitationSignal &new_excitation)
   m_excitation_configured = true;
   m_excitation = new_excitation;
 
+  init_rf_line_num_samples ();
   init_excitation_if_possible ();
   init_scan_sequence_if_possible ();
 }
@@ -491,6 +520,7 @@ void GpuAlgorithm::set_scan_sequence (ScanSequence::s_ptr new_scan_sequence)
   m_scan_sequence_configured = true;
   m_scan_sequence = new_scan_sequence;
 
+  init_rf_line_num_samples ();
   init_excitation_if_possible ();
   init_scan_sequence_if_possible ();
 }
@@ -500,15 +530,6 @@ void GpuAlgorithm::init_excitation_if_possible ()
   if (!m_scan_sequence_configured || !m_excitation_configured)
   {
     return;
-  }
-
-  // Calculate number of samples in needed radial direction if not calculated yet.
-  if (m_rf_line_num_samples == -1)
-  {
-    const auto line_length = m_scan_sequence->line_length;
-    const auto sampling_frequency = m_excitation.sampling_frequency;
-    m_rf_line_num_samples = compute_num_rf_samples (m_param_sound_speed, line_length, sampling_frequency);
-    m_log_object->write (ILog::INFO, "m_rf_line_num_samples: " + std::to_string (m_rf_line_num_samples));
   }
 
   // Get bytes per line
@@ -548,15 +569,6 @@ void GpuAlgorithm::init_scan_sequence_if_possible ()
     return;
   }
 
-  // Calculate number of samples in needed radial direction if not calculated yet.
-  if (m_rf_line_num_samples == -1)
-  {
-    const auto line_length = m_scan_sequence->line_length;
-    const auto sampling_frequency = m_excitation.sampling_frequency;
-    m_rf_line_num_samples = compute_num_rf_samples (m_param_sound_speed, line_length, sampling_frequency);
-    m_log_object->write (ILog::INFO, "m_rf_line_num_samples: " + std::to_string (m_rf_line_num_samples));
-  }
-
   // Get number of beams
   const auto num_beams = m_scan_sequence->get_num_lines ();
   m_log_object->write (ILog::INFO, "num_beams: " + std::to_string (num_beams));
@@ -579,28 +591,32 @@ void GpuAlgorithm::init_scan_sequence_if_possible ()
 
   // Calculate bytes needed
   const auto device_iq_line_bytes = sizeof (complex) * m_rf_line_num_samples;
-  const auto host_iq_line_bytes = sizeof (std::complex<float>) * m_rf_line_num_samples;
   std::stringstream ss;
-  ss << std::fixed << std::setprecision (1);
-  ss << "Allocating HOST ("
-     << (host_iq_line_bytes * num_beams) * 1e-6
-     << " MB) and DEVICE ("
+  ss << std::fixed << std::setprecision (2);
+  ss << "Allocating DEVICE memory ("
      << (device_iq_line_bytes * num_beams) * 1e-6
-     << " MB) memory";
+     << " MB)";
   m_log_object->write (ILog::INFO, ss.str ());
 
   // Allocate device memory for all RF lines
   m_device_time_proj = DeviceBufferRAII<complex>::u_ptr (new DeviceBufferRAII<complex> (device_iq_line_bytes * num_beams));
 
-  // Allocate host memory for all RF lines
-  m_host_rf_lines.resize (num_beams);
-  for (size_t beam_no = 0; beam_no < num_beams; beam_no++)
-  {
-    m_host_rf_lines[beam_no] = std::move (HostPinnedBufferRAII<std::complex<float>>::u_ptr (new HostPinnedBufferRAII<std::complex<float>> (host_iq_line_bytes)));
-  }
-
   // Save new number of samples allocated
   m_num_samples_allocated = new_num_samples_allocated;
+}
+
+void GpuAlgorithm::init_rf_line_num_samples ()
+{
+  if (!m_scan_sequence_configured || !m_excitation_configured)
+  {
+    return;
+  }
+
+  const auto line_length = m_scan_sequence->line_length;
+  const auto sampling_frequency = m_excitation.sampling_frequency;
+  m_rf_line_num_samples = compute_num_rf_samples (m_param_sound_speed, line_length, sampling_frequency);
+  // m_rf_line_num_samples = next_power_of_two (m_rf_line_num_samples);
+  m_log_object->write (ILog::INFO, "m_rf_line_num_samples: " + std::to_string (m_rf_line_num_samples));
 }
 
 void GpuAlgorithm::throw_if_not_configured ()
@@ -821,37 +837,69 @@ void GpuAlgorithm::fixed_projection_kernel (int stream_no, const Scanline &scanl
     throw std::logic_error ("unknown beam profile type");
   }
 
-  if (!m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
+  if (!m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<false, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, false, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
+  else if (!m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<false, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, false, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
+  else if (!m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<false, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, false, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_param_use_arc_projection && m_enable_phase_delay && use_lut)
+  else if (!m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<false, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, false, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
+  else if (!m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<true, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, true, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
+  else if (!m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<true, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, true, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
+  else if (!m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<true, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, true, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (m_param_use_arc_projection && m_enable_phase_delay && use_lut)
+  else if (!m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<true, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, true, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
+  {
+    launch_FixedAlgKernel<true, false, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
+  {
+    launch_FixedAlgKernel<true, false, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
+  {
+    launch_FixedAlgKernel<true, false, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && use_lut)
+  {
+    launch_FixedAlgKernel<true, false, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
+  {
+    launch_FixedAlgKernel<true, true, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
+  {
+    launch_FixedAlgKernel<true, true, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
+  {
+    launch_FixedAlgKernel<true, true, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+  }
+  else if (m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && use_lut)
+  {
+    launch_FixedAlgKernel<true, true, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
   else
   {

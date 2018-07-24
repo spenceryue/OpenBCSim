@@ -1,17 +1,29 @@
+Built for Visual Studio 14 2015 Win64
+
+
 CMake Paths Needed:
+  BOOST_ROOT
+  C:\Users\spenc\Desktop\OpenBCSim\ExternalLibs\boost_1_67_0
+  HDF5_ROOT
+  C:\Users\spenc\Desktop\OpenBCSim\ExternalLibs\hdf5-1.8.13
+  -- Don't worry about CMake warning about "Policy CMP0074"
+
+  CUDA_SDK_ROOT_DIR (Don't set this until asked for it by CMake GUI)
   C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0
 
-  C:\Users\syue\AppData\Local\Continuum\anaconda3\pkgs\numpy-base-1.14.3-py36h555522e_1\Lib\site-packages\numpy\core\include
-      or
+  NumPy_INCLUDE_DIR
   C:\Users\spenc\Anaconda3\pkgs\numpy-base-1.14.3-py36h555522e_1\Lib\site-packages\numpy\core\include
+      or
+  C:\Users\syue\AppData\Local\Continuum\anaconda3\pkgs\numpy-base-1.14.3-py36h555522e_1\Lib\site-packages\numpy\core\include
 
-  C:\Users\spenc\Desktop\OpenBCSim\ExternalLibs\boost_1_67_0
-  C:\Users\spenc\Desktop\OpenBCSim\ExternalLibs\hdf5-1.8.13
-
-  C:\Qt\5.10.1\msvc2013_64\lib\cmake\Qt5Core
-  C:/Qt/5.10.1/msvc2013_64/lib/cmake/Qt5Gui
-  C:\Qt\5.10.1\msvc2013_64\lib\cmake\Qt5OpenGL
-  C:\Qt\5.10.1\msvc2013_64\lib\cmake\Qt5Widgets
+  Qt5Core_DIR (Don't set this until asked for it by CMake GUI)
+  C:\Qt\5.11.1\msvc2015_64\lib\cmake\Qt5Core
+  Qt5Gui_DIR (Don't set this until asked for it by CMake GUI)
+  C:\Qt\5.11.1\msvc2015_64\lib\cmake\Qt5Gui
+  Qt5OpenGL_DIR (Don't set this until asked for it by CMake GUI)
+  C:\Qt\5.11.1\msvc2015_64\lib\cmake\Qt5OpenGL
+  Qt5Widgets_DIR (Don't set this until asked for it by CMake GUI)
+  C:\Qt\5.11.1\msvc2015_64\lib\cmake\Qt5Widgets
 
 
 Tip: Beware of long path names. Can cause "file does not exist" errors in compiler and linker.
@@ -75,12 +87,12 @@ Tip: Build and configure everything in Visual Studio in Release x64 mode.
 When building boost (from source)
   -- Make sure to set the flag in the "b2" program to build shared libraries
 
-    .\bootstrap v12
-    .\b2 link=shared --with-program_options --with-python --with-system --with-filesystem -j8 address-model=64
+    .\bootstrap v14
+    .\b2 link=shared --with-program_options --with-python --with-system --with-filesystem --with-test -j8 address-model=64
 
     Note: --with-filesystem is just used in the GPU examples
 
-    Built in about 1 min
+    Built in about 5 min
 
   -- When the libraries are built, they probably inside $(BOOST_ROOT)/stage/lib.
   I moved them to $(BOOST_ROOT)/lib. (Might not be necessary but whatever.)
@@ -89,8 +101,8 @@ When building boost (from source)
 Versions...
   -- Boost 1.67.0
 
-  -- When downloading Qt, only need to select the version for MSVC 2013 x64.
-    -- I used Qt 5.10.1
+  -- When downloading Qt, only need to select the version for MSVC 2015 x64.
+    -- I used Qt 5.11.1
 
   -- I used HDF5 version 1.8.13. When I tried to build a newer version from source,
   I couldn't get CMake/Visual Studio to find it.

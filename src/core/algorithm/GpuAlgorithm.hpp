@@ -91,12 +91,16 @@ protected:
 
     void save_cuda_device_properties();
 
-    void record_hardware_constraints();
+    // Set m_param_threads_per_block and m_param_num_cuda_streams to maximum allowed by hardware.
+    void init_from_hardware_constraints();
 
     // Initialize only once both scan sequence and excitation have been configured.
     void init_excitation_if_possible ();
     void init_scan_sequence_if_possible ();
     void throw_if_not_configured ();
+
+    // Calculate number of samples in needed radial direction.
+    void init_rf_line_num_samples ();
 
     // to ensure that calls to device beam profile RAII wrapper does not cause segfault.
     void create_dummy_lut_profile();
@@ -122,11 +126,21 @@ protected:
     bool                                                m_scan_sequence_configured;
     bool                                                m_excitation_configured;
 
+    // This method assumes the scatterers all lie in the plane, and uses the empty
+    // elevational component to a point on the transducer.
+    // This distance will be used as the transmit distance in the time projection.
+    // The arc or radial distance to the scatterer (with a zeroed elevational
+    // component) will still be used as the receive distance in time projection.
+    // Scatterers with the same planar coordinates (x,z) will therefore be represent
+    // the impulse response from the transducer as a whole.
+    // In addition, the weight will be 1, i.e. the beam profile (either analytical
+    // or LUT) will be ignored.
+    bool                                                m_use_elev_hack;
+
     // The cuFFT plan used for all transforms.
     CufftBatchedPlanRAII::u_ptr                         m_fft_plan;
 
     DeviceBufferRAII<complex>::u_ptr                    m_device_time_proj;
-    std::vector<HostPinnedBufferRAII<std::complex<float>>::u_ptr>     m_host_rf_lines;
 
     // precomputed excitation FFT with Hilbert mask applied.
     DeviceBufferRAII<complex>::u_ptr                    m_device_excitation_fft;

@@ -37,7 +37,9 @@ namespace bcsim {
 Scanline::Scanline(const vector3& origin, const vector3& direction, const vector3& lateral_dir, float timestamp) :
     origin(origin), direction(direction), lateral_dir(lateral_dir), timestamp(timestamp) {
 
-    elevational_dir = lateral_dir.cross(direction); 
+    // e.g. direction={0,0,1} and lateral_dir={1,0,0} => elevational_dir={0,1,0}
+    // Note: Need to update Algorithm 1, line 2 of OpenBCSim IEEE paper accordingly.
+    elevational_dir = direction.cross(lateral_dir);
 
     // TODO: Should all vectors be normalized here?
 
