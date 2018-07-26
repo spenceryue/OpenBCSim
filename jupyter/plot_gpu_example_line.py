@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 def plot_example_line (filepath):
     with open (filepath, 'rt') as f:
         lines = f.readlines ()
@@ -20,7 +22,13 @@ def plot_example_line (filepath):
 
 if __name__ == '__main__':
     import sys
-    if len (sys.argv) == 2:
-        plot_example_line (sys.argv[1])
-    else:
-        print ('Usage:\tpython {} <output_file.txt>'.format (sys.argv[0]))
+    import argparse
+
+    parser = argparse.ArgumentParser ()
+    parser.add_argument ('--file',
+                         default='../install/bin/GpuExample1/line.txt',
+                         help='Path to the line text file.'
+                        )
+    args = parser.parse_args ()
+
+    plot_example_line (args.file)

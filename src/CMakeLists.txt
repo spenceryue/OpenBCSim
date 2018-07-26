@@ -74,7 +74,12 @@ endif ()
 
 if (BCSIM_ENABLE_CUDA)
     # default flags for JIT compilation targeting Kepler and Maxwell, with "fast-math" enabled.
-    set(CUDA_NVCC_FLAGS_DEFAULT "-gencode=arch=compute_30,code=sm_30;-gencode=arch=compute_61,code=sm_61;-use_fast_math")
+    set(CUDA_NVCC_FLAGS_DEFAULT
+      "-arch=sm_61 \
+       -gencode=arch=compute_30,code=sm_30 \
+       -gencode=arch=compute_61,code=sm_61 \
+       -use_fast_math"
+      )
     if (CMAKE_COMPILER_IS_GNUCXX)
         # must explicitly enable C++11 with GCC. Also, position independent code is
         # required on 64-bit systems, but should also work on 32-bit.

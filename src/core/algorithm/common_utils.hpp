@@ -35,9 +35,9 @@ namespace bcsim {
 // Compute the required number of RF samples for a single image line
 // given the sound speed [m/s], line length [m], and temporal sampling freq. [Hz]
 template <typename T>
-size_t compute_num_rf_samples(T sound_speed, T line_length, T sampling_freq) {
+unsigned int compute_num_rf_samples(T sound_speed, T line_length, T sampling_freq) {
     auto max_time = static_cast<T>(2.0*line_length/sound_speed);
-    return static_cast<size_t>(std::floor(sampling_freq*max_time + 0.5)); 
+    return static_cast<unsigned int>(std::floor(sampling_freq*max_time + 0.5)); 
 }
 
 // When evaluating a spline as a sum of control points and basis functions,

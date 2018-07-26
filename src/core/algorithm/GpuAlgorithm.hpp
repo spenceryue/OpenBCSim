@@ -119,7 +119,14 @@ protected:
     ExcitationSignal                                    m_excitation;
 
     // number of samples in the time-projection lines [should be a power of two]
-    size_t                                              m_rf_line_num_samples;
+    // Power of two limitation is due to cuFFT not any of OpenBCSim's kernels.
+    // Precision of cuFFT is much worse for non-power-of-two length inputs.
+    // See: https://devtalk.nvidia.com/default/topic/411050/cufft-and-fftw-numeric-accuracy/
+    unsigned int                                        m_rf_line_num_samples;
+
+    // Whether to shift the RF data forward by m_excitation.center_index so that
+    // the response pulses are centered at the physical scatterer location.
+    bool                                                m_use_delay_compensation;
 
     // Configuration flags needed to ensure everything is configured
     // before doing the simulations.
@@ -135,6 +142,7 @@ protected:
     // the impulse response from the transducer as a whole.
     // In addition, the weight will be 1, i.e. the beam profile (either analytical
     // or LUT) will be ignored.
+    // See additional comments in cuda_kernels_fixed.cuh:40-47.
     bool                                                m_use_elev_hack;
 
     // The cuFFT plan used for all transforms.
@@ -147,7 +155,7 @@ protected:
 
     // Pair of (m_rf_line_num_samples, m_scan_sequence->get_num_lines ()).
     // Used to determine cuFFT batched transform plan.
-    std::pair<size_t, int>                              m_num_samples_allocated;
+    std::pair<unsigned int, int>                        m_num_samples_allocated;
 
     // it is only possible to change CUDA device before any operations
     // that involve the GPU

@@ -95,10 +95,12 @@ void example (int argc, char **argv)
   std::cout << "  Number of beams (scanlines) in each frame is " << num_beams << ".\n";
   std::cout << "  Simulations will run for " << num_seconds << " seconds." << std::endl;
 
-  // create an instance of the fixed-scatterer GPU algorithm
-  // auto sim = bcsim::Create("gpu_spline2");
+  // create an instance of the spline-scatterer GPU algorithm
   auto sim = bcsim::Create ("gpu");
-  sim->set_parameter ("verbose", "0");
+  // sim->set_parameter ("verbose", "0");
+
+  // test radial decimation
+  sim->set_parameter ("radial_decimation", "10");
 
   // use an analytical Gaussian beam profile
   sim->set_analytical_profile (bcsim::IBeamProfile::s_ptr (new bcsim::GaussianBeamProfile (1e-3, 3e-3)));

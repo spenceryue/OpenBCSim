@@ -47,7 +47,7 @@ std::vector<T> discrete_hilbert_mask(size_t num_samples) {
                 k = static_cast<T>(2);
             } else if (i == num_samples/2) {
                 k = static_cast<T>(1);
-            } 
+            }
             res[i] = k;
         }
     } else {
@@ -58,7 +58,7 @@ std::vector<T> discrete_hilbert_mask(size_t num_samples) {
                 k = static_cast<T>(1);
             } else if ( (i >= 1) && (i < (num_samples+1)/2) ) {
                 k = static_cast<T>(2);
-            } 
+            }
             res[i] = k;
         }
     }

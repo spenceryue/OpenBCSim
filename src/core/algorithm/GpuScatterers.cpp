@@ -9,7 +9,7 @@
 namespace bcsim
 {
 
-DeviceFixedScatterers::DeviceFixedScatterers (size_t num_scatterers)
+DeviceFixedScatterers::DeviceFixedScatterers (unsigned int num_scatterers)
     : m_num_scatterers (num_scatterers)
 {
   const auto num_bytes = num_scatterers * sizeof (float);
@@ -19,7 +19,7 @@ DeviceFixedScatterers::DeviceFixedScatterers (size_t num_scatterers)
   as = DeviceBufferRAII<float>::u_ptr (new DeviceBufferRAII<float> (num_bytes));
 }
 
-size_t DeviceFixedScatterers::get_num_scatterers () const
+unsigned int DeviceFixedScatterers::get_num_scatterers () const
 {
   return m_num_scatterers;
 }
@@ -246,7 +246,7 @@ DeviceSplineScatterers::DeviceSplineScatterers (bcsim::SplineScatterers::s_ptr h
 void DeviceSplineScatterers::copy_information (bcsim::SplineScatterers::s_ptr host_scatterers)
 {
   m_num_scatterers = host_scatterers->num_scatterers ();
-  m_num_cs = host_scatterers->get_num_control_points ();
+  m_num_cs = static_cast<int> (host_scatterers->get_num_control_points ());
   m_spline_degree = host_scatterers->spline_degree;
   m_knots = host_scatterers->knot_vector;
 
@@ -323,7 +323,7 @@ void DeviceSplineScatterers::update (bcsim::SplineScatterers::s_ptr host_scatter
     */
 }
 
-size_t DeviceSplineScatterers::get_num_scatterers () const
+unsigned int DeviceSplineScatterers::get_num_scatterers () const
 {
   return m_num_scatterers;
 }

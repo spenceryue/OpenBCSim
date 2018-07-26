@@ -28,7 +28,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "cuda_kernels_c_interface.h" // for struct LUTProfileGeometry
-#include <assert.h>
 #include <cuComplex.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -38,8 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 template <typename T>
 __global__ void MemsetKernel (T *res, T value, int num_samples)
 {
-  assert (0);
-  const int global_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  const auto global_idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (global_idx < num_samples)
   {
     res[global_idx] = value;
@@ -72,6 +70,7 @@ __device__ __inline__ float ComputeWeightLUT (cudaTextureObject_t lut_tex,
 }
 
 // used to multiply the FFTs
+template <bool normalize>
 __global__ void MultiplyFftKernel (cufftComplex *time_proj_fft, const cufftComplex *filter_fft, int num_samples);
 
 // scale a signal (to avoid losing precision)
@@ -79,7 +78,7 @@ __global__ void ScaleSignalKernel (cufftComplex *signal, float factor, int num_s
 
 // inplace IQ demodulation.
 // normalized_angular_freq = 2*pi*f_demod, where f_demod in [0.0, 0.5]
-__global__ void DemodulateKernel (cuComplex *signal, float normalized_angular_freq, int num_samples, int radial_decimation);
+__global__ void DemodulateKernel (cuComplex *signal, float normalized_angular_freq, int stop_index, int radial_decimation);
 
 // add noise to a signal
 __global__ void AddNoiseKernel (cuComplex *signal, cuComplex *noise, int num_samples);

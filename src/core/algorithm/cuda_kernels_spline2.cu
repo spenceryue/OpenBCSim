@@ -34,7 +34,7 @@ __global__ void SplineAlgKernel(SplineAlgKernelParams params) {
 
     // step 2: compute projections
     float3 point = make_float3(rendered_x, rendered_y, rendered_z) - params.origin;
-    
+
     // compute dot products
     auto radial_dist  = dot(point, params.rad_dir);
     const auto lateral_dist = dot(point, params.lat_dir);
@@ -57,7 +57,7 @@ __global__ void SplineAlgKernel(SplineAlgKernelParams params) {
     }
 
     const int radial_index = static_cast<int>(params.fs_hertz*2.0f*radial_dist/params.sound_speed + 0.5f);
-    
+
     if (radial_index >= 0 && radial_index < params.num_time_samples) {
         if (use_phase_delay) {
             // handle sub-sample displacement with a complex phase

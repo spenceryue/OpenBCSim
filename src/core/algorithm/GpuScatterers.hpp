@@ -15,9 +15,9 @@ public:
     typedef std::shared_ptr<DeviceFixedScatterers> s_ptr;
 
     // Allocate space for a new dataset with num_scatterers scatterers.
-    explicit DeviceFixedScatterers(size_t num_scatterers);
+    explicit DeviceFixedScatterers(unsigned int num_scatterers);
     
-    size_t get_num_scatterers() const;
+    unsigned int get_num_scatterers() const;
 
     float* get_xs_ptr() const;
 
@@ -33,7 +33,7 @@ private:
     DeviceBufferRAII<float>::u_ptr zs;
     DeviceBufferRAII<float>::u_ptr as;
 
-    size_t m_num_scatterers;
+    unsigned int m_num_scatterers;
 };
 
 // Device memory for multiple fixed-scatterer datasets
@@ -91,7 +91,7 @@ public:
     // update an existing dataset (will only reallocate memory if the new size is different from the previous)
     void update(bcsim::SplineScatterers::s_ptr host_scatterers);
 
-    size_t get_num_scatterers() const;
+    unsigned int get_num_scatterers() const;
 
     float* get_xs_ptr() const;
 
@@ -109,7 +109,7 @@ public:
 
 private:
     // the number of spline-scatterers
-    size_t                              m_num_scatterers;
+    unsigned int                        m_num_scatterers;
 
     // the knot vector common for all splines
     std::vector<float>                  m_knots;

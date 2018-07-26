@@ -47,11 +47,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace bcsim
 {
 GpuAlgorithm::GpuAlgorithm ()
-    : m_rf_line_num_samples (-1),
+    : m_use_delay_compensation (true),
       // The below initializations are necessary
       // because VS2013 has incorrect semantics for
       // value-initialization.
-      // i.e. Stuff isn't 0/false/null when it should be.
+      // i.e. Stuff isn't 0/false/nullptr when it should be.
       // See: https://stackoverflow.com/q/27668269/3624264
       m_scan_sequence_configured (false),
       m_excitation_configured (false),
@@ -87,7 +87,7 @@ void GpuAlgorithm::set_parameter (const std::string &key, const std::string &val
       throw std::runtime_error ("cannot change CUDA device now");
     }
     const auto device_count = get_num_cuda_devices ();
-    const int device_no = std::stoi (value);
+    const auto device_no = std::stoi (value);
     if (device_no < 0 || device_no >= device_count)
     {
       throw std::runtime_error ("illegal device number");
@@ -156,6 +156,21 @@ void GpuAlgorithm::set_parameter (const std::string &key, const std::string &val
     else if ((value == "off") || (value == "false"))
     {
       m_use_elev_hack = false;
+    }
+    else
+    {
+      throw std::runtime_error ("invalid value");
+    }
+  }
+  else if (key == "use_delay_compensation")
+  {
+    if ((value == "on") || (value == "true"))
+    {
+      m_use_delay_compensation = true;
+    }
+    else if ((value == "off") || (value == "false"))
+    {
+      m_use_delay_compensation = false;
     }
     else
     {
@@ -271,7 +286,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
 
   for (int beam_no = 0; beam_no < num_lines; beam_no++)
   {
-    size_t stream_no = beam_no % m_param_num_cuda_streams;
+    auto stream_no = beam_no % m_param_num_cuda_streams;
     auto cur_stream = m_stream_wrappers[stream_no]->get ();
 
     std::unique_ptr<EventTimerRAII> event_timer;
@@ -294,7 +309,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     {
       event_timer->restart ();
     }
-    std::cout << "launch_MemsetKernel to (" << complex_zero.x << ", " << complex_zero.y << ")" << std::endl;
+    m_log_object->write (ILog::DEBUG, "launch_MemsetKernel...");
     launch_MemsetKernel<cuComplex> (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, complex_zero, m_rf_line_num_samples);
 
     if (m_store_kernel_details)
@@ -309,12 +324,12 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     {
       const auto device_dataset = m_device_fixed_datasets.get_dataset (dset_idx);
       const auto num_scatterers = device_dataset->get_num_scatterers ();
-      const int num_blocks = round_up_div (num_scatterers, m_param_threads_per_block);
+      const auto num_blocks = round_up_div (num_scatterers, m_param_threads_per_block);
       if (num_blocks > m_cur_device_prop.maxGridSize[0])
       {
         throw std::runtime_error ("required number of x-blocks is larger than device supports (fixed scatterers)");
       }
-      std::cout << "fixed_projection_kernel..." << std::endl;
+      m_log_object->write (ILog::DEBUG, "fixed_projection_kernel...");
       fixed_projection_kernel (stream_no, scanline, num_blocks, rf_ptr, device_dataset);
 
       if (m_store_kernel_details)
@@ -332,7 +347,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       {
         const auto device_dataset = m_device_rendered_spline_datasets.get_dataset (dset_idx);
         const auto num_scatterers = device_dataset->get_num_scatterers ();
-        const int num_blocks = round_up_div (num_scatterers, m_param_threads_per_block);
+        const auto num_blocks = round_up_div (num_scatterers, m_param_threads_per_block);
         if (num_blocks > m_cur_device_prop.maxGridSize[0])
         {
           throw std::runtime_error ("required number of x-blocks is larger than device supports (spline scatterers)");
@@ -346,7 +361,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       {
         const auto device_dataset = m_device_spline_datasets.get_dataset (dset_idx);
         const auto num_scatterers = device_dataset->get_num_scatterers ();
-        const int num_blocks = round_up_div (num_scatterers, m_param_threads_per_block);
+        const auto num_blocks = round_up_div (num_scatterers, m_param_threads_per_block);
         if (num_blocks > m_cur_device_prop.maxGridSize[0])
         {
           throw std::runtime_error ("required number of x-blocks is larger than device supports (spline scatterers)");
@@ -363,12 +378,13 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
   }
 
   // block to ensure that all operations are completed
+  m_log_object->write (ILog::DEBUG, "cudaDeviceSynchronize 1...");
   cudaErrorCheck (cudaDeviceSynchronize ());
 
   if (m_param_noise_amplitude > 0.0f)
   {
-    const int threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
-    const auto num_samples = static_cast<int> (num_lines * m_rf_line_num_samples);
+    const auto threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
+    const auto num_samples = num_lines * m_rf_line_num_samples;
     const auto complex_ptr = reinterpret_cast<cuComplex *> (m_device_random_buffer->data ());
     cudaStream_t stream = 0;
     launch_AddNoiseKernel (num_samples / threads_per_line, threads_per_line, stream, complex_ptr, m_device_time_proj->data (), num_samples);
@@ -383,12 +399,14 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
   }
 
   // in-place batched forward FFT, using default stream 0
+  m_log_object->write (ILog::DEBUG, "cftExecC2C FORWARD...");
   cufftErrorCheck (cufftExecC2C (m_fft_plan->get (), m_device_time_proj->data (), m_device_time_proj->data (), CUFFT_FORWARD));
   if (m_store_kernel_details)
   {
     const auto elapsed_ms = static_cast<double> (event_timer->stop ());
     m_debug_data["kernel_forward_fft_ms"].push_back (elapsed_ms);
   }
+  m_log_object->write (ILog::DEBUG, "cudaDeviceSynchronize 2...");
   cudaErrorCheck (cudaDeviceSynchronize ());
 
   // Multiply kernel
@@ -408,10 +426,8 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
 
     // multiply with FFT of impulse response w/Hilbert transform
     int threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
-    std::cout << "launch_MultiplyFftKernel..." << std::endl;
-    launch_MultiplyFftKernel (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, m_device_excitation_fft->data (), m_rf_line_num_samples);
-    std::cout << "launch_ScaleSignalKernel..." << std::endl;
-    launch_ScaleSignalKernel (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, 1.0f / m_rf_line_num_samples, m_rf_line_num_samples);
+    m_log_object->write (ILog::DEBUG, "launch_MultiplyFftKernel...");
+    launch_MultiplyFftKernel<true> (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, m_device_excitation_fft->data (), m_rf_line_num_samples);
     if (m_store_kernel_details)
     {
       const auto elapsed_ms = static_cast<double> (event_timer->stop ());
@@ -419,31 +435,40 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     }
   }
 
-  // in-place batched backward FFT, using default stream 0
+  // In-place batched backward FFT, using default stream 0
   if (m_store_kernel_details)
   {
     event_timer->restart ();
   }
+  m_log_object->write (ILog::DEBUG, "cudaDeviceSynchronize 3...");
   cudaErrorCheck (cudaDeviceSynchronize ());
-    std::cout << "cufftExecC2C..." << std::endl;
+
+  m_log_object->write (ILog::DEBUG, "cftExecC2C INVERSE...");
   cufftErrorCheck (cufftExecC2C (m_fft_plan->get (), m_device_time_proj->data (), m_device_time_proj->data (), CUFFT_INVERSE));
-    std::cout << "launch_ScaleSignalKernel..." << std::endl;
-  launch_ScaleSignalKernel (m_rf_line_num_samples * num_lines / m_param_threads_per_block, m_param_threads_per_block, 0, m_device_time_proj->data (), 1.0f / m_rf_line_num_samples, m_rf_line_num_samples * num_lines);
+
   if (m_store_kernel_details)
   {
     const auto elapsed_ms = static_cast<double> (event_timer->stop ());
     m_debug_data["kernel_inverse_fft_ms"].push_back (elapsed_ms);
   }
+
+  m_log_object->write (ILog::DEBUG, "cudaDeviceSynchronize 4...");
   cudaErrorCheck (cudaDeviceSynchronize ());
 
   rf_lines.clear ();
+  int delay_compensation_num_samples = 0;
+  if (m_use_delay_compensation)
+  {
+    delay_compensation_num_samples = m_excitation.center_index;
+  }
+
   for (int beam_no = 0; beam_no < num_lines; beam_no++)
   {
     size_t stream_no = beam_no % m_param_num_cuda_streams;
     auto cur_stream = m_stream_wrappers[stream_no]->get ();
 
-    // compute current offset into device buffer
-    auto rf_ptr = m_device_time_proj->data () + beam_no * m_rf_line_num_samples;
+    // compute current offset into device buffer, accounting for radial decimation
+    auto rf_ptr = m_device_time_proj->data () + beam_no * m_rf_line_num_samples + delay_compensation_num_samples;
 
     std::unique_ptr<EventTimerRAII> event_timer;
     if (m_store_kernel_details)
@@ -458,14 +483,16 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     const float norm_f_demod = f_demod / m_excitation.sampling_frequency;
     const float PI = static_cast<float> (4.0 * std::atan (1));
     const auto normalized_angular_freq = 2 * PI * norm_f_demod;
-    const int num_blocks = round_up_div (m_rf_line_num_samples, m_radial_decimation * threads_per_line);
-    std::cout << "launch_DemodulateKernel..." << std::endl;
+    const auto stop_index = m_rf_line_num_samples;
+    const auto num_samples = (stop_index - delay_compensation_num_samples - 1) / m_radial_decimation + 1;
+    const auto num_blocks = round_up_div (num_samples, threads_per_line);
+    m_log_object->write (ILog::DEBUG, "launch_DemodulateKernel...");
     launch_DemodulateKernel (num_blocks,
                              threads_per_line,
                              cur_stream,
                              rf_ptr,
                              normalized_angular_freq,
-                             m_rf_line_num_samples,
+                             stop_index,
                              m_radial_decimation);
 
     if (m_store_kernel_details)
@@ -475,19 +502,17 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       event_timer->restart ();
     }
 
-    // Copy to host, accounting for radial decimation.
-    const auto delay_compensation_num_samples = static_cast<size_t> (m_excitation.center_index);
-    const auto size = round_up_div (m_rf_line_num_samples, m_radial_decimation);
-    rf_lines.emplace_back (size);
-    auto dest = rf_lines.back ().data () + delay_compensation_num_samples;
+    // Copy to host
+    rf_lines.emplace_back (num_samples);
+    auto dest = rf_lines.back ().data ();
     const auto dpitch = sizeof (std::complex<float>);
     const auto src = rf_ptr;
-    const auto spitch = m_radial_decimation * dpitch;
-    const auto width = dpitch;
-    const auto height = size - delay_compensation_num_samples;
+    const auto spitch = m_radial_decimation * sizeof (complex);
+    const auto width = sizeof (complex);
+    const auto height = num_samples;
 
-    std::cout << "cudaMemcpy2DAsync..." << std::endl;
-    cudaErrorCheck (cudaMemcpy2DAsync (dest, dpitch, src, spitch, width, height, cudaMemcpyDeviceToHost, cur_stream));
+    m_log_object->write (ILog::DEBUG, "cudaMemcpy2DAsync...");
+    cudaErrorCheck (cudaMemcpy2DAsync (dest, dpitch, rf_ptr, spitch, width, height, cudaMemcpyDeviceToHost, cur_stream));
 
     if (m_store_kernel_details)
     {
@@ -495,6 +520,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       m_debug_data["kernel_memcpy_ms"].push_back (elapsed_ms);
     }
   }
+  m_log_object->write (ILog::DEBUG, "cudaDeviceSynchronize 5...");
   cudaErrorCheck (cudaDeviceSynchronize ());
 }
 
@@ -558,8 +584,8 @@ void GpuAlgorithm::init_excitation_if_possible ()
 
   // Result: u + i * H[u] where u is the excitation signal, i is sqrt(-1), H[.] is the Hilbert transform operator
   cudaStream_t cuda_stream = 0;
-  launch_ScaleSignalKernel (m_rf_line_num_samples / m_param_threads_per_block, m_param_threads_per_block, cuda_stream, m_device_excitation_fft->data (), 1.0f / m_rf_line_num_samples, m_rf_line_num_samples);
-  launch_MultiplyFftKernel (m_rf_line_num_samples / m_param_threads_per_block, m_param_threads_per_block, cuda_stream, m_device_excitation_fft->data (), device_hilbert_mask.data (), m_rf_line_num_samples);
+  // Note: This Hilbert transform multiplication mask doesn't require normalization. (See the `discrete_hilbert_mask` implementation to see why.)
+  launch_MultiplyFftKernel<false> (m_rf_line_num_samples / m_param_threads_per_block, m_param_threads_per_block, cuda_stream, m_device_excitation_fft->data (), device_hilbert_mask.data (), m_rf_line_num_samples);
 }
 
 void GpuAlgorithm::init_scan_sequence_if_possible ()
@@ -574,17 +600,17 @@ void GpuAlgorithm::init_scan_sequence_if_possible ()
   m_log_object->write (ILog::INFO, "num_beams: " + std::to_string (num_beams));
 
   // Return early if samples allocated doesn't change.
-  const auto new_num_samples_allocated = std::pair<size_t, int>{m_rf_line_num_samples, num_beams};
+  const auto new_num_samples_allocated = std::pair<unsigned int, int>{m_rf_line_num_samples, num_beams};
   if (new_num_samples_allocated == m_num_samples_allocated)
   {
     return;
   }
 
   // Make CuFFT plan
-  const auto num_samples = static_cast<int> (m_rf_line_num_samples);
-  const auto batch = static_cast<int> (num_beams);
-  const int rank = 1;
-  int dims[] = {m_rf_line_num_samples};
+  const auto num_samples = m_rf_line_num_samples;
+  const auto batch = num_beams;
+  const auto rank = 1;
+  int dims[] = {static_cast<int> (m_rf_line_num_samples)};
   m_log_object->write (ILog::INFO, "Reconfiguring cuFFT batched plan");
   m_log_object->write (ILog::INFO, "batch = " + std::to_string (batch));
   m_fft_plan = CufftBatchedPlanRAII::u_ptr (new CufftBatchedPlanRAII (rank, dims, num_samples, CUFFT_C2C, batch));
@@ -614,8 +640,16 @@ void GpuAlgorithm::init_rf_line_num_samples ()
 
   const auto line_length = m_scan_sequence->line_length;
   const auto sampling_frequency = m_excitation.sampling_frequency;
+
+  // Calculate samples required for given depth (line_length)
   m_rf_line_num_samples = compute_num_rf_samples (m_param_sound_speed, line_length, sampling_frequency);
-  // m_rf_line_num_samples = next_power_of_two (m_rf_line_num_samples);
+
+  // Add padding for convolution (with excitation signal)
+  m_rf_line_num_samples += static_cast<unsigned int> (m_excitation.samples.size ()) - 1;
+
+  // Round up to next power of two
+  m_rf_line_num_samples = next_power_of_two (m_rf_line_num_samples);
+
   m_log_object->write (ILog::INFO, "m_rf_line_num_samples: " + std::to_string (m_rf_line_num_samples));
 }
 
@@ -719,10 +753,10 @@ void GpuAlgorithm::set_lookup_profile (IBeamProfile::s_ptr beam_profile)
 void GpuAlgorithm::dump_orthogonal_lut_slices (const std::string &raw_path)
 {
   const auto write_raw = [&](float3 origin, float3 dir0, float3 dir1, std::string raw_file) {
-    const int num_samples = m_param_threads_per_block;
-    const int total_num_samples = num_samples * num_samples;
-    const int num_bytes = sizeof (float) * total_num_samples;
-    DeviceBufferRAII<float> device_slice (static_cast<size_t> (num_bytes));
+    const auto num_samples = m_param_threads_per_block;
+    const auto total_num_samples = num_samples * num_samples;
+    const auto num_bytes = sizeof (float) * total_num_samples;
+    DeviceBufferRAII<float> device_slice (num_bytes);
 
     //dim3 grid_size (num_samples, num_samples, 1);
     //dim3 block_size (1, 1, 1);
@@ -754,7 +788,7 @@ void GpuAlgorithm::dump_orthogonal_lut_slices (const std::string &raw_path)
   // 6 equally spaced lateral-elevational slices of [0.0, 1.0]
   for (int i = 0; i <= 5; i++)
   {
-    write_raw (make_float3 (0.0f, 0.0f, static_cast<float> (i) / 5),
+    write_raw (make_float3 (0.0f, 0.0f, i / 5.0f),
                make_float3 (1.0f, 0.0f, 0.0f),
                make_float3 (0.0f, 1.0f, 0.0f),
                raw_path + "lut_slice_lat_ele_" + std::to_string (i) + ".raw");
@@ -959,7 +993,7 @@ void GpuAlgorithm::spline_projection_kernel (int stream_no, const Scanline &scan
   params.ele_dir = to_float3 (scanline.get_elevational_dir ());
   params.origin = to_float3 (scanline.get_origin ());
   params.fs_hertz = m_excitation.sampling_frequency;
-  params.num_time_samples = static_cast<int> (m_rf_line_num_samples);
+  params.num_time_samples = m_rf_line_num_samples;
   params.sigma_lateral = m_analytical_sigma_lat;
   params.sigma_elevational = m_analytical_sigma_ele;
   params.sound_speed = m_param_sound_speed;
@@ -1048,6 +1082,14 @@ std::string GpuAlgorithm::get_parameter (const std::string &key) const
     cudaDeviceProp prop;
     cudaErrorCheck (cudaGetDeviceProperties (&prop, m_param_cuda_device_no));
     return prop.name;
+  }
+  else if (key == "use_elev_hack")
+  {
+    return std::to_string (m_use_elev_hack);
+  }
+  else if (key == "use_delay_compensation")
+  {
+    return std::to_string (m_use_delay_compensation);
   }
   else
   {

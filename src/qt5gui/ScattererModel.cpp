@@ -44,19 +44,19 @@ void BaseScattererModel::precompute_template(trianglemesh3d::ITriangleMesh3d::u_
 
 
 void SplineScattererModel::setTimestamp(float timestamp) {
-    size_t num_splines = m_splines.size();
+    unsigned int num_splines = static_cast<unsigned int> (m_splines.size());
     m_data.clear();
         
     // Each scatterer has one point and one normal vector
     m_data.reserve(num_splines*2*3);
     
     // Evaluate all splines in timestamp
-    for (size_t i = 0; i < num_splines; i++) {
+    for (unsigned int i = 0; i < num_splines; i++) {
         // Evaluate scatterer position
         bcsim::vector3 p = RenderCurve<float, bcsim::vector3>(m_splines[i], timestamp);
         
         // Add a correctly positioned cube in each scatterer position
-        for (size_t i = 0; i < m_cube_points.size()/3; i++) {
+        for (int i = 0; i < m_cube_points.size()/3; i++) {
             m_data.push_back(m_cube_points[3*i]  *m_scatterer_radius + p.x);
             m_data.push_back(m_cube_points[3*i+1]*m_scatterer_radius + p.y);
             m_data.push_back(m_cube_points[3*i+2]*m_scatterer_radius + p.z);
@@ -68,23 +68,23 @@ void SplineScattererModel::setTimestamp(float timestamp) {
 }
 
 void SplineScattererModel::setSplines(const std::vector<SplineCurve<float, bcsim::vector3> >& splines) {
-    size_t num_splines = splines.size();
+    auto num_splines = splines.size();
     m_splines = splines;
 }
 
 void FixedScattererModel::setPoints(const std::vector<bcsim::vector3>& points) {
-    size_t num_points = points.size();
+	unsigned int num_points = static_cast<unsigned int> (points.size());
     m_data.clear();
         
     // Each scatterer has one point and one normal vector
     m_data.reserve(num_points*2*3);
     
     // Evaluate all splines in timestamp
-    for (size_t i = 0; i < num_points; i++) {
+    for (unsigned int i = 0; i < num_points; i++) {
         auto p = points[i];
         
         // Add a correctly positioned cube in each scatterer position
-        for (size_t i = 0; i < m_cube_points.size()/3; i++) {
+        for (int i = 0; i < m_cube_points.size()/3; i++) {
             m_data.push_back(m_cube_points[3*i]  *m_scatterer_radius + p.x);
             m_data.push_back(m_cube_points[3*i+1]*m_scatterer_radius + p.y);
             m_data.push_back(m_cube_points[3*i+2]*m_scatterer_radius + p.z);

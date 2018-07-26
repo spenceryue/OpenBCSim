@@ -99,9 +99,9 @@ void example (int argc, char **argv)
   std::cout << "  Calls to simulate_lines() enables?: " << enable_simulate_lines << std::endl;
 
   // create an instance of the fixed-scatterer GPU algorithm
-  // auto sim = bcsim::Create("gpu_fixed");
   auto sim = bcsim::Create ("gpu");
-  sim->set_parameter ("verbose", "0");
+  // sim->set_parameter ("verbose", "0");
+  printf ("WHAT IS MY `verbose`?.............................%s\n", sim->get_parameter ("verbose"));
 
   // use an analytical Gaussian beam profile
   sim->set_analytical_profile (bcsim::IBeamProfile::s_ptr (new bcsim::GaussianBeamProfile (1e-3, 3e-3)));
@@ -119,6 +119,9 @@ void example (int argc, char **argv)
 
   // define sound speed
   sim->set_parameter ("sound_speed", "1540.0");
+
+  // test radial decimation
+  sim->set_parameter ("radial_decimation", "10");
 
   // configure a scan sequence consisting of a single RF line
   const auto line_length = 0.12f;
@@ -170,8 +173,6 @@ void example (int argc, char **argv)
       sim->clear_fixed_scatterers ();
       sim->add_fixed_scatterers (scatterers);
     }
-
-    sim->set_scan_sequence (scanseq);
 
     if (enable_simulate_lines)
     {

@@ -143,3 +143,5 @@ protected:
 
 }   // namespace
 
+// template class DLL_PUBLIC std::allocator<float>;
+// template class DLL_PUBLIC std::vector<float>;

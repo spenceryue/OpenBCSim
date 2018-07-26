@@ -1,7 +1,6 @@
 #pragma once
 #include "cuda_helpers.h" // for operator-
 #include "cuda_kernels_c_interface.h"
-#include <assert.h>
 #include <cuComplex.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
@@ -15,8 +14,7 @@ __global__ void SliceLookupTable (float3 origin,
 template <bool use_elev_hack, bool use_arc_projection, bool use_phase_delay, bool use_lut>
 __global__ void FixedAlgKernel (FixedAlgKernelParams params)
 {
-  assert (0);
-  const int global_idx = blockIdx.x * blockDim.x + threadIdx.x;
+  const auto global_idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (global_idx >= params.num_scatterers)
   {
     return;
@@ -45,7 +43,9 @@ __global__ void FixedAlgKernel (FixedAlgKernelParams params)
       // to a different aperture element of the transducer.
 
       // Divide by 2 to make up for multiplying by 2 in radial_index formula
-      const float dist = (norm3df (point.x, 0, point.z) + elev_dist) / 2;
+      // The y-component is replaced with just the beam-origin y-component
+      // because the true scatterer is assumed to lie in the plane.
+      const float dist = (norm3df (point.x, params.origin.y, point.z) + elev_dist) / 2;
       radial_dist = copysignf (dist, radial_dist);
     }
     else
@@ -82,9 +82,9 @@ __global__ void FixedAlgKernel (FixedAlgKernelParams params)
     if (use_phase_delay)
     {
       // handle sub-sample displacement with a complex phase
-      const auto true_index = params.fs_hertz * 2.0f * radial_dist / params.sound_speed;
-      const float ss_delay = (radial_index - true_index) / params.fs_hertz;
-      const float complex_phase = 6.283185307179586 * params.demod_freq * ss_delay;
+      const auto true_index = params.fs_hertz * 2.0 * radial_dist / params.sound_speed;
+      const auto ss_delay = (radial_index - true_index) / params.fs_hertz;
+      const auto complex_phase = 6.283185307179586 * params.demod_freq * ss_delay;
 
       // exp(i*theta) = cos(theta) + i*sin(theta)
       float sin_value, cos_value;
@@ -99,6 +99,4 @@ __global__ void FixedAlgKernel (FixedAlgKernelParams params)
       atomicAdd (&(params.res[radial_index].x), weight * params.point_as[global_idx]);
     }
   }
-  assert (!isnan (params.res[radial_index].x));
-  assert (!isnan (params.res[radial_index].y));
 }

@@ -49,8 +49,8 @@ namespace bcsim
 {
 void CpuAlgorithm::projection_loop (FixedScatterers::s_ptr fixed_scatterers, const Scanline &line, std::complex<float> *time_proj_signal, size_t num_time_samples)
 {
-  const int num_scatterers = fixed_scatterers->scatterers.size ();
-  for (int scatterer_no = 0; scatterer_no < num_scatterers; scatterer_no++)
+  const unsigned int num_scatterers = static_cast<unsigned int> (fixed_scatterers->scatterers.size ());
+  for (unsigned int scatterer_no = 0; scatterer_no < num_scatterers; scatterer_no++)
   {
     const PointScatterer &scatterer = fixed_scatterers->scatterers[scatterer_no];
 
@@ -88,11 +88,11 @@ void CpuAlgorithm::projection_loop (FixedScatterers::s_ptr fixed_scatterers, con
     {
       // handle sub-sample displacement with a complex phase
       const auto true_index = r * 2.0 * m_excitation.sampling_frequency / (m_param_sound_speed);
-      const float ss_delay = (closest_index - true_index) / m_excitation.sampling_frequency;
-      const float complex_phase = 6.283185307179586 * m_excitation.demod_freq * ss_delay;
+      const auto ss_delay = (closest_index - true_index) / m_excitation.sampling_frequency;
+      const auto complex_phase = 6.283185307179586 * m_excitation.demod_freq * ss_delay;
 
       // phase-delay
-      time_proj_signal[closest_index] += scaled_ampl * std::exp (std::complex<float> (0.0f, complex_phase));
+      time_proj_signal[closest_index] += scaled_ampl * std::exp (std::complex<float> (0.0f, static_cast<float> (complex_phase)));
     }
     else
     {
@@ -106,7 +106,7 @@ void CpuAlgorithm::projection_loop (SplineScatterers::s_ptr spline_scatterers, c
   const int num_scatterers = spline_scatterers->num_scatterers ();
 
   // The number of control points most be at least one more than the degree
-  const int num_control_points = spline_scatterers->get_num_control_points ();
+  const auto num_control_points = spline_scatterers->get_num_control_points ();
   if (num_control_points <= spline_scatterers->spline_degree)
   {
     throw std::runtime_error ("too few spline control points for given degree");
@@ -117,7 +117,7 @@ void CpuAlgorithm::projection_loop (SplineScatterers::s_ptr spline_scatterers, c
   int mu = bspline_storve::compute_knot_interval (spline_scatterers->knot_vector, line.get_timestamp ());
 
   int lower_lim = 0;
-  int upper_lim = num_control_points - 1;
+  int upper_lim = static_cast<int> (num_control_points - 1);
   if (m_param_sum_all_cs)
   {
     m_log_object->write (ILog::DEBUG, "In debug mode: summing over i = " + std::to_string (lower_lim) + "..." + std::to_string (upper_lim));
@@ -166,8 +166,8 @@ void CpuAlgorithm::projection_loop (SplineScatterers::s_ptr spline_scatterers, c
     }
 
     // Add scaled amplitude to closest index
-    const float sampling_time_step = 1.0 / m_excitation.sampling_frequency;
-    int closest_index = (int)std::floor (r * 2.0 / (m_param_sound_speed * sampling_time_step) + 0.5f);
+    const float sampling_time_step = 1.0f / m_excitation.sampling_frequency;
+    int closest_index = (int)std::floor (r * 2.0f / (m_param_sound_speed * sampling_time_step) + 0.5f);
 
     float scaled_ampl = m_beam_profile->sampleProfile (r, l, e) * spline_scatterers->amplitudes[scatterer_no];
 
@@ -180,12 +180,12 @@ void CpuAlgorithm::projection_loop (SplineScatterers::s_ptr spline_scatterers, c
     if (m_enable_phase_delay)
     {
       // handle sub-sample displacement with a complex phase
-      const auto true_index = r * 2.0 / (m_param_sound_speed * sampling_time_step);
-      const float ss_delay = (closest_index - true_index) / m_excitation.sampling_frequency;
-      const float complex_phase = 6.283185307179586 * m_excitation.demod_freq * ss_delay;
+      const double true_index = r * 2.0 / (m_param_sound_speed * sampling_time_step);
+      const double ss_delay = (closest_index - true_index) / m_excitation.sampling_frequency;
+      const double complex_phase = 6.283185307179586 * m_excitation.demod_freq * ss_delay;
 
       // phase-delay
-      time_proj_signal[closest_index] += scaled_ampl * std::exp (std::complex<float> (0.0f, complex_phase));
+      time_proj_signal[closest_index] += scaled_ampl * std::exp (std::complex<float> (0.0f, static_cast<float> (complex_phase)));
     }
     else
     {

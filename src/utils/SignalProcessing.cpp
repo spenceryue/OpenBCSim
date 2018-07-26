@@ -58,7 +58,7 @@ std::vector<T> FirWin(int length, T fc) {
         if (n == 0) {
             temp = 2*fc;
         } else {
-            temp = std::sin(2*PI*fc*n)/(PI*n);
+            temp = static_cast<T> (std::sin(2*PI*fc*n)/(PI*n));
         }
         h.push_back(temp);
     }

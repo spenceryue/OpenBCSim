@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #pragma once
+#include "export_macros.hpp"
 #include <cmath>
 
 namespace bcsim {
@@ -35,7 +36,7 @@ namespace bcsim {
 // Lightweight implementation of three-dimensional vectors
 // and associated operations.
 template <typename T>
-class Vector3D {
+class DLL_PUBLIC Vector3D {
 public:
     Vector3D () : x(static_cast<T>(0.0)),
                  y(static_cast<T>(0.0)),

@@ -62,7 +62,6 @@ private:
 };
 
 // RAII wrapper for pinned host memory.
-// Note: Unused in OpenBCSim after removing it in GpuAlgorithm.cpp (7/24/18)
 template <typename T>
 class HostPinnedBufferRAII
 {

@@ -100,7 +100,7 @@ public:
   }
 };
 
-struct Interval
+struct DLL_PUBLIC Interval
 {
 public:
   Interval (float t0, float t1) : first (t0), last (t1) {}
@@ -194,7 +194,7 @@ struct SplineScatterers : public Scatterers
       throw std::logic_error ("invalid spline configuration");
     }
     start_time = knot_vector[spline_degree];
-    end_time = knot_vector[num_cs] - 1e-5; // "end-hack"
+    end_time = knot_vector[num_cs] - 1e-5f; // "end-hack"
   }
 
   // Spline degree and knot vector are common for

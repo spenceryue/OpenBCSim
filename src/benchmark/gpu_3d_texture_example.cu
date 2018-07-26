@@ -70,24 +70,24 @@ void test1() {
     const size_t num_samples_y = 32;   // aka. height
     const size_t num_samples_z = 1024;  // aka. depth
 
-    const auto x_min = -2e-2;
-    const auto x_max = 2e-2;
-    const auto y_min = -2e-2;
-    const auto y_max = 2e-2;
+    const auto x_min = -2e-2f;
+    const auto x_max = 2e-2f;
+    const auto y_min = -2e-2f;
+    const auto y_max = 2e-2f;
 
     // radius
-    const auto r_min = 5e-3;        // at z_min
-    const auto r_max = 13e-3;       // at z_max
+    const auto r_min = 5e-3f;        // at z_min
+    const auto r_max = 13e-3f;       // at z_max
 
     std::vector<float> host_input_buffer = get_gaussian_samples(x_min, x_max, y_min, y_max, r_min, r_max,
                                                                 num_samples_x, num_samples_y, num_samples_z);
-    
+
     // allocate CUDA 3D array in device memory
     // channelDesc describes the format of the value returned when fetching the texture
     // ==> float texels (32, 0, 0, 0)
     auto channel_desc = cudaCreateChannelDesc(32, 0, 0, 0, cudaChannelFormatKindFloat);
     cudaArray* cu_array_3d;
-    
+
     // Stackoverflow:
     //  Because you are allocating an array with cudaMalloc3DArray, use the width in elements.
     //  If you were using cudaMalloc3D, the extent would have a width in bytes
@@ -98,7 +98,7 @@ void test1() {
 
     // copy input data from host to CUDA 3D array
     cudaMemcpy3DParms par_3d = {0};
-    par_3d.srcPtr = make_cudaPitchedPtr(host_input_buffer.data(), num_samples_x*sizeof(float), num_samples_x, num_samples_y); 
+    par_3d.srcPtr = make_cudaPitchedPtr(host_input_buffer.data(), num_samples_x*sizeof(float), num_samples_x, num_samples_y);
     par_3d.dstArray = cu_array_3d;
     par_3d.extent = extent;
     par_3d.kind = cudaMemcpyHostToDevice;
@@ -159,14 +159,14 @@ void test2() {
     const size_t num_samples_y = 32;   // aka. height
     const size_t num_samples_z = 1024;  // aka. depth
 
-    const auto x_min = -2e-2;
-    const auto x_max = 2e-2;
-    const auto y_min = -2e-2;
-    const auto y_max = 2e-2;
+    const auto x_min = -2e-2f;
+    const auto x_max = 2e-2f;
+    const auto y_min = -2e-2f;
+    const auto y_max = 2e-2f;
 
     // radius
-    const auto r_min = 5e-3;        // at z_min
-    const auto r_max = 13e-3;       // at z_max
+    const auto r_min = 5e-3f;        // at z_min
+    const auto r_max = 13e-3f;       // at z_max
 
     std::vector<float> host_input_buffer = get_gaussian_samples(x_min, x_max, y_min, y_max, r_min, r_max,
                                                                 num_samples_x, num_samples_y, num_samples_z);

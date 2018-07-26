@@ -73,9 +73,9 @@ public:
     CpuAlgorithm();
 
     virtual ~CpuAlgorithm() { }
-        
+
     virtual void set_parameter(const std::string& key, const std::string& value)                    override;
-    
+
     virtual void set_scan_sequence(ScanSequence::s_ptr new_scan_sequence)                           override;
 
     virtual void set_excitation(const ExcitationSignal& new_excitation)                             override;
@@ -99,14 +99,14 @@ public:
 protected:
     // Projection loop for a single fixed scatterer dataset.
     void projection_loop(FixedScatterers::s_ptr fixed_scatterers, const Scanline& line, std::complex<float>* time_proj_signal, size_t num_time_samples);
-    
+
     // Projection loop for a single spline scatterer dataset.
     void projection_loop(SplineScatterers::s_ptr spline_scatterers, const Scanline& line, std::complex<float>* time_proj_signal, size_t num_time_samples);
 
 protected:
     // Use as many cores as possible for simulation.
     void set_use_all_available_cores();
-    
+
     // Use a specific number of cores for simulation.
     void set_use_specific_num_cores(int num_cores);
 
@@ -115,10 +115,10 @@ protected:
     // Delete any old convolvers and create new which reflects the
     // possibly changed result size.
     void configure_convolvers_if_possible();
-    
+
     // Throw a runtime_error if everything isn't properly configured.
     void throw_if_not_configured();
-    
+
     // Simulate a single RF line.
     // Returns a std::vector of IQ signal samples.
     // Sampling frequency is the same as for the excitation signal. TODO: Not so with decimation...
@@ -131,17 +131,17 @@ protected:
     ExcitationSignal                         m_excitation;
     // Pointer to one FFT-convolver for each thread.
     std::vector<IBeamConvolver::ptr>         convolvers;
-    
-    PointScattererCollection                m_scatterers_collection;
-    
+
+    PointScattererCollection                 m_scatterers_collection;
+
     // The number of time samples in each RF line in the scan sequence.
-    size_t                                  m_rf_line_num_samples;
+    unsigned int                             m_rf_line_num_samples;
 
     // Configuration flags needed to ensure everything is configured
     // before doing the simulations.
     bool m_scan_sequence_configured;
     bool m_excitation_configured;
-    
+
     // Number of threads to use for simulation.
     int  m_omp_num_threads;
 

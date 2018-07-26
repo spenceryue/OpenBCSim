@@ -65,6 +65,18 @@ public:
 
     // Verify that the unit vectors are orthonormal
     bool is_valid() const;
+
+	// For exporting std::vector<Scanline>
+	bool bcsim::Scanline::operator< (const bcsim::Scanline&) const
+	{
+		return true;
+	}
+
+	// For exporting std::vector<Scanline>
+	bool bcsim::Scanline::operator== (const bcsim::Scanline&) const
+	{
+		return true;
+	}
         
 private:
     // The start point.
@@ -123,4 +135,7 @@ private:
 };
 
 }   // namespace
+
+// template class DLL_PUBLIC std::allocator<bcsim::Scanline>;
+// template class DLL_PUBLIC std::vector<bcsim::Scanline>;
 

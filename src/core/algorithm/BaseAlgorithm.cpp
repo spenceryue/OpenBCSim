@@ -34,14 +34,20 @@ namespace bcsim
 {
 
 BaseAlgorithm::BaseAlgorithm ()
+#ifdef NDEBUG
+    // This is a minimum verbosity level (0=DEBUG, 1=INFO, 2=WARNING, 3=FATAL).
+    // It's not a boolean flag. (See BCSimConfig.hpp::ILog::LogType.)
+    : m_param_verbose (1),
+#else
     : m_param_verbose (0),
+#endif
       m_param_sound_speed (1540.0f),
       m_param_noise_amplitude (0.0f),
       m_param_use_arc_projection (true),
       m_radial_decimation (1),
       m_enable_phase_delay (false),
       m_cur_beam_profile_type (BeamProfileType::NOT_CONFIGURED),
-      m_log_object (std::make_shared<StdoutLog> ())
+      m_log_object (std::make_shared<StdoutLog> (m_param_verbose))
 {
 }
 

@@ -9,6 +9,6 @@ __global__ void RenderSplineKernel(const float* control_xs,
                                    float* rendered_xs,
                                    float* rendered_ys,
                                    float* rendered_zs,
-                                   int cs_idx_start,
-                                   int cs_idx_end,
-                                   int NUM_SPLINES);
+                                   size_t cs_idx_start,
+                                   size_t cs_idx_end,
+                                   size_t NUM_SPLINES);
