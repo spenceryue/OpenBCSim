@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "GpuAlgorithm.hpp"
 #include "../bspline.hpp"
 #include "../discrete_hilbert_mask.hpp"
-#include "../fft.hpp" // for next_power_of_two
+#include "../fft.hpp"           // for next_power_of_two
 #include "common_definitions.h" // for MAX_NUM_CUDA_STREAMS and MAX_SPLINE_DEGREE
 #include "common_utils.hpp"     // for compute_num_rf_samples
 #include "cuda_debug_utils.h"
@@ -39,8 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "cufft_helpers.h"
 #include <complex>
 #include <cuda.h>
-#include <iostream>
 #include <iomanip> // for setprecision
+#include <iostream>
 #include <stdexcept>
 #include <tuple> // for std::tie
 
@@ -300,7 +300,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     m_log_object->write (ILog::DEBUG, "beam_no = " + std::to_string (beam_no) + ", stream_no = " + std::to_string (stream_no));
 
     auto scanline = m_scan_sequence->get_scanline (beam_no);
-    int threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
+    const auto threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
     auto rf_ptr = m_device_time_proj->data () + beam_no * m_rf_line_num_samples;
 
     // clear time projections (safer than cudaMemsetAsync)
@@ -425,7 +425,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     auto rf_ptr = m_device_time_proj->data () + beam_no * m_rf_line_num_samples;
 
     // multiply with FFT of impulse response w/Hilbert transform
-    int threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
+    const auto threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
     m_log_object->write (ILog::DEBUG, "launch_MultiplyFftKernel...");
     launch_MultiplyFftKernel<true> (m_rf_line_num_samples / threads_per_line, threads_per_line, cur_stream, rf_ptr, m_device_excitation_fft->data (), m_rf_line_num_samples);
     if (m_store_kernel_details)
@@ -478,13 +478,13 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     }
 
     // IQ demodulation (+decimate?)
-    int threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
+    const auto threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
     const auto f_demod = m_excitation.demod_freq;
     const float norm_f_demod = f_demod / m_excitation.sampling_frequency;
     const float PI = static_cast<float> (4.0 * std::atan (1));
     const auto normalized_angular_freq = 2 * PI * norm_f_demod;
-    const auto stop_index = m_rf_line_num_samples;
-    const auto num_samples = (stop_index - delay_compensation_num_samples - 1) / m_radial_decimation + 1;
+    const auto stop_index = m_rf_line_num_samples - delay_compensation_num_samples;
+    const auto num_samples = (stop_index - 1) / m_radial_decimation + 1;
     const auto num_blocks = round_up_div (num_samples, threads_per_line);
     m_log_object->write (ILog::DEBUG, "launch_DemodulateKernel...");
     launch_DemodulateKernel (num_blocks,
@@ -512,7 +512,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     const auto height = num_samples;
 
     m_log_object->write (ILog::DEBUG, "cudaMemcpy2DAsync...");
-    cudaErrorCheck (cudaMemcpy2DAsync (dest, dpitch, rf_ptr, spitch, width, height, cudaMemcpyDeviceToHost, cur_stream));
+    cudaErrorCheck (cudaMemcpy2DAsync (dest, dpitch, src, spitch, width, height, cudaMemcpyDeviceToHost, cur_stream));
 
     if (m_store_kernel_details)
     {
@@ -520,6 +520,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       m_debug_data["kernel_memcpy_ms"].push_back (elapsed_ms);
     }
   }
+
   m_log_object->write (ILog::DEBUG, "cudaDeviceSynchronize 5...");
   cudaErrorCheck (cudaDeviceSynchronize ());
 }
@@ -546,6 +547,7 @@ void GpuAlgorithm::set_scan_sequence (ScanSequence::s_ptr new_scan_sequence)
   m_scan_sequence_configured = true;
   m_scan_sequence = new_scan_sequence;
 
+  // This order matters!
   init_rf_line_num_samples ();
   init_excitation_if_possible ();
   init_scan_sequence_if_possible ();
@@ -603,6 +605,7 @@ void GpuAlgorithm::init_scan_sequence_if_possible ()
   const auto new_num_samples_allocated = std::pair<unsigned int, int>{m_rf_line_num_samples, num_beams};
   if (new_num_samples_allocated == m_num_samples_allocated)
   {
+    m_log_object->write (ILog::DEBUG, "Skipping init_scan_sequence_if_possible() because no new memory allocation needed.");
     return;
   }
 

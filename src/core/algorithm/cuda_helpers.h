@@ -22,7 +22,7 @@ inline void cudaAssert (cudaError_t code, const char *file, int line)
 {
   if (code != cudaSuccess)
   {
-    auto msg = std::string ("CUDA error: ") + std::string (cudaGetErrorString (code)) + std::string (", FILE: ") + std::string (file) + std::string (", LINE: ") + std::to_string (line);
+    auto msg = std::string ("CUDA error (") + std::to_string(code) + "): " + std::string (cudaGetErrorString (code)) + ", FILE: " + std::string (file) + ", LINE: " + std::to_string (line);
     throw std::runtime_error (msg);
   }
 }

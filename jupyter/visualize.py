@@ -1,4 +1,4 @@
-def visualize (iq_lines, title='', equalize=False, min_dB=None, save_path=None, figsize=(12, 6), aspect_ratio='auto'):
+def visualize (iq_lines, title='', equalize=False, min_dB=None, save_path=None, figsize=(12, 6), aspect_ratio='auto', show=True):
     import matplotlib.pyplot as plt
     import numpy as np
 
@@ -7,8 +7,9 @@ def visualize (iq_lines, title='', equalize=False, min_dB=None, save_path=None, 
     # Detect envelope
     data = abs (iq_lines)
     # Full-scale contrast stretch into range [0, 1]
-    low, high = data.min (), data.max ()
-    data = (data - low) / (high - low)
+    if not equalize:
+      low, high = data.min (), data.max ()
+      data = (data - low) / (high - low)
     # Histogram equalize
     if equalize:
         hist, bins = np.histogram (abs (data), bins=256)
@@ -25,10 +26,9 @@ def visualize (iq_lines, title='', equalize=False, min_dB=None, save_path=None, 
     plt.sca (ax)
     plt.plot(center_magnitude, color=(153/255,102/255,204/255))
     plt.xlabel ('Depth', fontsize=14, labelpad=15)
-    plt.ylabel ('Amplitude', fontsize=14, labelpad=15)
     plt.yticks ([])
-    plt.grid ()
-    plt.title ('Center RF-Line Magnitude', fontsize=16, pad=15)
+    plt.grid (False)
+    plt.title ('Center RF-Line Amplitude', fontsize=22, pad=15)
 
     for side in ['top', 'right', 'left']:
         ax.spines[side].set_visible (False)
@@ -40,8 +40,8 @@ def visualize (iq_lines, title='', equalize=False, min_dB=None, save_path=None, 
     plt.xlabel ('Width', fontsize=14, labelpad=15)
     plt.ylabel ('Depth', fontsize=14, labelpad=15)
     if title:
-        plt.title (title, fontsize=16, pad=15)
-    plt.grid ()
+        plt.title (title, fontsize=22, pad=15)
+    plt.grid (False)
 
     plt.tick_params (axis='both', which='both', bottom=True, top=False,
                     labelbottom=True, left=True, right=False, labelleft=True)
@@ -58,4 +58,7 @@ def visualize (iq_lines, title='', equalize=False, min_dB=None, save_path=None, 
         plt.savefig(save_path)
         print('Image written to disk at:\n{}'.format (save_path))
 
-    plt.show()
+    if show:
+        plt.show ()
+    else:
+        return fig, axes
