@@ -26,36 +26,28 @@ void launch_ScaleSignalKernel (unsigned int grid_size, unsigned int block_size, 
   ScaleSignalKernel<<<grid_size, block_size, 0, stream>>> (signal, factor, num_samples);
 }
 
-template <bool A, bool B, bool C, bool D>
+template <bool A, bool B, bool C>
 void launch_FixedAlgKernel (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params)
 {
-  FixedAlgKernel<A, B, C, D><<<grid_size, block_size, 0, stream>>> (params);
+  FixedAlgKernel<A, B, C><<<grid_size, block_size, 0, stream>>> (params);
 }
 
 // explicit function template instantiations for required datatypes
 template void DLL_PUBLIC launch_MemsetKernel (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, cuComplex *ptr, cuComplex value, int num_samples);
 
 // explicit function template instantiations for different normalizations.
-template void DLL_PUBLIC launch_MultiplyFftKernel<false>  (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, cufftComplex *time_proj_fft, const cufftComplex *filter_fft, int num_samples);
-template void DLL_PUBLIC launch_MultiplyFftKernel<true>  (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, cufftComplex *time_proj_fft, const cufftComplex *filter_fft, int num_samples);
+template void DLL_PUBLIC launch_MultiplyFftKernel<false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, cufftComplex *time_proj_fft, const cufftComplex *filter_fft, int num_samples);
+template void DLL_PUBLIC launch_MultiplyFftKernel<true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, cufftComplex *time_proj_fft, const cufftComplex *filter_fft, int num_samples);
 
 // fixed algorithm explicit function template instantiations - all combinations
-template void DLL_PUBLIC launch_FixedAlgKernel<false, false, false, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<false, false, false, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<false, false, true, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<false, false, true, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<false, true, false, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<false, true, false, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<false, true, true, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<false, true, true, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, false, false, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, false, false, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, false, true, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, false, true, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, true, false, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, true, false, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, true, true, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
-template void DLL_PUBLIC launch_FixedAlgKernel<true, true, true, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, false, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, false, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, true, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<false, true, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, false, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, false, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, true, false> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
+template void DLL_PUBLIC launch_FixedAlgKernel<true, true, true> (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, FixedAlgKernelParams params);
 
 bool splineAlg1_updateConstantMemory (float *src_ptr, size_t num_bytes)
 {

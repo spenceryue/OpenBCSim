@@ -467,7 +467,8 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
     size_t stream_no = beam_no % m_param_num_cuda_streams;
     auto cur_stream = m_stream_wrappers[stream_no]->get ();
 
-    // compute current offset into device buffer, accounting for radial decimation
+    // Compute current offset into device buffer.
+    // Account for the delay introduced by convolving with the excitation if `m_use_delay_compensation`.
     auto rf_ptr = m_device_time_proj->data () + beam_no * m_rf_line_num_samples + delay_compensation_num_samples;
 
     std::unique_ptr<EventTimerRAII> event_timer;
@@ -477,7 +478,7 @@ void GpuAlgorithm::simulate_lines (std::vector<std::vector<std::complex<float>>>
       event_timer->restart ();
     }
 
-    // IQ demodulation (+decimate?)
+    // IQ demodulation and decimation (by m_radial_decimation).
     const auto threads_per_line = m_param_threads_per_block; // Fine tune with profiler if needed
     const auto f_demod = m_excitation.demod_freq;
     const float norm_f_demod = f_demod / m_excitation.sampling_frequency;
@@ -769,7 +770,6 @@ void GpuAlgorithm::dump_orthogonal_lut_slices (const std::string &raw_path)
     cudaErrorCheck (cudaDeviceSynchronize ());
     dump_device_buffer_as_raw_file (device_slice, raw_file);
     m_log_object->write (ILog::DEBUG, "Wrote RAW file to " + raw_file);
-
   };
 
   // slice in the middle lateral-elevational plane (radial dist is 0.5)
@@ -849,7 +849,7 @@ void GpuAlgorithm::fixed_projection_kernel (int stream_no, const Scanline &scanl
   params.sigma_lateral = m_analytical_sigma_lat;
   params.sigma_elevational = m_analytical_sigma_ele;
   params.sound_speed = m_param_sound_speed;
-  params.res = res_buffer;
+  params.result = res_buffer;
   params.demod_freq = m_excitation.demod_freq;
   params.num_scatterers = dataset->get_num_scatterers (),
   params.lut_tex = m_device_beam_profile->get ();
@@ -874,69 +874,37 @@ void GpuAlgorithm::fixed_projection_kernel (int stream_no, const Scanline &scanl
     throw std::logic_error ("unknown beam profile type");
   }
 
-  if (!m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
+  if (!m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<false, false, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
+  else if (!m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<false, false, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
+  else if (!m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<false, false, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && use_lut)
+  else if (!m_param_use_arc_projection && m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<false, false, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<false, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
+  else if (m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<false, true, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<true, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
+  else if (m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<false, true, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<true, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
+  else if (m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
   {
-    launch_FixedAlgKernel<false, true, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<true, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
-  else if (!m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && use_lut)
+  else if (m_param_use_arc_projection && m_enable_phase_delay && use_lut)
   {
-    launch_FixedAlgKernel<false, true, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
-  {
-    launch_FixedAlgKernel<true, false, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && !m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
-  {
-    launch_FixedAlgKernel<true, false, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
-  {
-    launch_FixedAlgKernel<true, false, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && !m_param_use_arc_projection && m_enable_phase_delay && use_lut)
-  {
-    launch_FixedAlgKernel<true, false, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && !use_lut)
-  {
-    launch_FixedAlgKernel<true, true, false, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && m_param_use_arc_projection && !m_enable_phase_delay && use_lut)
-  {
-    launch_FixedAlgKernel<true, true, false, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && !use_lut)
-  {
-    launch_FixedAlgKernel<true, true, true, false> (num_blocks, m_param_threads_per_block, cur_stream, params);
-  }
-  else if (m_use_elev_hack && m_param_use_arc_projection && m_enable_phase_delay && use_lut)
-  {
-    launch_FixedAlgKernel<true, true, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
+    launch_FixedAlgKernel<true, true, true> (num_blocks, m_param_threads_per_block, cur_stream, params);
   }
   else
   {
@@ -1003,7 +971,7 @@ void GpuAlgorithm::spline_projection_kernel (int stream_no, const Scanline &scan
   params.cs_idx_start = cs_idx_start;
   params.cs_idx_end = cs_idx_end;
   params.NUM_SPLINES = dataset->get_num_scatterers (),
-  params.res = res_buffer;
+  params.result = res_buffer;
   params.eval_basis_offset_elements = eval_basis_offset_elements;
   params.demod_freq = m_excitation.demod_freq;
   params.lut_tex = m_device_beam_profile->get ();
@@ -1100,6 +1068,6 @@ std::string GpuAlgorithm::get_parameter (const std::string &key) const
   }
 }
 
-} // end namespace
+} // namespace bcsim
 
 #endif // BCSIM_ENABLE_CUDA
