@@ -28,12 +28,12 @@ inline void cudaAssert (cudaError_t code, const char *file, int line)
 }
 
 // RAII-style wrapper for device memory.
-template <typename T>
+template <class T>
 class DeviceBufferRAII
 {
 public:
-  typedef std::unique_ptr<DeviceBufferRAII<T>> u_ptr;
-  typedef std::shared_ptr<DeviceBufferRAII<T>> s_ptr;
+  using u_ptr = std::unique_ptr<DeviceBufferRAII<T>>;
+  using s_ptr = std::shared_ptr<DeviceBufferRAII<T>>;
 
   explicit DeviceBufferRAII (size_t num_bytes)
   {
@@ -46,14 +46,54 @@ public:
     cudaErrorCheck (cudaFree (memory));
   }
 
-  T *data ()
+  T *data () const
   {
     return static_cast<T *> (memory);
   }
 
-  size_t get_num_bytes ()
+  size_t get_num_bytes () const
   {
     return num_bytes_allocated;
+  }
+
+  void copyFromAsync (const T *src, int num_elements, cudaStream_t cuda_stream = 0)
+  {
+    const auto bytes = num_elements * sizeof (T);
+    if (bytes > num_bytes_allocated)
+    {
+      throw std::out_of_range ("Source bytes (" +
+                               std::to_string (bytes) +
+                               ") exceeds DeviceBufferRAII memory allocated (" +
+                               std::to_string (num_bytes_allocated) +
+                               ").");
+    }
+    cudaErrorCheck (cudaMemcpyAsync (memory, src, bytes, cudaMemcpyHostToDevice, cuda_stream));
+  }
+
+  void copyToAsync (T *dest, int num_elements, int start_idx = 0, cudaStream_t cuda_stream = 0)
+  {
+    const auto bytes = num_elements * sizeof (T);
+    if (start_idx * sizeof (T) + bytes > num_bytes_allocated)
+    {
+      throw std::out_of_range ("Source bytes (" +
+                               std::to_string (bytes) +
+                               ") exceeds DeviceBufferRAII memory allocated (" +
+                               std::to_string (num_bytes_allocated) +
+                               ").");
+    }
+    cudaErrorCheck (cudaMemcpyAsync (dest, memory + start_idx, bytes, cudaMemcpyDeviceToHost, cuda_stream));
+  }
+
+  void copyFrom (const T *src, int num_elements, cudaStream_t cuda_stream = 0)
+  {
+    copyFromAsync (src, num_elements, cuda_stream);
+    cudaErrorCheck (cudaDeviceSynchronize ());
+  }
+
+  void copyTo (T *dest, int num_elements, int start_idx = 0, cudaStream_t cuda_stream = 0)
+  {
+    copyToAsync (dest, start_idx, num_elements, cuda_stream);
+    cudaErrorCheck (cudaDeviceSynchronize ());
   }
 
 private:
@@ -62,12 +102,12 @@ private:
 };
 
 // RAII wrapper for pinned host memory.
-template <typename T>
+template <class T>
 class HostPinnedBufferRAII
 {
 public:
-  typedef std::unique_ptr<HostPinnedBufferRAII<T>> u_ptr;
-  typedef std::shared_ptr<HostPinnedBufferRAII<T>> s_ptr;
+  using u_ptr = std::unique_ptr<HostPinnedBufferRAII<T>>;
+  using s_ptr = std::shared_ptr<HostPinnedBufferRAII<T>>;
 
   explicit HostPinnedBufferRAII (size_t num_bytes)
   {
@@ -79,7 +119,7 @@ public:
     cudaErrorCheck (cudaFreeHost (memory));
   }
 
-  T *data ()
+  T *data () const
   {
     return static_cast<T *> (memory);
   }
@@ -131,8 +171,8 @@ private:
 class CudaStreamRAII
 {
 public:
-  typedef std::unique_ptr<CudaStreamRAII> u_ptr;
-  typedef std::shared_ptr<CudaStreamRAII> s_ptr;
+  using u_ptr = std::unique_ptr<CudaStreamRAII>;
+  using s_ptr = std::shared_ptr<CudaStreamRAII>;
 
   explicit CudaStreamRAII ()
   {
@@ -178,12 +218,17 @@ inline __host__ __device__ float norm (float3 a)
 #endif
 }
 
+inline __host__ __device__ float dist (float3 a, float3 b)
+{
+  return norm (a - b);
+}
+
 inline __host__ __device__ float3 operator* (float3 a, float b)
 {
   return make_float3 (a.x * b, a.y * b, a.z * b);
 }
 
-template <typename T>
+template <class T>
 void fill_host_vector_uniform_random (T low, T high, size_t length, T *data)
 {
   std::random_device rd;
@@ -204,9 +249,9 @@ inline int round_up_div (int num, int den)
 class DeviceBeamProfileRAII
 {
 public:
-  typedef std::function<void(const std::string &)> LogCallback;
-  typedef std::unique_ptr<DeviceBeamProfileRAII> u_ptr;
-  typedef std::shared_ptr<DeviceBeamProfileRAII> s_ptr;
+  using LogCallback = std::function<void(const std::string &)>;
+  using u_ptr = std::unique_ptr<DeviceBeamProfileRAII>;
+  using s_ptr = std::shared_ptr<DeviceBeamProfileRAII>;
 
   typedef struct TableExtent3D
   {

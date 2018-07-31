@@ -10,7 +10,7 @@
 // Functionality shared between FixedAlgKernel and SplineAlgKernel.
 // Processes one beam (scanline) per kernel launch.
 template <bool use_arc_projection, bool use_phase_delay, bool use_lut>
-__device__ __forceinline__ void ProjectionAlg (const ProjectionAlgParams params,
+__device__ __forceinline__ void ProjectionAlg (const ProjectionParams params,
                                                const float3 scatterer_point,
                                                const float amplitude)
 {
@@ -30,7 +30,7 @@ __device__ __forceinline__ void ProjectionAlg (const ProjectionAlgParams params,
     radial_dist = copysignf (norm (point), radial_dist);
   }
 
-  float weight = amplitude;
+  float weight = 1.0f;
   if (use_lut)
   {
     // Compute weight from lookup-table and radial_dist, lateral_dist, and elev_dist.
@@ -57,12 +57,12 @@ __device__ __forceinline__ void ProjectionAlg (const ProjectionAlgParams params,
       float sin_value, cos_value;
       sincosf (complex_phase, &sin_value, &cos_value);
 
-      atomicAdd (&(params.result[radial_index].x), weight * cos_value);
-      atomicAdd (&(params.result[radial_index].y), weight * sin_value);
+      atomicAdd (&(params.result[radial_index].x), weight * cos_value * amplitude);
+      atomicAdd (&(params.result[radial_index].y), weight * sin_value * amplitude);
     }
     else
     {
-      atomicAdd (&(params.result[radial_index].x), weight);
+      atomicAdd (&(params.result[radial_index].x), weight * amplitude);
     }
   }
 }

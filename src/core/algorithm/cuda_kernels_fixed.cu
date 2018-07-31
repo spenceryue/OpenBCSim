@@ -42,7 +42,6 @@ __global__ void FixedAlgKernel (const FixedAlgKernelParams params)
                                             params.point_ys[global_idx],
                                             params.point_zs[global_idx]);
   const auto amplitude = params.point_as[global_idx];
-
   ProjectionAlg<use_arc_projection,
                 use_phase_delay,
                 use_lut> (params, scatterer_point, amplitude);

@@ -28,114 +28,108 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #pragma once
-#include <vector>
-#include <memory>
-#include "export_macros.hpp"
 #include "BCSimConfig.hpp"
+#include "export_macros.hpp"
+#include <memory>
+#include <vector>
 
-namespace bcsim {
-
+namespace bcsim
+{
 // A single scanline.
-class DLL_PUBLIC Scanline {
+class DLL_PUBLIC Scanline
+{
 public:
-    Scanline() { }
-    
-    // Elevational direction implicitly defined as cross product between lateral_dir and direction.
-    Scanline(const vector3& origin, const vector3& direction, const vector3& lateral_dir, float timestamp);
-    
-    vector3 get_elevational_dir() const {
-        return elevational_dir;
-    }
+  Scanline () {}
 
-    vector3 get_direction() const {
-        return direction;
-    }
+  // Elevational direction implicitly defined as cross product between lateral_dir and direction.
+  Scanline (const vector3 &origin, const vector3 &direction, const vector3 &lateral_dir, float timestamp);
 
-    vector3 get_origin() const {
-        return origin;
-    }
+  vector3 get_elevational_dir () const
+  {
+    return elevational_dir;
+  }
 
-    vector3 get_lateral_dir() const {
-        return lateral_dir;
-    }
+  vector3 get_direction () const
+  {
+    return direction;
+  }
 
-    float get_timestamp() const {
-        return timestamp;
-    }
+  vector3 get_origin () const
+  {
+    return origin;
+  }
 
-    // Verify that the unit vectors are orthonormal
-    bool is_valid() const;
+  vector3 get_lateral_dir () const
+  {
+    return lateral_dir;
+  }
 
-	// For exporting std::vector<Scanline>
-	bool bcsim::Scanline::operator< (const bcsim::Scanline&) const
-	{
-		return true;
-	}
+  float get_timestamp () const
+  {
+    return timestamp;
+  }
 
-	// For exporting std::vector<Scanline>
-	bool bcsim::Scanline::operator== (const bcsim::Scanline&) const
-	{
-		return true;
-	}
-        
-private:
-    // The start point.
-    vector3 origin;
-
-    // The direction unit vector (radial direction).
-    vector3 direction;
-    
-    // Unit vector in lateral direction (the elevational direction
-    // is implicitly defined by the cross product of lateral_dir and direction)
-    vector3 lateral_dir;
-    
-    // Timestamp for scanline which is useful with dynamic scatterer collections.
-    float timestamp;
-
-    // Computed as cross product between the lateral and radial direction.
-    vector3 elevational_dir;
+  // Verify that the unit vectors are orthonormal
+  bool is_valid () const;
 
 private:
-    // Verify that the unit vectors span 3D space.
-    bool is_orthogonal() const;
+  // The start point.
+  vector3 origin;
 
-    // Verify that the vectors have unit length.
-    bool is_normalized() const;
+  // The direction unit vector (radial direction).
+  vector3 direction;
+
+  // Unit vector in lateral direction (the elevational direction
+  // is implicitly defined by the cross product of lateral_dir and direction)
+  vector3 lateral_dir;
+
+  // Timestamp for scanline which is useful with dynamic scatterer collections.
+  float timestamp;
+
+  // Computed as cross product between the lateral and radial direction.
+  vector3 elevational_dir;
+
+private:
+  // Verify that the unit vectors span 3D space.
+  bool is_orthogonal () const;
+
+  // Verify that the vectors have unit length.
+  bool is_normalized () const;
 };
 
 // A collection of scanlines that defines the complete scan.
 // The length of scanlines is common to all lines in a scan sequence.
-class DLL_PUBLIC ScanSequence {
+class DLL_PUBLIC ScanSequence
+{
 public:
-    typedef std::shared_ptr<ScanSequence> s_ptr;
-    typedef std::unique_ptr<ScanSequence> u_ptr;
+  typedef std::shared_ptr<ScanSequence> s_ptr;
+  typedef std::unique_ptr<ScanSequence> u_ptr;
 
-    ScanSequence(float line_length);
-    
-    int get_num_lines() const;
-    
-    // Add a new scanline to the scan sequence.
-    void add_scanline(Scanline new_line);
-    
-    const Scanline& get_scanline(int index) const;
+  ScanSequence (float line_length);
 
-    // Verify that all scanlines are valid.
-    bool is_valid() const;
+  int get_num_lines () const;
 
-    // The beam length [m]
-    float line_length;
+  // Add a new scanline to the scan sequence.
+  void add_scanline (Scanline new_line);
 
-    // If set to true, all scanlines have exactly equal timestamps
-    // which is defined by the timestamp of the first line. This is
-    // needed for knowing when to apply the optimized spline alg.
-    bool all_timestamps_equal;
+  const Scanline &get_scanline (int index) const;
+
+  // Verify that all scanlines are valid.
+  bool is_valid () const;
+
+  // The beam length [m]
+  float line_length;
+
+  // If set to true, all scanlines have exactly equal timestamps
+  // which is defined by the timestamp of the first line. This is
+  // needed for knowing when to apply the optimized spline alg.
+  bool all_timestamps_equal;
 
 private:
-    std::vector<Scanline> scanlines;
+  std::vector<Scanline> scanlines;
 };
 
-}   // namespace
+} // namespace bcsim
 
 // template class DLL_PUBLIC std::allocator<bcsim::Scanline>;
 // template class DLL_PUBLIC std::vector<bcsim::Scanline>;
-

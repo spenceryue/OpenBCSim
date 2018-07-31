@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 void example (int argc, char **argv)
 {
-  std::cout << "=== GPU example 1 ===" << std::endl;
+  std::cout << "=== GPU example 2 ===" << std::endl;
   std::cout << "  Single-line scanning using the spline-scatterers GPU algorithm." << std::endl;
 
   // default values

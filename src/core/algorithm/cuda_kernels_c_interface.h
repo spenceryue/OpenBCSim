@@ -1,4 +1,5 @@
 #pragma once
+#include "../Aperture.hpp"
 #include "../export_macros.hpp"
 #include <cuComplex.h>
 #include <cuda.h>
@@ -7,14 +8,14 @@
 
 // Headers for all CUDA functionality accessible from C++
 
-struct DLL_PUBLIC LUTProfileGeometry
+struct LUTProfileGeometry
 {
   float r_min, r_max;
   float l_min, l_max;
   float e_min, e_max;
 };
 
-struct DLL_PUBLIC BaseKernelParams
+struct BaseParams
 {
   float fs_hertz;       // temporal sampling frequency in hertz
   int num_time_samples; // number of samples in time signal
@@ -24,7 +25,7 @@ struct DLL_PUBLIC BaseKernelParams
   int num_scatterers;   // number of scatterers
 };
 
-struct DLL_PUBLIC ProjectionAlgParams : BaseKernelParams
+struct ProjectionParams : BaseParams
 {
   float3 rad_dir;              // radial direction unit vector
   float3 lat_dir;              // lateral direction unit vector
@@ -36,7 +37,7 @@ struct DLL_PUBLIC ProjectionAlgParams : BaseKernelParams
   LUTProfileGeometry lut;
 };
 
-struct DLL_PUBLIC FixedAlgKernelParams : ProjectionAlgParams
+struct FixedAlgKernelParams : ProjectionParams
 {
   float *point_xs; // pointer to device memory x components
   float *point_ys; // pointer to device memory y components
@@ -44,7 +45,7 @@ struct DLL_PUBLIC FixedAlgKernelParams : ProjectionAlgParams
   float *point_as; // pointer to device memory amplitudes
 };
 
-struct DLL_PUBLIC SplineAlgKernelParams : ProjectionAlgParams
+struct SplineAlgKernelParams : ProjectionParams
 {
   float *control_xs;              // pointer to device memory x components
   float *control_ys;              // pointer to device memory y components
@@ -54,6 +55,13 @@ struct DLL_PUBLIC SplineAlgKernelParams : ProjectionAlgParams
   int cs_idx_end;                 // end index for spline evaluation sum (inclusive)
   int NUM_SPLINES;                // number of splines in phantom (i.e. number of scatterers)
   int eval_basis_offset_elements; // memory offset (for different CUDA streams)
+};
+
+struct ProjectionAllParams : FixedAlgKernelParams
+{
+  ApertureParams transmit;
+  ApertureParams receive;
+  float attenuation = 0.7; // decrease in amplitude over distance travelled in dB/MHz/cm (typical: 0.7)
 };
 
 template <typename T>

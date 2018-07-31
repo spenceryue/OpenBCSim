@@ -8,7 +8,6 @@
 
 namespace bcsim
 {
-
 DeviceFixedScatterers::DeviceFixedScatterers (unsigned int num_scatterers)
     : m_num_scatterers (num_scatterers)
 {
@@ -405,5 +404,5 @@ DeviceSplineScatterers::s_ptr DeviceSplineScatterersCollection::get_dataset (siz
   return m_spline_datasets[dset_idx];
 }
 
-} // end namespace
+} // namespace bcsim
 #endif BCSIM_ENABLE_CUDA
