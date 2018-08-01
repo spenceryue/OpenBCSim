@@ -1,7 +1,6 @@
 # Build core simulator library.
 set(CORE_LIBRARY_SOURCE_FILES "")
 list(APPEND CORE_LIBRARY_SOURCE_FILES
-     Aperture.h
      BCSimConfig.hpp
      BeamConvolver.hpp
      BeamConvolver.cpp
@@ -48,8 +47,6 @@ if (BCSIM_ENABLE_CUDA)
                      algorithm/cuda_kernels_spline2.cu
                      algorithm/cuda_kernels_spline2.cuh
                      algorithm/cuda_kernels_projection.cuh
-                     algorithm/cuda_kernels_projection_all.cu
-                     algorithm/cuda_kernels_projection_all.cuh
                      algorithm/cuda_kernels_c_interface.h
                      algorithm/cuda_kernels_c_interface.cu
                      )

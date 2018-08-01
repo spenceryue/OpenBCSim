@@ -57,13 +57,6 @@ struct SplineAlgKernelParams : ProjectionParams
   int eval_basis_offset_elements; // memory offset (for different CUDA streams)
 };
 
-struct ProjectionAllParams : FixedAlgKernelParams
-{
-  ApertureParams transmit;
-  ApertureParams receive;
-  float attenuation = 0.7; // decrease in amplitude over distance travelled in dB/MHz/cm (typical: 0.7)
-};
-
 template <typename T>
 void DLL_PUBLIC launch_MemsetKernel (unsigned int grid_size, unsigned int block_size, cudaStream_t stream, T *ptr, T value, int num_elements);
 
