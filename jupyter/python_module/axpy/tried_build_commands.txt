@@ -1,0 +1,129 @@
+CONCLUSION:
+at::optional just doesn't work.
+
+
+ORIGINAL BY SETUPTOOLS:
+===
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\x86_amd64\cl.exe
+/c
+/nologo
+/Ox
+/W3
+/GL
+/DNDEBUG
+/MD
+-IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include
+-IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\TH
+-IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\THC
+"-IC:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include"
+-IC:\Users\spenc\Anaconda3\include
+-IC:\Users\spenc\Anaconda3\include
+"-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE"
+"-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE"
+"-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt"
+"-IC:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um"
+"-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared"
+"-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um"
+"-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt"
+/EHsc
+/Tpaxpy_cuda.cpp
+/Fobuild\temp.win-amd64-3.6\Release\axpy_cuda.obj
+-DTORCH_EXTENSION_NAME=axpy
+
+
+
+ADAPTED FOR CLANG:
+===
+clang++ ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\TH ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\THC ^
+-I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include" ^
+-I C:\Users\spenc\Anaconda3\include ^
+-DTORCH_EXTENSION_NAME=axpy ^
+-std=c++17 ^
+-nostdinc++ ^
+-o ^
+build\temp.win-amd64-3.6\Release\axpy_cuda.obj ^
+-c ^
+axpy_cuda.cpp
+
+NEEDED FOR ABOVE?
+===
+-I "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE" ^
+-I "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE" ^
+-I "C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt" ^
+-I "C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um" ^
+-I "C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared" ^
+-I "C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um" ^
+-I "C:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt" ^
+--target=x86_64-pc-windows ^
+-D_hypot=hypot ^
+
+
+
+NEED TO RUN THIS FIRST FOR ORIGINAL BY SETUPTOOLS:
+===
+vcvarsall.bat
+
+ORIGINAL BY SETUPTOOLS:
+===
+"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\x86_amd64\link.exe" ^
+/nologo ^
+/INCREMENTAL:NO ^
+/LTCG ^
+/DLL ^
+/MANIFEST:EMBED,ID=2 ^
+/MANIFESTUAC:NO ^
+/LIBPATH:C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib ^
+/LIBPATH:"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" ^
+/LIBPATH:C:\Users\spenc\Anaconda3\libs ^
+/LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64" ^
+/LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB\amd64" ^
+/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\ucrt\x64" ^
+/LIBPATH:"C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x64" ^
+/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\um\x64" ^
+cudart.lib ^
+ATen.lib ^
+_C.lib ^
+build\temp.win-amd64-3.6\Release\axpy_cuda.obj ^
+build\temp.win-amd64-3.6\Release\axpy_cuda_kernel.obj ^
+/OUT:build\lib.win-amd64-3.6\axpy.cp36-win_amd64.pyd ^
+/IMPLIB:build\temp.win-amd64-3.6\Release\axpy.cp36-win_amd64.lib
+
+OPTIONAL...
+===
+/LIBPATH:C:\Users\spenc\Anaconda3\PCbuild\amd64 ^
+
+
+
+ADAPTED FOR CLANG
+===
+clang++ ^
+-shared ^
+-L C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib ^
+-L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" ^
+-L C:\Users\spenc\Anaconda3\libs ^
+-L "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64" ^
+-L "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB\amd64" ^
+-L "C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\ucrt\x64" ^
+-L "C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x64" ^
+-L "C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\um\x64" ^
+-l msvcrt ^
+-l _C.lib ^
+-l cudart.lib ^
+-l ATen.lib ^
+-fuse-ld=lld ^
+-o ^
+build\lib.win-amd64-3.6\axpy.cp36-win_amd64.pyd ^
+build\temp.win-amd64-3.6\Release\axpy_cuda.obj ^
+build\temp.win-amd64-3.6\Release\axpy_cuda_kernel.obj -v
+
+
+
+ADAPTED FOR CLANG. (DOESN'T USE A LOT OF HEADERS SETUPTOOLS ADDS IN)
+===
+nvcc ^
+-arch=sm_61 ^
+-o build\temp.win-amd64-3.6\Release\axpy_cuda_kernel.obj ^
+-c axpy_cuda_kernel.cu

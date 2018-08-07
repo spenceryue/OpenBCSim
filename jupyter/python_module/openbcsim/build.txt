@@ -1,0 +1,119 @@
+running build
+running build_ext
+building 'openbcsim' extension
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\x86_amd64\cl.exe /c /nologo /Ox /W3 /GL /DNDEBUG /MD -IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include -IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\TH -IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\THC "-IC:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include" -IC:\Users\spenc\Anaconda3\include -IC:\Users\spenc\Anaconda3\include "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt" "-IC:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt" "-IC:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt" "-IC:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt" /EHsc /Tpopenbcsim_module.cpp /Fobuild\temp.win-amd64-3.6\Release\openbcsim_module.obj /Ox /std:c++latest -DTORCH_EXTENSION_NAME=openbcsim
+openbcsim_module.cpp
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Error.h(239): warning C4275: non dll-interface class 'std::exception' used as base for dll-interface struct 'at::Error'
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE\vcruntime_exception.h(43): note: see declaration of 'std::exception'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Error.h(239): note: see declaration of 'at::Error'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Error.h(275): warning C4251: 'at::Error::what_without_backtrace_': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of struct 'at::Error'
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE\xstring(2633): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Error.h(276): warning C4251: 'at::Error::what_': class 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>' needs to have dll-interface to be used by clients of struct 'at::Error'
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE\xstring(2633): note: see declaration of 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/UndefinedTensor.h(7): warning C4275: non dll-interface struct 'at::TensorImpl' used as base for dll-interface struct 'at::UndefinedTensor'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/TensorImpl.h(16): note: see declaration of 'at::TensorImpl'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/UndefinedTensor.h(7): note: see declaration of 'at::UndefinedTensor'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Scalar.h(85): warning C4251: 'at::Scalar::t': struct 'at::detail::TensorBase' needs to have dll-interface to be used by clients of class 'at::Scalar'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/TensorBase.h(9): note: see declaration of 'at::detail::TensorBase'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Tensor.h(532): warning C4522: 'at::Tensor': multiple assignment operators specified
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Context.h(77): warning C4251: 'at::Context::generator_registry': class 'std::unique_ptr<at::Generator,std::default_delete<_Ty>>' needs to have dll-interface to be used by clients of class 'at::Context'
+        with
+        [
+            _Ty=at::Generator
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Type.h(100): note: see declaration of 'std::unique_ptr<at::Generator,std::default_delete<_Ty>>'
+        with
+        [
+            _Ty=at::Generator
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Context.h(80): warning C4251: 'at::Context::type_registry': class 'std::unique_ptr<at::Type,std::default_delete<_Ty>>' needs to have dll-interface to be used by clients of class 'at::Context'
+        with
+        [
+            _Ty=at::Type
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Context.h(78): note: see declaration of 'std::unique_ptr<at::Type,std::default_delete<_Ty>>'
+        with
+        [
+            _Ty=at::Type
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Context.h(89): warning C4251: 'at::Context::thc_init': struct 'std::once_flag' needs to have dll-interface to be used by clients of class 'at::Context'
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE\mutex(452): note: see declaration of 'std::once_flag'
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/TensorGeometry.h(63): warning C4251: 'at::TensorGeometry::sizes_': class 'std::vector<T,std::allocator<_Ty>>' needs to have dll-interface to be used by clients of struct 'at::TensorGeometry'
+        with
+        [
+            T=int64_t,
+            _Ty=int64_t
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/ArrayRef.h(178): note: see declaration of 'std::vector<T,std::allocator<_Ty>>'
+        with
+        [
+            T=int64_t,
+            _Ty=int64_t
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/TensorGeometry.h(64): warning C4251: 'at::TensorGeometry::strides_': class 'std::vector<T,std::allocator<_Ty>>' needs to have dll-interface to be used by clients of struct 'at::TensorGeometry'
+        with
+        [
+            T=int64_t,
+            _Ty=int64_t
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/ArrayRef.h(178): note: see declaration of 'std::vector<T,std::allocator<_Ty>>'
+        with
+        [
+            T=int64_t,
+            _Ty=int64_t
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE\numeric(20): warning C4244: '=': conversion from 'int64_t' to 'int', possible loss of data
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE\numeric(30): note: see reference to function template instantiation '_Ty std::_Accumulate_unchecked<_Iter,_Ty,_Fn2>(_InIt,_InIt,_Ty,_Fn2 &)' being compiled
+        with
+        [
+            _Ty=int,
+            _Iter=const __int64 *,
+            _Fn2=std::multiplies<int64_t>,
+            _InIt=const __int64 *
+        ]
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\ATen/Utils.h(76): note: see reference to function template instantiation '_Ty std::accumulate<const __int64*,int,std::multiplies<int64_t>>(_InIt,_InIt,_Ty,_Fn2)' being compiled
+        with
+        [
+            _Ty=int,
+            _InIt=const __int64 *,
+            _Fn2=std::multiplies<int64_t>
+        ]
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\bin\nvcc.exe -c openbcsim_kernel.cu -o build\temp.win-amd64-3.6\Release\openbcsim_kernel.obj -Xcompiler /wd4819 -Xcompiler /MD -IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include -IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\TH -IC:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\THC "-IC:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include" -IC:\Users\spenc\Anaconda3\include -IC:\Users\spenc\Anaconda3\include "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt" "-IC:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt" "-IC:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE" "-IC:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\ucrt" "-IC:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\shared" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\um" "-IC:\Program Files (x86)\Windows Kits\10\include\10.0.14393.0\winrt" -arch=sm_61 --nvlink-options=-v-O0 -Xptxas -O0 -DTORCH_EXTENSION_NAME=openbcsim
+openbcsim_kernel.cu(20): warning: dynamic initialization in unreachable code
+          detected during:
+            instantiation of "void projection_kernel(Simulation<scalar_t>, scalar_t *) [with scalar_t=float]" 
+(88): here
+            instantiation of "void launch_projection_kernel(const Simulation<scalar_t> &, scalar_t *, dim3, dim3, size_t, cudaStream_t) [with scalar_t=float]" 
+(91): here
+
+openbcsim_kernel.cu(20): warning: dynamic initialization in unreachable code
+          detected during:
+            instantiation of "void projection_kernel(Simulation<scalar_t>, scalar_t *) [with scalar_t=double]" 
+(88): here
+            instantiation of "void launch_projection_kernel(const Simulation<scalar_t> &, scalar_t *, dim3, dim3, size_t, cudaStream_t) [with scalar_t=double]" 
+(93): here
+
+openbcsim_kernel.cu(20): warning: dynamic initialization in unreachable code
+
+openbcsim_kernel.cu
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\x86_amd64\link.exe /nologo /INCREMENTAL:NO /LTCG /DLL /MANIFEST:EMBED,ID=2 /MANIFESTUAC:NO /LIBPATH:C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib "/LIBPATH:C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib/x64" /LIBPATH:C:\Users\spenc\Anaconda3\libs /LIBPATH:C:\Users\spenc\Anaconda3\PCbuild\amd64 "/LIBPATH:C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64" "/LIBPATH:C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB\amd64" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\ucrt\x64" "/LIBPATH:C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x64" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\um\x64" "/LIBPATH:C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB" "/LIBPATH:C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\ucrt\x86" "/LIBPATH:C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x86" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\um\x86" "/LIBPATH:C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB" "/LIBPATH:C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\ucrt\x86" "/LIBPATH:C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x86" "/LIBPATH:C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\um\x86" cudart.lib ATen.lib _C.lib /EXPORT:PyInit_openbcsim build\temp.win-amd64-3.6\Release\openbcsim_module.obj build\temp.win-amd64-3.6\Release\openbcsim_kernel.obj /OUT:build\lib.win-amd64-3.6\openbcsim.cp36-win_amd64.pyd /IMPLIB:build\temp.win-amd64-3.6\Release\openbcsim.cp36-win_amd64.lib
+openbcsim_module.obj : warning LNK4197: export 'PyInit_openbcsim' specified multiple times; using first specification
+   Creating library build\temp.win-amd64-3.6\Release\openbcsim.cp36-win_amd64.lib and object build\temp.win-amd64-3.6\Release\openbcsim.cp36-win_amd64.exp
+Generating code
+Finished generating code
+C:\Users\spenc\Anaconda3\lib\site-packages\torch\utils\cpp_extension.py:106: UserWarning: 
+
+                               !! WARNING !!
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Your compiler (cl) may be ABI-incompatible with PyTorch!
+Please use a compiler that is ABI-compatible with GCC 4.9 and above.
+See https://gcc.gnu.org/onlinedocs/libstdc++/manual/abi.html.
+
+See https://gist.github.com/goldsborough/d466f43e8ffc948ff92de7486c5216d6
+for instructions on how to install GCC 4.9 or higher.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                              !! WARNING !!
+
+  warnings.warn(ABI_INCOMPATIBILITY_WARNING.format(compiler))

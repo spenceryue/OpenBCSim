@@ -1,0 +1,15 @@
+running test
+running egg_info
+writing axpy.egg-info\PKG-INFO
+writing dependency_links to axpy.egg-info\dependency_links.txt
+writing top-level names to axpy.egg-info\top_level.txt
+reading manifest file 'axpy.egg-info\SOURCES.txt'
+writing manifest file 'axpy.egg-info\SOURCES.txt'
+running build_ext
+copying build\lib.win-amd64-3.6\axpy.cp36-win_amd64.pyd -> 
+BLEH
+BLEH BLEH
+test_hello (axpy_test.TestAxpy) ... Ah sad, you gave me None
+ok
+test_hello2 (axpy_test.TestAxpy) ... BLEH
+BLEH BLEH
