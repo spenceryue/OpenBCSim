@@ -16,7 +16,6 @@ setup (
         'nvcc': [
           '-arch=sm_61',
           '--nvlink-options=-v'
-          '-O0', '-Xptxas', '-O0'
         ]
       }
     ),

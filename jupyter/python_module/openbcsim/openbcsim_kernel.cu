@@ -1,16 +1,17 @@
 #include "openbcsim_kernel.cuh"
 #include "vector_functions_extended.hpp"
 
-#include <stdio.h>
 template <class scalar_t>
 __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__restrict__ output_buffer)
 {
   /*
     Grid Dimensions Computation Layout:
     =========================
-    X-dimension: scatterers (block) index
-    Y-dimension: transmitter aperture index
-    Z-dimension: receiver aperture index
+    blockIdx.x: scatterer index-base
+      blockDim.x: scatterer index-base-stride
+      threadIdx.x: scatterer index-offset
+    blockIdx.y: transmitter sub-element index
+    blockIdx.z: receiver sub-element index
   */
 
   // 1. Calculate scatterer index.
@@ -40,6 +41,17 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
   // 5. Calculate total travel distance: distance(transmitter, scatterer) + distance(scatterer, receiver).
   const scalar_t travel_distance = dist (transmitter, scatterer) + dist (scatterer, receiver);
 
+  const double two_sigma_squared = 2.0f * .001 * .001;
+  const double lateral_dist = scatterer.x - receiver.x;
+  const double w = exp (-lateral_dist * lateral_dist / two_sigma_squared);
+
+  const auto projection_idx = args.sampling_frequency * travel_distance / args.speed_of_sound;
+  const auto output_idx = 2 * (args.num_time_samples * blockIdx.z + (static_cast<int> (projection_idx + .5) % args.num_time_samples));
+  const scalar_t value = w * args.scatterer_amplitude[scatterer_idx] * args.scatterer_x[scatterer_idx];
+  // atomicAdd (&output_buffer[output_idx + 0], scatterer_idx);
+  atomicAdd (&output_buffer[output_idx + 0], value);
+
+  /*
   // 6. Calculate the transmitter and receiver element indices (as opposed to the sub-element indices above)
   const auto transmitter_element_idx = transmitter_idx / (args.transmitter.num_subdivisions);
   const auto receiver_element_idx = receiver_idx / (args.receiver.num_subdivisions);
@@ -49,11 +61,12 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
   const scalar_t receiver_delay = args.receiver.delay[receiver_element_idx];
   const scalar_t delay = transmitter_delay + receiver_delay;
   const scalar_t fractional_idx = args.sampling_frequency * travel_distance / args.speed_of_sound;
-  const auto projection_idx = static_cast<unsigned> (fractional_idx + delay + 0.5);
+  // Need to dot with radial unit vector for sign... (TODO)
+  const auto projection_idx = static_cast<int> (fractional_idx + delay + 0.5);
 
   // 8. Return early if projection lands outside scan region.
   // Scatterer is either too deep or "behind" the plane of the transducer element.
-  if (projection_idx < 0 || projection_idx >= params.num_time_samples)
+  if (projection_idx < 0 || projection_idx >= args.num_time_samples)
     return;
 
   // 9 Calculate phase factor.
@@ -74,13 +87,13 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
 
   // 12. Get index into output buffer from projection index and receiver index (grid Z dimension).
   // Note: Factor of 2 is to make room for real and imag components.
-  const auto output_idx = 2 * args.num_time_samples * receiver_idx + projection_idx;
+  const auto output_idx = 2 * (args.num_time_samples * receiver_idx + projection_idx);
 
   // 13. Add (scatterer amplitude) * weight into output buffer.
   const scalar_t amplitude = args.scatterer_amplitude[scatterer_idx];
   const scalar2<scalar_t> output = weight * amplitude;
   atomicAdd (&output_buffer[output_idx + 0], output.x);
-  atomicAdd (&output_buffer[output_idx + 1], output.y);
+  atomicAdd (&output_buffer[output_idx + 1], output.y);*/
 }
 
 template <class scalar_t>

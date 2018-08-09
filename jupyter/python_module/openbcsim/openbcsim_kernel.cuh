@@ -1,5 +1,5 @@
 #pragma once
-#include "definitions.hpp"
+#include "definitions.h"
 #include <cuda_runtime_api.h>
 
 #define THREADS_PER_BLOCK 1024

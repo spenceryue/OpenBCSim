@@ -32,6 +32,8 @@
 *.pyc
 *~
 .ipynb_checkpoints/
+*.sublime-workspace
+**/logs
 
 # Specific folder
 build

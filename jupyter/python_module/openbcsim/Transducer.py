@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import openbcsim # Must come after `import torch`
 
 class Transducer:
   '''Base class for describing a transducer.'''
@@ -56,23 +57,22 @@ class Transducer:
     self.check_shape (['delay', 'apodization'], [num_elements])
 
   def new_tensor (self, data, **kwargs):
-    '''Call `torch.Tensor.new_tensor` with `self.tensor_type` as the reference tensor,
-    or return `None` if `data` is `None`.'''
-    if data is None:
-      return None
-    else:
+    '''Call `torch.Tensor.new_tensor` with `self.tensor_type` as the
+    reference tensor if `data` is not `None`.'''
+    if data is not None:
       return self.tensor_type.new_tensor (data, **kwargs)
 
   def new_ones (self, size, **kwargs):
-    '''Shortcut to calling `self.tensor_type.new_ones (...)`'''
+    '''Shortcut to calling `self.tensor_type.new_ones (...)`.'''
     return self.tensor_type.new_ones (size, **kwargs)
 
   def new_zeros (self, size, **kwargs):
-    '''Shortcut to calling `self.tensor_type.new_zeros (...)`'''
+    '''Shortcut to calling `self.tensor_type.new_zeros (...)`.'''
     return self.tensor_type.new_zeros (size, **kwargs)
 
   def check_shape (self, attributes, true_shape):
-    '''Check that the list of `attributes` (given by their string names) have the desired `true_shape`.'''
+    '''Check that the list of `attributes` (given by their string names)
+    have the desired `true_shape`.'''
     true_shape = tuple (true_shape)
     for attr in attributes:
       value = getattr (self, attr)
@@ -80,12 +80,44 @@ class Transducer:
         continue
       shape = tuple (value.shape)
       if shape != true_shape:
-        msg = 'Shape of self.{} {} does not match desired true shape {}.'.format (attr, shape, true_shape)
+        msg = f'Shape of self.{attr} {shape} does not match desired true shape {true_shape}.'
         raise ValueError (msg)
 
   def same_tensor_type (self, other):
     return (self.tensor_type.dtype == other.tensor_type.dtype) and \
          (self.tensor_type.device == other.tensor_type.device)
+
+  def select_by_type (self, *functions):
+    types = [torch.float32, torch.float64];
+    for i,dtype in enumerate (types):
+      if self.dtype is dtype:
+        return functions[i]
+    raise TypeError (f'No matching type for: {self.dtype}')
+
+  def to_struct (self):
+    constructor = self.select_by_type (
+            openbcsim.Transducer_float,
+            openbcsim.Transducer_double
+          )
+    try:
+      return constructor (
+        num_elements = self.num_elements,
+        num_subelements = self.num_subelements,
+        num_subdivisions = self.num_subdivisions,
+        x = self.x,
+        y = self.y,
+        z = self.z,
+        delay = self.delay,
+        apodization = self.apodization,
+        center_frequency = self.center_frequency,
+      )
+    except Exception as e:
+      # Dump everything... (Look for a type error)
+      print ({key: (type (getattr (self, key)), getattr (self, key)) for key in [
+              'num_elements', 'num_subelements', 'num_subdivisions', 'x', 'y',
+              'z', 'delay', 'apodization', 'center_frequency'
+            ]})
+      raise e
 
   def __repr__ (self):
     '''Returns __repr__ of arguments needed to construct self.'''
@@ -94,7 +126,7 @@ class Transducer:
     constructor_args = inspect.signature (cls).parameters.keys ()
     message = cls.__name__ + ' ({})'
     # Note: `{{` escapes `{` and `}}` escapes `}`. (For reference: pyformat.info)
-    template = ', '.join ('{0}={{{0}!r}}'.format (arg) for arg in constructor_args)
+    template = ', '.join (f'{arg}={{{arg}!r}}' for arg in constructor_args)
 
     return message.format (template).format (**self.__dict__)
 
@@ -125,7 +157,7 @@ class LinearTransducer (Transducer):
     )
 
     # Default to delay=0, apodization=1 for all elements
-    self.delay = self.new_zeros (num_elements),
+    self.delay = self.new_zeros (num_elements)
     self.apodization = self.new_ones (num_elements)
 
     # Record number of subelement divisions
@@ -146,18 +178,26 @@ class LinearTransducer (Transducer):
     offset_x = cls.subdivide (width, num_sub_x)
     offset_y = cls.subdivide (height, num_sub_y)
 
+    print ('1: offset_x\n', offset_x, offset_x.shape)
+
     # Tile the subelement offsets
     tiled_offset_x = np.tile (offset_x, [num_sub_y, num_elements])
     tiled_offset_y = np.tile (offset_y.reshape(-1, 1), [1, tiled_offset_x.shape[1]])
+
+    print ('2: tiled_offset_x\n', tiled_offset_x, tiled_offset_x.shape)
 
     # Center-to-center distance between elements
     pitch = width + kerf
 
     # Tile the element positions
     position_x = np.arange ((-num_elements//2 + 1) * pitch, (num_elements//2 + 1) * pitch, pitch)
+    print ('3: position_x\n', position_x, position_x.shape)
     position_x = position_x.reshape (1, -1)
+    print ('4: position_x\n', position_x, position_x.shape)
     position_x = position_x.repeat (num_sub_x, axis=1)
+    print ('5: position_x\n', position_x, position_x.shape)
     position_x = position_x.repeat (num_sub_y, axis=0)
+    print ('6: position_x\n', position_x, position_x.shape)
 
     # Sum positions and offsets
     x = position_x + tiled_offset_x
@@ -191,14 +231,14 @@ class LinearTransducer (Transducer):
       ax.text (self.x[0], self.y[0], self.z[0], 'o Start', fontsize=14, weight='bold', color='red')
       if true_scale:
         # Scale axes to true proportions (if `true_scale` set).
-        limits = np.array ([getattr (ax, 'get_{}lim'.format(axis)) () for axis in 'xyz'])
+        limits = np.array ([getattr (ax, f'get_{axis}lim') () for axis in 'xyz'])
         ax.auto_scale_xyz(*[(limits.min (), limits.max ())]*3)
       else:
         # Label transducer elements.
         stride = self.num_elements * self.num_sub_x // 6
         stride = max (stride, 1)
         for i in range (stride, self.num_subelements, stride):
-          ax.text (self.x[i], self.y[i], self.z[i], 'o {}'.format (i), fontsize=12, color='red')
+          ax.text (self.x[i], self.y[i], self.z[i], f'o {i}', fontsize=12, color='red')
         # Warn that axes are not to scale.
         ax.text2D (1, 0, '(Axes not plotted to scale.)', transform=ax.transAxes,
                ha='right', fontsize=12, color='red')
@@ -210,13 +250,13 @@ class LinearTransducer (Transducer):
     # Label axes and convert tick values to millimeters.
     ax.set_xlabel ('x [mm]', color='red', fontsize=16, labelpad=10)
     xticks = ax.get_xticks ()
-    ax.set_xticklabels (['{:.1f}'.format (e*1000) for e in xticks])
+    ax.set_xticklabels ([f'{e*1000:.1f}' for e in xticks])
     ax.set_ylabel ('y [mm]', color='red', fontsize=16, labelpad=10)
     yticks = ax.get_yticks ()
-    ax.set_yticklabels (['{:.1f}'.format (e*1000) for e in yticks])
+    ax.set_yticklabels ([f'{e*1000:.1f}' for e in yticks])
     ax.set_zlabel ('z [mm]', color='red', fontsize=16, labelpad=10)
     zticks = ax.get_zticks ()
-    ax.set_zticklabels (['{:.1f}'.format (e*1000) for e in zticks])
+    ax.set_zticklabels ([f'{e*1000:.1f}' for e in zticks])
 
     # Give the plot a title
     ax.set_title ('Transducer Element Positions', color='red', fontsize=22, pad=50)

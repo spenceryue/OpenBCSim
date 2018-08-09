@@ -2,7 +2,7 @@
 #define strdup _strdup
 #include <torch/torch.h>
 
-#include "definitions.hpp"
+#include "definitions.h"
 #include "openbcsim_kernel.cuh"
 #include <type_traits>
 
@@ -16,20 +16,19 @@ using namespace pybind11::literals;
   {                      \
     CHECK_CUDA (x);      \
     CHECK_CONTIGUOUS (x) \
-  } while (false)
+  } while (0)
 
-template <class scalar_t>
-Transducer<scalar_t> create_Transducer (unsigned num_elements,
-                                        unsigned num_subelements,
-                                        unsigned num_subdivisions,
-                                        at::Tensor x,
-                                        at::Tensor y,
-                                        at::Tensor z,
-                                        at::Tensor delay,
-                                        at::Tensor apodization,
-                                        scalar_t center_frequency)
+template <class scalar_t, class what, std::enable_if_t<std::is_same_v<what, Transducer<scalar_t>>, int> = 0>
+Transducer<scalar_t> create (unsigned num_elements,
+                             unsigned num_subelements,
+                             unsigned num_subdivisions,
+                             at::Tensor x,
+                             at::Tensor y,
+                             at::Tensor z,
+                             at::Tensor delay,
+                             at::Tensor apodization,
+                             scalar_t center_frequency)
 {
-  // at::Tensor
   CHECK_INPUT (x);
   CHECK_INPUT (y);
   CHECK_INPUT (z);
@@ -50,20 +49,20 @@ Transducer<scalar_t> create_Transducer (unsigned num_elements,
   return result;
 }
 
-template <class scalar_t>
-Simulation<scalar_t> create_Simulation (scalar_t sampling_frequency,
-                                        scalar_t decimation,
-                                        scalar_t scan_depth,
-                                        scalar_t speed_of_sound,
-                                        scalar_t attenuation,
-                                        const Transducer<scalar_t> &transmitter,
-                                        const Transducer<scalar_t> &receiver,
-                                        unsigned num_time_samples,
-                                        at::Tensor scatterer_x,
-                                        at::Tensor scatterer_y,
-                                        at::Tensor scatterer_z,
-                                        at::Tensor scatterer_amplitude,
-                                        unsigned num_scatterers)
+template <class scalar_t, class what, std::enable_if_t<std::is_same_v<what, Simulation<scalar_t>>, int> = 0>
+Simulation<scalar_t> create (scalar_t sampling_frequency,
+                             scalar_t decimation,
+                             scalar_t scan_depth,
+                             scalar_t speed_of_sound,
+                             scalar_t attenuation,
+                             const Transducer<scalar_t> &transmitter,
+                             const Transducer<scalar_t> &receiver,
+                             unsigned num_time_samples,
+                             at::Tensor scatterer_x,
+                             at::Tensor scatterer_y,
+                             at::Tensor scatterer_z,
+                             at::Tensor scatterer_amplitude,
+                             unsigned num_scatterers)
 {
   CHECK_INPUT (scatterer_x);
   CHECK_INPUT (scatterer_y);
@@ -95,16 +94,18 @@ T ceil_div (T num, T den)
 }
 
 template <class scalar_t>
-at::Tensor run (const Simulation<scalar_t> &args)
+at::Tensor launch (const Simulation<scalar_t> &args)
 {
   const at::ScalarType s_type = (std::is_same_v<scalar_t, float>) ? (at::kFloat) : (at::kDouble);
+
   // Must use int64_t[] because at::IntList constructor is finicky.
   // If you get an "out of memory" error it was because the at::IntList constructor didn't use/convert the arguments properly.
   // (The zeros() function takes a sizes argument of type at::IntList.)
-  const int64_t sizes[] = {args.receiver.num_subelements * args.num_scatterers * 2};
+  const int64_t sizes[] = {args.receiver.num_subelements * args.num_time_samples * 2};
+
   // For some reason need to use `torch::` namespace instead of `at::` here...
   // https://github.com/pytorch/pytorch/issues/6103#issuecomment-377312709
-  at::Tensor output = torch::CUDA (s_type).ones (sizes);
+  at::Tensor output = torch::CUDA (s_type).zeros (sizes);
 
   const dim3 grid = {ceil_div<unsigned> (args.num_scatterers, THREADS_PER_BLOCK),
                      args.transmitter.num_subelements,
@@ -115,46 +116,64 @@ at::Tensor run (const Simulation<scalar_t> &args)
   return output;
 }
 
+#define DEFINE_FOR_TYPE(scalar_t)                                                                         \
+  do                                                                                                      \
+  {                                                                                                       \
+    /* Module docstring */                                                                                \
+    m.doc () = "Interface to pass simulation parameters to CUDA kernel.";                                 \
+                                                                                                          \
+    py::class_<Transducer<scalar_t>> (m, "Transducer_" #scalar_t, "Struct with transducer parameters.\n", \
+                                      py::dynamic_attr ())                                                \
+        .def (py::init (&create<scalar_t, Transducer<scalar_t>>),                                         \
+              "num_elements"_a,                                                                           \
+              "num_subelements"_a,                                                                        \
+              "num_subdivisions"_a,                                                                       \
+              "x"_a,                                                                                      \
+              "y"_a,                                                                                      \
+              "z"_a,                                                                                      \
+              "delay"_a,                                                                                  \
+              "apodization"_a,                                                                            \
+              "center_frequency"_a)                                                                       \
+        .def_readonly ("num_elements", &Transducer<scalar_t>::num_elements)                               \
+        .def_readonly ("num_subelements", &Transducer<scalar_t>::num_subelements)                         \
+        .def_readonly ("num_subdivisions", &Transducer<scalar_t>::num_subdivisions)                       \
+        .def_readonly ("center_frequency", &Transducer<scalar_t>::center_frequency);                      \
+                                                                                                          \
+    py::class_<Simulation<scalar_t>> (m, "Simulation_" #scalar_t, "Struct with simulation parameters.\n", \
+                                      py::dynamic_attr ())                                                \
+        .def (py::init (&create<scalar_t, Simulation<scalar_t>>),                                         \
+              "sampling_frequency"_a,                                                                     \
+              "decimation"_a,                                                                             \
+              "scan_depth"_a,                                                                             \
+              "speed_of_sound"_a,                                                                         \
+              "attenuation"_a,                                                                            \
+              "transmitter"_a,                                                                            \
+              "receiver"_a,                                                                               \
+              "num_time_samples"_a,                                                                       \
+              "scatterer_x"_a,                                                                            \
+              "scatterer_y"_a,                                                                            \
+              "scatterer_z"_a,                                                                            \
+              "scatterer_amplitude"_a,                                                                    \
+              "num_scatterers"_a)                                                                         \
+        .def_readonly ("sampling_frequency", &Simulation<scalar_t>::sampling_frequency)                   \
+        .def_readonly ("decimation", &Simulation<scalar_t>::decimation)                                   \
+        .def_readonly ("scan_depth", &Simulation<scalar_t>::scan_depth)                                   \
+        .def_readonly ("speed_of_sound", &Simulation<scalar_t>::speed_of_sound)                           \
+        .def_readonly ("attenuation", &Simulation<scalar_t>::attenuation)                                 \
+        .def_readonly ("transmitter", &Simulation<scalar_t>::transmitter)                                 \
+        .def_readonly ("receiver", &Simulation<scalar_t>::receiver)                                       \
+        .def_readonly ("num_time_samples", &Simulation<scalar_t>::num_time_samples)                       \
+        .def_readonly ("num_scatterers", &Simulation<scalar_t>::num_scatterers);                          \
+                                                                                                          \
+    m.def ("launch_" #scalar_t, &launch<scalar_t>,                                                        \
+           "Simulate the response from a single transmission pulse.\n"                                    \
+           "Outputs a Tensor of shape:\n"                                                                 \
+           "  (args.receiver.num_subelements, args.num_time_samples).",                                   \
+           "args"_a);                                                                                     \
+  } while (0)
+
 PYBIND11_MODULE (TORCH_EXTENSION_NAME, m)
 {
-  // Module docstring
-  m.doc () = "Interface to pass simulation parameters to CUDA kernel.";
-
-  py::class_<Transducer<float>> (m, "Transducer_f",
-                                 "Struct with transducer parameters.\n"
-                                 "(\"_f\" signifies array element data is float.)")
-      .def (py::init (&create_Transducer<float>),
-            "num_elements"_a,
-            "num_subelements"_a,
-            "num_subdivisions"_a,
-            "x"_a,
-            "y"_a,
-            "z"_a,
-            "delay"_a,
-            "apodization"_a,
-            "center_frequency"_a);
-
-  py::class_<Simulation<float>> (m, "Simulation_f",
-                                 "Struct with simulation parameters.\n"
-                                 "(\"_f\" signifies array element data is float.)")
-      .def (py::init (&create_Simulation<float>),
-            "sampling_frequency"_a,
-            "decimation"_a,
-            "scan_depth"_a,
-            "speed_of_sound"_a,
-            "attenuation"_a,
-            "transmitter"_a,
-            "receiver"_a,
-            "num_time_samples"_a,
-            "scatterer_x"_a,
-            "scatterer_y"_a,
-            "scatterer_z"_a,
-            "scatterer_amplitude"_a,
-            "num_scatterers"_a);
-
-  m.def ("run", &run<float>,
-         "Simulate the response from a single excitation pulse.\n"
-         "Outputs a Tensor of shape:\n"
-         "  (args.receiver.num_subelements, args.num_time_samples).",
-         "args"_a);
+  DEFINE_FOR_TYPE (float);
+  DEFINE_FOR_TYPE (double);
 }
