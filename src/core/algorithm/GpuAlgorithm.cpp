@@ -55,7 +55,6 @@ GpuAlgorithm::GpuAlgorithm ()
       // See: https://stackoverflow.com/q/27668269/3624264
       m_scan_sequence_configured (false),
       m_excitation_configured (false),
-      m_use_elev_hack (false),
       m_param_cuda_device_no (0),
       m_can_change_cuda_device (true),
       m_store_kernel_details (false),
@@ -146,21 +145,6 @@ void GpuAlgorithm::set_parameter (const std::string &key, const std::string &val
   {
     const auto verbose = std::stoi (value);
     m_param_verbose = m_log_object->verbose = verbose;
-  }
-  else if (key == "use_elev_hack")
-  {
-    if ((value == "on") || (value == "true"))
-    {
-      m_use_elev_hack = true;
-    }
-    else if ((value == "off") || (value == "false"))
-    {
-      m_use_elev_hack = false;
-    }
-    else
-    {
-      throw std::runtime_error ("invalid value");
-    }
   }
   else if (key == "use_delay_compensation")
   {
@@ -1053,10 +1037,6 @@ std::string GpuAlgorithm::get_parameter (const std::string &key) const
     cudaDeviceProp prop;
     cudaErrorCheck (cudaGetDeviceProperties (&prop, m_param_cuda_device_no));
     return prop.name;
-  }
-  else if (key == "use_elev_hack")
-  {
-    return std::to_string (m_use_elev_hack);
   }
   else if (key == "use_delay_compensation")
   {

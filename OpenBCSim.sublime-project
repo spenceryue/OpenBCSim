@@ -24,6 +24,8 @@
       "-I$project_base_path/src/qt5gui/trainglemesh3d",
       "-I$project_base_path/src/utils",
       "-I$project_base_path/src/utils/cartesianator",
+      "--cuda-gpu-arch=sm_61",
+      "-std=c++17",
     ],
     "default_line_ending": "unix",
   },

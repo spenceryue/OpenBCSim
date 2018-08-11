@@ -42,4 +42,6 @@ build64
 generated_phantoms
 ExternalLibs/boost_1_67_0/*
 !ExternalLibs/hdf5-1.8.13/**/*
+ExternalLibs/pybind11
+**/*.egg-info/
 install

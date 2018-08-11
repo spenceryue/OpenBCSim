@@ -1,0 +1,555 @@
+
+    Report Information
+        UnixTime Generated                                                      1533942828
+    OS Information
+        Computer Name                                                           MYAERO
+        NetBIOS Name                                                            MYAERO
+        OS Name                                                                 Windows 10 Home
+        GetVersionEx
+            dwMajorVersion                                                      10
+            dwMinorVersion                                                      0
+            dwBuildNumber                                                       17134
+            dwPlatformId                                                        2
+            wServicePackMajor                                                   0
+            wServicePackMinor                                                   0
+            wSuiteMask                                                          768
+            wProductType                                                        Workstation
+        GetProductInfo                                                          3
+        GetNativeSystemInfo
+            wProcessorArchitecture                                              x64
+            dwPageSize                                                          4096
+            lpMinimumApplicationAddress                                         65536
+            lpMaximumApplicationAddress                                         140737488289791
+            dwActiveProcessorMask                                               255
+            dwNumberOfProcessors                                                8
+            dwAllocationGranularity                                             65536
+            wProcessorLevel                                                     6
+            wProcessorRevision                                                  40457
+        EnumDisplayDevices
+            Display Device
+                DeviceName                                                      \\.\DISPLAY1
+                DeviceString                                                    Intel(R) HD Graphics 630
+                StateFlags                                                      5
+                DeviceID                                                        PCI\VEN_8086&DEV_591B&SUBSYS_34641458&REV_04
+                DeviceKey                                                       \Registry\Machine\System\CurrentControlSet\Control\Video\{5CD0C459-5C33-11E8-A51F-00059A3C7A00}\0000
+                Monitor
+                    DeviceName                                                  \\.\DISPLAY1\Monitor0
+                    DeviceString                                                Generic PnP Monitor
+                    StateFlags                                                  3
+                    DeviceID                                                    MONITOR\LGD049A\{4d36e96e-e325-11ce-bfc1-08002be10318}\0001
+                    DeviceKey                                                   \Registry\Machine\System\CurrentControlSet\Control\Class\{4d36e96e-e325-11ce-bfc1-08002be10318}\0001
+            Display Device
+                DeviceName                                                      \\.\DISPLAY2
+                DeviceString                                                    Intel(R) HD Graphics 630
+                StateFlags                                                      0
+                DeviceID                                                        PCI\VEN_8086&DEV_591B&SUBSYS_34641458&REV_04
+                DeviceKey                                                       \Registry\Machine\System\CurrentControlSet\Control\Video\{5CD0C459-5C33-11E8-A51F-00059A3C7A00}\0001
+            Display Device
+                DeviceName                                                      \\.\DISPLAY3
+                DeviceString                                                    Intel(R) HD Graphics 630
+                StateFlags                                                      0
+                DeviceID                                                        PCI\VEN_8086&DEV_591B&SUBSYS_34641458&REV_04
+                DeviceKey                                                       \Registry\Machine\System\CurrentControlSet\Control\Video\{5CD0C459-5C33-11E8-A51F-00059A3C7A00}\0002
+            Display Device
+                DeviceName                                                      \\.\DISPLAY4
+                DeviceString                                                    NVIDIA GeForce GTX 1060
+                StateFlags                                                      0
+                DeviceID                                                        PCI\VEN_10DE&DEV_1C20&SUBSYS_34641458&REV_A1
+                DeviceKey                                                       \Registry\Machine\System\CurrentControlSet\Control\Video\{5CD0C491-5C33-11E8-A51F-00059A3C7A00}\0000
+            Display Device
+                DeviceName                                                      \\.\DISPLAY5
+                DeviceString                                                    NVIDIA GeForce GTX 1060
+                StateFlags                                                      0
+                DeviceID                                                        PCI\VEN_10DE&DEV_1C20&SUBSYS_34641458&REV_A1
+                DeviceKey                                                       \Registry\Machine\System\CurrentControlSet\Control\Video\{5CD0C491-5C33-11E8-A51F-00059A3C7A00}\0001
+            Display Device
+                DeviceName                                                      \\.\DISPLAY6
+                DeviceString                                                    NVIDIA GeForce GTX 1060
+                StateFlags                                                      0
+                DeviceID                                                        PCI\VEN_10DE&DEV_1C20&SUBSYS_34641458&REV_A1
+                DeviceKey                                                       \Registry\Machine\System\CurrentControlSet\Control\Video\{5CD0C491-5C33-11E8-A51F-00059A3C7A00}\0002
+            Display Device
+                DeviceName                                                      \\.\DISPLAY7
+                DeviceString                                                    NVIDIA GeForce GTX 1060
+                StateFlags                                                      0
+                DeviceID                                                        PCI\VEN_10DE&DEV_1C20&SUBSYS_34641458&REV_A1
+                DeviceKey                                                       \Registry\Machine\System\CurrentControlSet\Control\Video\{5CD0C491-5C33-11E8-A51F-00059A3C7A00}\0003
+        GlobalMemoryStatusEx
+            dwMemoryLoad                                                        51
+            ullTotalPhys                                                        17059758080
+            ullAvailPhys                                                        8332173312
+            ullTotalPageFile                                                    19609894912
+            ullAvailPageFile                                                    8970932224
+            ullTotalVirtual                                                     140737488224256
+            ullAvailVirtual                                                     140733110640640
+        Processor Information
+            0
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+            1
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+            2
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+            3
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+            4
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+            5
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+            6
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+            7
+                Name                                                            Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                Clock speed (MHz)                                               2808
+    NvAPI
+        IsMSHybridGraphics                                                      True
+        DisplayDriverVersion
+            Driver Version                                                      39882
+            Changelist                                                          0
+            BuildBranchString                                                   r398_75
+            Default AdapterString                                               GeForce GTX 1060
+        DisplayDriverCompileType                                                Release
+    NvDebugApi
+        WDDM Devices
+            GPU
+                Name                                                            GeForce GTX 1060
+                Architecture                                                    Unknown
+                Architecture Number                                             304
+                Architecture Implementation                                     6
+                Architecture Revision                                           161
+                Number of GPCs                                                  2
+                Number of TPCs                                                  10
+                Number of SMs                                                   10
+                Warps per SM                                                    128
+                Lanes per warp                                                  32
+                Register file size                                              65536
+                Max CTAs per SM                                                 64
+                Max size of shared memory per CTA (bytes)                       49152
+                SM Revision                                                     393216
+                Number of FB PAs                                                8
+                Number of LTs per LTC                                           4
+                RmGpuId                                                         256
+        RM Devices
+    CUDA
+        CUDA Device
+            Name                                                                GeForce GTX 1060
+            Driver                                                              WDDM
+            DeviceIndex                                                         0
+            GPU Family                                                          GP106-A
+            RmGpuId                                                             256
+            Compute Major                                                       6
+            Compute Minor                                                       1
+            MAX_THREADS_PER_BLOCK                                               1024
+            MAX_BLOCK_DIM_X                                                     1024
+            MAX_BLOCK_DIM_Y                                                     1024
+            MAX_BLOCK_DIM_Z                                                     64
+            MAX_GRID_DIM_X                                                      2147483647
+            MAX_GRID_DIM_Y                                                      65535
+            MAX_GRID_DIM_Z                                                      65535
+            MAX_SHARED_MEMORY_PER_BLOCK                                         49152
+            TOTAL_CONSTANT_MEMORY                                               65536
+            WARP_SIZE                                                           32
+            MAX_PITCH                                                           2147483647
+            MAX_REGISTERS_PER_BLOCK                                             65536
+            CLOCK_RATE                                                          1670500
+            TEXTURE_ALIGNMENT                                                   512
+            GPU_OVERLAP                                                         1
+            MULTIPROCESSOR_COUNT                                                10
+            KERNEL_EXEC_TIMEOUT                                                 0
+            INTEGRATED                                                          0
+            CAN_MAP_HOST_MEMORY                                                 1
+            COMPUTE_MODE                                                        0
+            MAXIMUM_TEXTURE1D_WIDTH                                             131072
+            MAXIMUM_TEXTURE2D_WIDTH                                             131072
+            MAXIMUM_TEXTURE2D_HEIGHT                                            65536
+            MAXIMUM_TEXTURE3D_WIDTH                                             16384
+            MAXIMUM_TEXTURE3D_HEIGHT                                            16384
+            MAXIMUM_TEXTURE3D_DEPTH                                             16384
+            MAXIMUM_TEXTURE2D_LAYERED_WIDTH                                     32768
+            MAXIMUM_TEXTURE2D_LAYERED_HEIGHT                                    32768
+            MAXIMUM_TEXTURE2D_LAYERED_LAYERS                                    2048
+            SURFACE_ALIGNMENT                                                   512
+            CONCURRENT_KERNELS                                                  1
+            ECC_ENABLED                                                         0
+            PCI_BUS_ID                                                          1
+            PCI_DEVICE_ID                                                       0
+            TCC_DRIVER                                                          0
+            MEMORY_CLOCK_RATE                                                   4004000
+            GLOBAL_MEMORY_BUS_WIDTH                                             192
+            L2_CACHE_SIZE                                                       1572864
+            MAX_THREADS_PER_MULTIPROCESSOR                                      2048
+            ASYNC_ENGINE_COUNT                                                  2
+            UNIFIED_ADDRESSING                                                  1
+            MAXIMUM_TEXTURE1D_LAYERED_WIDTH                                     32768
+            MAXIMUM_TEXTURE1D_LAYERED_LAYERS                                    2048
+            CAN_TEX2D_GATHER                                                    1
+            MAXIMUM_TEXTURE2D_GATHER_WIDTH                                      32768
+            MAXIMUM_TEXTURE2D_GATHER_HEIGHT                                     32768
+            MAXIMUM_TEXTURE3D_WIDTH_ALTERNATE                                   8192
+            MAXIMUM_TEXTURE3D_HEIGHT_ALTERNATE                                  8192
+            MAXIMUM_TEXTURE3D_DEPTH_ALTERNATE                                   32768
+            PCI_DOMAIN_ID                                                       0
+            TEXTURE_PITCH_ALIGNMENT                                             32
+            MAXIMUM_TEXTURECUBEMAP_WIDTH                                        32768
+            MAXIMUM_TEXTURECUBEMAP_LAYERED_WIDTH                                32768
+            MAXIMUM_TEXTURECUBEMAP_LAYERED_LAYERS                               2046
+            MAXIMUM_SURFACE1D_WIDTH                                             32768
+            MAXIMUM_SURFACE2D_WIDTH                                             131072
+            MAXIMUM_SURFACE2D_HEIGHT                                            65536
+            MAXIMUM_SURFACE3D_WIDTH                                             16384
+            MAXIMUM_SURFACE3D_HEIGHT                                            16384
+            MAXIMUM_SURFACE3D_DEPTH                                             16384
+            MAXIMUM_SURFACE1D_LAYERED_WIDTH                                     32768
+            MAXIMUM_SURFACE1D_LAYERED_LAYERS                                    2048
+            MAXIMUM_SURFACE2D_LAYERED_WIDTH                                     32768
+            MAXIMUM_SURFACE2D_LAYERED_HEIGHT                                    32768
+            MAXIMUM_SURFACE2D_LAYERED_LAYERS                                    2048
+            MAXIMUM_SURFACECUBEMAP_WIDTH                                        32768
+            MAXIMUM_SURFACECUBEMAP_LAYERED_WIDTH                                32768
+            MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS                               2046
+            MAXIMUM_TEXTURE1D_LINEAR_WIDTH                                      134217728
+            MAXIMUM_TEXTURE2D_LINEAR_WIDTH                                      131072
+            MAXIMUM_TEXTURE2D_LINEAR_HEIGHT                                     65000
+            MAXIMUM_TEXTURE2D_LINEAR_PITCH                                      2097120
+            MAXIMUM_TEXTURE2D_MIPMAPPED_WIDTH                                   32768
+            MAXIMUM_TEXTURE2D_MIPMAPPED_HEIGHT                                  32768
+            MAXIMUM_TEXTURE1D_MIPMAPPED_WIDTH                                   16384
+            STREAM_PRIORITIES_SUPPORTED                                         1
+            GLOBAL_L1_CACHE_SUPPORTED                                           1
+            LOCAL_L1_CACHE_SUPPORTED                                            1
+            MAX_SHARED_MEMORY_PER_MULTIPROCESSOR                                98304
+            MAX_REGISTERS_PER_MULTIPROCESSOR                                    65536
+            MANAGED_MEMORY                                                      1
+            MULTI_GPU_BOARD                                                     0
+            MULTI_GPU_BOARD_GROUP_ID                                            0
+            HOST_NATIVE_ATOMIC_SUPPORTED                                        0
+            SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO                               32
+            PAGEABLE_MEMORY_ACCESS                                              0
+            CONCURRENT_MANAGED_ACCESS                                           0
+            COMPUTE_PREEMPTION_SUPPORTED                                        0
+            CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM                             0
+            CAN_USE_STREAM_MEM_OPS                                              0
+            CAN_USE_64_BIT_STREAM_MEM_OPS                                       0
+            CAN_USE_STREAM_WAIT_VALUE_NOR                                       0
+            COOPERATIVE_LAUNCH                                                  0
+            COOPERATIVE_MULTI_DEVICE_LAUNCH                                     0
+            MAX_SHARED_MEMORY_PER_BLOCK_OPTIN                                   49152
+            CAN_FLUSH_REMOTE_WRITES                                             0
+            HOST_REGISTER_SUPPORTED                                             1
+            PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES                        0
+            DIRECT_MANAGED_MEM_ACCESS_FROM_HOST                                 0
+            DISPLAY_NAME                                                        GeForce GTX 1060
+            COMPUTE_CAPABILITY_MAJOR                                            6
+            COMPUTE_CAPABILITY_MINOR                                            1
+            TOTAL_MEMORY                                                        6442450944
+            RAM_TYPE                                                            8
+            RAM_LOCATION                                                        1
+            GPU_PCI_DEVICE_ID                                                   471863518
+            GPU_PCI_SUB_SYSTEM_ID                                               878974040
+            GPU_PCI_REVISION_ID                                                 161
+            GPU_PCI_EXT_DEVICE_ID                                               7200
+            GPU_PCI_EXT_GEN                                                     2
+            GPU_PCI_EXT_GPU_GEN                                                 2
+            GPU_PCI_EXT_GPU_LINK_RATE                                           8000
+            GPU_PCI_EXT_GPU_LINK_WIDTH                                          16
+            GPU_PCI_EXT_DOWNSTREAM_LINK_RATE                                    8000
+            GPU_PCI_EXT_DOWNSTREAM_LINK_WIDTH                                   16
+    OpenCL
+        Platform
+            Profile                                                             FULL_PROFILE
+            Version                                                             OpenCL 2.1 
+            Name                                                                Intel(R) OpenCL
+            Vendor                                                              Intel(R) Corporation
+            Extensions                                                          cl_intel_dx9_media_sharing cl_khr_3d_image_writes cl_khr_byte_addressable_store cl_khr_d3d11_sharing cl_khr_depth_images cl_khr_dx9_media_sharing cl_khr_fp64 cl_khr_gl_sharing cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_icd cl_khr_image2d_from_buffer cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_spir
+            Device
+                CL_DEVICE_ADDRESS_BITS                                          64
+                CL_DEVICE_AVAILABLE                                             True
+                CL_DEVICE_COMPILER_AVAILABLE                                    True
+                CL_DEVICE_DOUBLE_FP_CONFIG
+                    CL_FP_DENORM                                                True
+                    CL_FP_INF_NAN                                               True
+                    CL_FP_DENORM                                                True
+                    CL_FP_ROUND_TO_NEAREST                                      True
+                    CL_FP_ROUND_TO_ZERO                                         True
+                    CL_FP_FMA                                                   True
+                CL_DEVICE_ENDIAN_LITTLE                                         True
+                CL_DEVICE_ERROR_CORRECTION_SUPPORT                              False
+                CL_DEVICE_EXECUTION_CAPABILITIES
+                    CL_EXEC_KERNEL                                              True
+                    CL_EXEC_NATIVE_KERNEL                                       False
+                CL_DEVICE_EXTENSIONS                                            cl_khr_3d_image_writes cl_khr_byte_addressable_store cl_khr_fp16 cl_khr_depth_images cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_icd cl_khr_image2d_from_buffer cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_intel_subgroups cl_intel_required_subgroup_size cl_intel_subgroups_short cl_khr_spir cl_intel_accelerator cl_intel_media_block_io cl_intel_driver_diagnostics cl_intel_device_side_avc_motion_estimation cl_khr_priority_hints cl_khr_subgroups cl_khr_il_program cl_khr_fp64 cl_intel_planar_yuv cl_intel_packed_yuv cl_intel_motion_estimation cl_intel_advanced_motion_estimation cl_khr_gl_sharing cl_khr_gl_depth_images cl_khr_gl_event cl_khr_gl_msaa_sharing cl_intel_dx9_media_sharing cl_khr_dx9_media_sharing cl_khr_d3d10_sharing cl_khr_d3d11_sharing cl_intel_d3d11_nv12_media_sharing cl_intel_simultaneous_sharing 
+                CL_DEVICE_GLOBAL_MEM_CACHE_SIZE                                 524288
+                CL_DEVICE_GLOBAL_MEM_CACHE_TYPE                                 RW
+                CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE                             64
+                CL_DEVICE_GLOBAL_MEM_SIZE                                       6823903232
+                CL_DEVICE_HALF_FP_CONFIG
+                    CL_FP_DENORM                                                True
+                    CL_FP_INF_NAN                                               True
+                    CL_FP_DENORM                                                True
+                    CL_FP_ROUND_TO_NEAREST                                      True
+                    CL_FP_ROUND_TO_ZERO                                         True
+                    CL_FP_FMA                                                   True
+                CL_DEVICE_HOST_UNIFIED_MEMORY                                   True
+                CL_DEVICE_IMAGE_SUPPORT                                         True
+                CL_DEVICE_IMAGE2D_MAX_HEIGHT                                    16384
+                CL_DEVICE_IMAGE2D_MAX_WIDTH                                     16384
+                CL_DEVICE_IMAGE3D_MAX_DEPTH                                     2048
+                CL_DEVICE_IMAGE3D_MAX_HEIGHT                                    16384
+                CL_DEVICE_IMAGE3D_MAX_WIDTH                                     16384
+                CL_DEVICE_LOCAL_MEM_SIZE                                        65536
+                CL_DEVICE_LOCAL_MEM_TYPE                                        Local
+                CL_DEVICE_MAX_CLOCK_FREQUENCY                                   1100
+                CL_DEVICE_MAX_COMPUTE_UNITS                                     24
+                CL_DEVICE_MAX_CONSTANT_ARGS                                     8
+                CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE                              3411951616
+                CL_DEVICE_MAX_MEM_ALLOC_SIZE                                    3411951616
+                CL_DEVICE_MAX_PARAMETER_SIZE                                    1024
+                CL_DEVICE_MAX_READ_IMAGE_ARGS                                   128
+                CL_DEVICE_MAX_SAMPLERS                                          16
+                CL_DEVICE_MAX_WORK_GROUP_SIZE                                   256
+                CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS                              3
+                CL_DEVICE_MAX_WORK_ITEM_SIZES
+                    0                                                           256
+                    1                                                           256
+                    2                                                           256
+                CL_DEVICE_MAX_WRITE_IMAGE_ARGS                                  128
+                CL_DEVICE_MEM_BASE_ADDR_ALIGN                                   1024
+                CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE                              128
+                CL_DEVICE_NAME                                                  Intel(R) HD Graphics 630
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_CHAR                              16
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_SHORT                             8
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_INT                               4
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_LONG                              1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_FLOAT                             1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_DOUBLE                            1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_HALF                              8
+                CL_DEVICE_OPENCL_C_VERSION                                      OpenCL C 2.1 
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR                           16
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT                          8
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT                            4
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG                           1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT                          1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE                         1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF                           8
+                CL_DEVICE_PROFILE                                               FULL_PROFILE
+                CL_DEVICE_PROFILING_TIMER_RESOLUTION                            83
+                CL_DEVICE_QUEUE_PROPERTIES
+                    CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE                      True
+                    CL_QUEUE_PROFILING_ENABLE                                   True
+                CL_DEVICE_SINGLE_FP_CONFIG
+                    CL_FP_DENORM                                                True
+                    CL_FP_INF_NAN                                               True
+                    CL_FP_DENORM                                                True
+                    CL_FP_ROUND_TO_NEAREST                                      True
+                    CL_FP_ROUND_TO_ZERO                                         True
+                    CL_FP_FMA                                                   True
+                CL_DEVICE_TYPE
+                    CL_DEVICE_TYPE_DEFAULT                                      False
+                    CL_DEVICE_TYPE_CPU                                          False
+                    CL_DEVICE_TYPE_GPU                                          True
+                    CL_DEVICE_TYPE_ACCELERATOR                                  False
+                CL_DEVICE_VENDOR                                                Intel(R) Corporation
+                CL_DEVICE_VENDOR_ID                                             32902
+                CL_DEVICE_VERSION                                               OpenCL 2.1 NEO 
+                CL_DRIVER_VERSION                                               23.20.16.4973
+                Profile                                                         FULL_PROFILE
+                Version                                                         OpenCL 2.1 
+                Name                                                            Intel(R) OpenCL
+                Vendor                                                          Intel(R) Corporation
+                Extensions                                                      cl_intel_dx9_media_sharing cl_khr_3d_image_writes cl_khr_byte_addressable_store cl_khr_d3d11_sharing cl_khr_depth_images cl_khr_dx9_media_sharing cl_khr_fp64 cl_khr_gl_sharing cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_icd cl_khr_image2d_from_buffer cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_spir
+            Device
+                CL_DEVICE_ADDRESS_BITS                                          64
+                CL_DEVICE_AVAILABLE                                             True
+                CL_DEVICE_COMPILER_AVAILABLE                                    True
+                CL_DEVICE_DOUBLE_FP_CONFIG
+                    CL_FP_DENORM                                                True
+                    CL_FP_INF_NAN                                               True
+                    CL_FP_DENORM                                                True
+                    CL_FP_ROUND_TO_NEAREST                                      True
+                    CL_FP_ROUND_TO_ZERO                                         True
+                    CL_FP_FMA                                                   True
+                CL_DEVICE_ENDIAN_LITTLE                                         True
+                CL_DEVICE_ERROR_CORRECTION_SUPPORT                              False
+                CL_DEVICE_EXECUTION_CAPABILITIES
+                    CL_EXEC_KERNEL                                              True
+                    CL_EXEC_NATIVE_KERNEL                                       True
+                CL_DEVICE_EXTENSIONS                                            cl_khr_icd cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_byte_addressable_store cl_khr_depth_images cl_khr_3d_image_writes cl_intel_exec_by_local_thread cl_khr_spir cl_khr_dx9_media_sharing cl_intel_dx9_media_sharing cl_khr_d3d11_sharing cl_khr_gl_sharing cl_khr_fp64 cl_khr_image2d_from_buffer cl_intel_vec_len_hint 
+                CL_DEVICE_GLOBAL_MEM_CACHE_SIZE                                 262144
+                CL_DEVICE_GLOBAL_MEM_CACHE_TYPE                                 RW
+                CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE                             64
+                CL_DEVICE_GLOBAL_MEM_SIZE                                       17059758080
+                CL_DEVICE_HALF_FP_CONFIG                                        Information not available
+                CL_DEVICE_HOST_UNIFIED_MEMORY                                   True
+                CL_DEVICE_IMAGE_SUPPORT                                         True
+                CL_DEVICE_IMAGE2D_MAX_HEIGHT                                    16384
+                CL_DEVICE_IMAGE2D_MAX_WIDTH                                     16384
+                CL_DEVICE_IMAGE3D_MAX_DEPTH                                     2048
+                CL_DEVICE_IMAGE3D_MAX_HEIGHT                                    2048
+                CL_DEVICE_IMAGE3D_MAX_WIDTH                                     2048
+                CL_DEVICE_LOCAL_MEM_SIZE                                        32768
+                CL_DEVICE_LOCAL_MEM_TYPE                                        Global
+                CL_DEVICE_MAX_CLOCK_FREQUENCY                                   2800
+                CL_DEVICE_MAX_COMPUTE_UNITS                                     8
+                CL_DEVICE_MAX_CONSTANT_ARGS                                     480
+                CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE                              131072
+                CL_DEVICE_MAX_MEM_ALLOC_SIZE                                    4264939520
+                CL_DEVICE_MAX_PARAMETER_SIZE                                    3840
+                CL_DEVICE_MAX_READ_IMAGE_ARGS                                   480
+                CL_DEVICE_MAX_SAMPLERS                                          480
+                CL_DEVICE_MAX_WORK_GROUP_SIZE                                   8192
+                CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS                              3
+                CL_DEVICE_MAX_WORK_ITEM_SIZES
+                    0                                                           8192
+                    1                                                           8192
+                    2                                                           8192
+                CL_DEVICE_MAX_WRITE_IMAGE_ARGS                                  480
+                CL_DEVICE_MEM_BASE_ADDR_ALIGN                                   1024
+                CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE                              128
+                CL_DEVICE_NAME                                                  Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_CHAR                              32
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_SHORT                             16
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_INT                               8
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_LONG                              4
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_FLOAT                             8
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_DOUBLE                            4
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_HALF                              0
+                CL_DEVICE_OPENCL_C_VERSION                                      OpenCL C 2.0 
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR                           1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT                          1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT                            1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG                           1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT                          1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE                         1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF                           0
+                CL_DEVICE_PROFILE                                               FULL_PROFILE
+                CL_DEVICE_PROFILING_TIMER_RESOLUTION                            364
+                CL_DEVICE_QUEUE_PROPERTIES
+                    CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE                      True
+                    CL_QUEUE_PROFILING_ENABLE                                   True
+                CL_DEVICE_SINGLE_FP_CONFIG
+                    CL_FP_DENORM                                                True
+                    CL_FP_INF_NAN                                               True
+                    CL_FP_DENORM                                                True
+                    CL_FP_ROUND_TO_NEAREST                                      True
+                    CL_FP_ROUND_TO_ZERO                                         False
+                    CL_FP_FMA                                                   False
+                CL_DEVICE_TYPE
+                    CL_DEVICE_TYPE_DEFAULT                                      False
+                    CL_DEVICE_TYPE_CPU                                          True
+                    CL_DEVICE_TYPE_GPU                                          False
+                    CL_DEVICE_TYPE_ACCELERATOR                                  False
+                CL_DEVICE_VENDOR                                                Intel(R) Corporation
+                CL_DEVICE_VENDOR_ID                                             32902
+                CL_DEVICE_VERSION                                               OpenCL 2.1 (Build 611)
+                CL_DRIVER_VERSION                                               7.6.0.611
+                Profile                                                         FULL_PROFILE
+                Version                                                         OpenCL 2.1 
+                Name                                                            Intel(R) OpenCL
+                Vendor                                                          Intel(R) Corporation
+                Extensions                                                      cl_intel_dx9_media_sharing cl_khr_3d_image_writes cl_khr_byte_addressable_store cl_khr_d3d11_sharing cl_khr_depth_images cl_khr_dx9_media_sharing cl_khr_fp64 cl_khr_gl_sharing cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_icd cl_khr_image2d_from_buffer cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_spir
+        Platform
+            Profile                                                             FULL_PROFILE
+            Version                                                             OpenCL 1.2 CUDA 9.2.189
+            Name                                                                NVIDIA CUDA
+            Vendor                                                              NVIDIA Corporation
+            Extensions                                                          cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_fp64 cl_khr_byte_addressable_store cl_khr_icd cl_khr_gl_sharing cl_nv_compiler_options cl_nv_device_attribute_query cl_nv_pragma_unroll cl_nv_d3d10_sharing cl_khr_d3d10_sharing cl_nv_d3d11_sharing cl_nv_copy_opts cl_nv_create_buffer
+            Device
+                CL_DEVICE_ADDRESS_BITS                                          64
+                CL_DEVICE_AVAILABLE                                             True
+                CL_DEVICE_COMPILER_AVAILABLE                                    True
+                CL_DEVICE_DOUBLE_FP_CONFIG
+                    CL_FP_DENORM                                                True
+                    CL_FP_INF_NAN                                               True
+                    CL_FP_DENORM                                                True
+                    CL_FP_ROUND_TO_NEAREST                                      True
+                    CL_FP_ROUND_TO_ZERO                                         True
+                    CL_FP_FMA                                                   True
+                CL_DEVICE_ENDIAN_LITTLE                                         True
+                CL_DEVICE_ERROR_CORRECTION_SUPPORT                              False
+                CL_DEVICE_EXECUTION_CAPABILITIES
+                    CL_EXEC_KERNEL                                              True
+                    CL_EXEC_NATIVE_KERNEL                                       False
+                CL_DEVICE_EXTENSIONS                                            cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_fp64 cl_khr_byte_addressable_store cl_khr_icd cl_khr_gl_sharing cl_nv_compiler_options cl_nv_device_attribute_query cl_nv_pragma_unroll cl_nv_d3d10_sharing cl_khr_d3d10_sharing cl_nv_d3d11_sharing cl_nv_copy_opts cl_nv_create_buffer
+                CL_DEVICE_GLOBAL_MEM_CACHE_SIZE                                 163840
+                CL_DEVICE_GLOBAL_MEM_CACHE_TYPE                                 RW
+                CL_DEVICE_GLOBAL_MEM_CACHELINE_SIZE                             128
+                CL_DEVICE_GLOBAL_MEM_SIZE                                       6442450944
+                CL_DEVICE_HALF_FP_CONFIG                                        Information not available
+                CL_DEVICE_HOST_UNIFIED_MEMORY                                   False
+                CL_DEVICE_IMAGE_SUPPORT                                         True
+                CL_DEVICE_IMAGE2D_MAX_HEIGHT                                    32768
+                CL_DEVICE_IMAGE2D_MAX_WIDTH                                     16384
+                CL_DEVICE_IMAGE3D_MAX_DEPTH                                     16384
+                CL_DEVICE_IMAGE3D_MAX_HEIGHT                                    16384
+                CL_DEVICE_IMAGE3D_MAX_WIDTH                                     16384
+                CL_DEVICE_LOCAL_MEM_SIZE                                        49152
+                CL_DEVICE_LOCAL_MEM_TYPE                                        Local
+                CL_DEVICE_MAX_CLOCK_FREQUENCY                                   1670
+                CL_DEVICE_MAX_COMPUTE_UNITS                                     10
+                CL_DEVICE_MAX_CONSTANT_ARGS                                     9
+                CL_DEVICE_MAX_CONSTANT_BUFFER_SIZE                              65536
+                CL_DEVICE_MAX_MEM_ALLOC_SIZE                                    1610612736
+                CL_DEVICE_MAX_PARAMETER_SIZE                                    4352
+                CL_DEVICE_MAX_READ_IMAGE_ARGS                                   256
+                CL_DEVICE_MAX_SAMPLERS                                          32
+                CL_DEVICE_MAX_WORK_GROUP_SIZE                                   1024
+                CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS                              3
+                CL_DEVICE_MAX_WORK_ITEM_SIZES
+                    0                                                           1024
+                    1                                                           1024
+                    2                                                           64
+                CL_DEVICE_MAX_WRITE_IMAGE_ARGS                                  16
+                CL_DEVICE_MEM_BASE_ADDR_ALIGN                                   4096
+                CL_DEVICE_MIN_DATA_TYPE_ALIGN_SIZE                              128
+                CL_DEVICE_NAME                                                  GeForce GTX 1060
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_CHAR                              1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_SHORT                             1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_INT                               1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_LONG                              1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_FLOAT                             1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_DOUBLE                            1
+                CL_DEVICE_NATIVE_VECTOR_WIDTH_HALF                              0
+                CL_DEVICE_OPENCL_C_VERSION                                      OpenCL C 1.2 
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR                           1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT                          1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT                            1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG                           1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT                          1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE                         1
+                CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF                           0
+                CL_DEVICE_PROFILE                                               FULL_PROFILE
+                CL_DEVICE_PROFILING_TIMER_RESOLUTION                            1000
+                CL_DEVICE_QUEUE_PROPERTIES
+                    CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE                      True
+                    CL_QUEUE_PROFILING_ENABLE                                   True
+                CL_DEVICE_SINGLE_FP_CONFIG
+                    CL_FP_DENORM                                                True
+                    CL_FP_INF_NAN                                               True
+                    CL_FP_DENORM                                                True
+                    CL_FP_ROUND_TO_NEAREST                                      True
+                    CL_FP_ROUND_TO_ZERO                                         True
+                    CL_FP_FMA                                                   True
+                CL_DEVICE_TYPE
+                    CL_DEVICE_TYPE_DEFAULT                                      False
+                    CL_DEVICE_TYPE_CPU                                          False
+                    CL_DEVICE_TYPE_GPU                                          True
+                    CL_DEVICE_TYPE_ACCELERATOR                                  False
+                CL_DEVICE_VENDOR                                                NVIDIA Corporation
+                CL_DEVICE_VENDOR_ID                                             4318
+                CL_DEVICE_VERSION                                               OpenCL 1.2 CUDA
+                CL_DRIVER_VERSION                                               398.82
+                Profile                                                         FULL_PROFILE
+                Version                                                         OpenCL 1.2 CUDA 9.2.189
+                Name                                                            NVIDIA CUDA
+                Vendor                                                          NVIDIA Corporation
+                Extensions                                                      cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics cl_khr_local_int32_extended_atomics cl_khr_fp64 cl_khr_byte_addressable_store cl_khr_icd cl_khr_gl_sharing cl_nv_compiler_options cl_nv_device_attribute_query cl_nv_pragma_unroll cl_nv_d3d10_sharing cl_khr_d3d10_sharing cl_nv_d3d11_sharing cl_nv_copy_opts cl_nv_create_buffer
+    Tools
+        Host Version                                                            5.6.0.18146
+        Host Tool Edition                                                       Standard
+        Host Application Version                                                14.0

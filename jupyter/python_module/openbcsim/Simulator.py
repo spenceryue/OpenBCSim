@@ -2,7 +2,7 @@ import torch
 import openbcsim # Must come after `import torch`
 import Transducer
 
-class Simulation:
+class Simulator:
   '''Data and parameters needed to run a simulation.'''
 
   def __init__ (self, sampling_frequency=100e6, decimation=10,
@@ -148,8 +148,8 @@ class Simulation:
 
   def to_struct (self):
     constructor = self.select_by_type (
-        openbcsim.Simulation_float,
-        openbcsim.Simulation_double
+        openbcsim.Simulator_float,
+        openbcsim.Simulator_double
       )
     try:
       return constructor (
@@ -182,14 +182,81 @@ class Simulation:
               ]})
         raise e
 
-  def launch (self, verbose=True):
+  def launch (self, silent=False):
+    '''Launch CUDA kernel to simulate a frame.'''
     import time
+    import os
+    os.environ['CUDA_LAUNCH_BLOCKING'] = '1' # To track the CUDA errors
+
     tic = time.clock ()
     simulate = self.select_by_type (openbcsim.launch_float, openbcsim.launch_double)
-    result = simulate (self.to_struct ())
-    if verbose:
-      print (f'({time.clock () - tic:.1f} seconds)')
+    try:
+      result = simulate (self.to_struct ())
+      torch.cuda.synchronize ()
+      [x for x in result if False] # Read to trigger cudaMemcpy
+    except Exception as e:
+      msg = 'See CUDA documentation for list of error codes:\n'
+      msg += 'https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g3f51e3575c2178246db0a94a430e0038'
+      print (msg)
+      raise e
+    else:
+      self.toc = time.clock () - tic
+      self.perf = {
+        'seconds': self.toc,
+        'Theoretical memory bandwidth': 4004e6 * (192/8) * 2 / 1e9,
+        'Actual memory bandwidth': result.numel () * 4 * (1 + self.dtype is torch.float64) * 2 / toc,
+        'Threads per second': stats (silent=True)['CUDA threads'] / toc,
+      }
+      if not silent:
+        msg = '''\
+{seconds:.1f} seconds
+Theoretical memory bandwidth: {Theoretical memory bandwidth:.1f}
+Actual memory bandwidth: {Actual memory bandwidth:.1f}
+Threads per second: {Threads per second:.1f}\
+'''.format (**self.perf)
+        print (msg)
+
     return result
+
+  def stats (self, silent=False):
+    '''Launch stats.'''
+    from math import ceil
+    self.stats = {
+        'Output buffer elements':     2 * self.num_time_samples * self.receiver.num_subelements,
+        'Time samples':               self.num_time_samples,
+        'Transmitter subelements':    self.transmitter.num_subelements,
+        'Receiver subelements':       self.receiver.num_subelements,
+        'Scatterer samples':          self.num_scatterers,
+        'CUDA threads':               1024 * ceil (self.num_scatterers/1024) * self.transmitter.num_subelements * self.receiver.num_subelements,
+        'CUDA blocks':                self.num_scatterers * self.transmitter.num_subelements * self.receiver.num_subelements // 1024,
+      }
+
+    if not silent:
+      msg = '''\
+Output buffer elements     {Output buffer elements:<15,} = \
+2 x [Time samples] x [Receiver subelements] \
+-- `2 x` because data is complex
+Time samples               {Time samples:<15,}
+Transmitter subelements    {Transmitter subelements:<15,}
+Receiver subelements       {Receiver subelements:<15,}
+Scatterer samples          {Scatterer samples:<15,}
+CUDA threads               {CUDA threads:<15,} = \
+1024 * ceil([Scatterer samples] / 1024) x [Transmitter subelements] x [Receiver subelements]
+CUDA blocks                {CUDA blocks:<15,} = [CUDA threads] / 1024\
+'''.format (**self.stats)
+      print (msg)
+
+    return self.stats
+
+  @staticmethod
+  def reset_device ():
+    '''Doesn't work :(. (Trying to recover from error without restarting
+    notebook.'''
+    openbcsim.reset_device ()
+    torch.cuda.empty_cache ()
+    import importlib
+    importlib.reload (torch)
+    torch.cuda.init ()
 
   def __repr__ (self):
     '''Returns __repr__ of arguments needed to construct self.'''

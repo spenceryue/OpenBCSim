@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 def tee (cmd,
   file=None,
   check=False,
@@ -5,6 +7,7 @@ def tee (cmd,
   stdout=None,
   prefix='',
   has_line_callback=None,
+  bufsize=1,
   **kwargs
 ):
   import subprocess as sub
@@ -15,6 +18,7 @@ def tee (cmd,
     stdout=sub.PIPE,
     stderr=sub.STDOUT,
     universal_newlines=True,
+    bufsize=bufsize,
     **kwargs,
   )
 
@@ -28,7 +32,7 @@ def tee (cmd,
         has_line = True
         print (prefix + line, end='', file=stdout)
         if file is not None:
-          print (line, file=file)
+          print (line, end='', file=file)
       if has_line_callback is not None:
         has_line_callback (has_line)
 
@@ -40,3 +44,13 @@ def tee (cmd,
 
   if check and p.returncode != 0:
     raise sub.CalledProcessError (p.returncode, cmd)
+
+if __name__ == '__main__':
+  import argparse
+
+  parser = argparse.ArgumentParser ()
+  parser.add_argument ('cmd', type=str, nargs='+')
+  parser.add_argument ('-f', type=str, default=None, help='Output file', dest='file')
+  parser.add_argument ('-s', action='store_true', dest='shell', help='Run a shell command')
+  args = parser.parse_args ()
+  tee (**args.__dict__)

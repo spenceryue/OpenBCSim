@@ -134,8 +134,8 @@ class Transducer:
 class LinearTransducer (Transducer):
   '''A linear transducer.'''
 
-  def __init__ (self, num_elements=1, width=.44e-3, height=5e-3, kerf=0, num_sub_x=1, num_sub_y=1,
-                center_frequency=3.5e6,
+  def __init__ (self, num_elements=1, width=.44e-3, height=5e-3, kerf=0.05e-3,
+                num_sub_x=1, num_sub_y=1, center_frequency=3.5e6,
                 dtype=torch.float32, device='cuda'):
     '''Initializes an `Transducer` with a linear geometry spanning lengthwise the x-direction.
     Also initializes per-element delays and apodizations to 0s and 1s respectively.'''
@@ -175,29 +175,21 @@ class LinearTransducer (Transducer):
     Arguments and functionality is very similar to xdc_linear_array() in Field II.'''
 
     # Subelement division offsets
-    offset_x = cls.subdivide (width, num_sub_x)
-    offset_y = cls.subdivide (height, num_sub_y)
-
-    print ('1: offset_x\n', offset_x, offset_x.shape)
+    offset_x = cls.centered_range (num_sub_x, width/num_sub_x)
+    offset_y = cls.centered_range (num_sub_y, height/num_sub_y)
 
     # Tile the subelement offsets
     tiled_offset_x = np.tile (offset_x, [num_sub_y, num_elements])
     tiled_offset_y = np.tile (offset_y.reshape(-1, 1), [1, tiled_offset_x.shape[1]])
 
-    print ('2: tiled_offset_x\n', tiled_offset_x, tiled_offset_x.shape)
-
     # Center-to-center distance between elements
     pitch = width + kerf
 
     # Tile the element positions
-    position_x = np.arange ((-num_elements//2 + 1) * pitch, (num_elements//2 + 1) * pitch, pitch)
-    print ('3: position_x\n', position_x, position_x.shape)
+    position_x = cls.centered_range (num_elements, pitch)
     position_x = position_x.reshape (1, -1)
-    print ('4: position_x\n', position_x, position_x.shape)
     position_x = position_x.repeat (num_sub_x, axis=1)
-    print ('5: position_x\n', position_x, position_x.shape)
     position_x = position_x.repeat (num_sub_y, axis=0)
-    print ('6: position_x\n', position_x, position_x.shape)
 
     # Sum positions and offsets
     x = position_x + tiled_offset_x
@@ -207,13 +199,13 @@ class LinearTransducer (Transducer):
     return x, y, z
 
   @staticmethod
-  def subdivide (length, num_divisions):
-    '''Calculate a range of `num_divisions` positions centered around zero that have the given total `length`.'''
-    step = length / num_divisions        # ex: step = 1
-    start = (-num_divisions//2 + 1) * step   # ex: start = -3//2 + 1 = (-2) + 1 = -1
-    stop = (num_divisions//2 + 1) * step     # ex: stop = 3//2 + 1 = (1) + 1 = 2 (but stop is excluded)
-    divisions = np.arange (start, stop, step)  # ex: divisions = [-1, 0, 1]
-
+  def centered_range (count, step, center=0):
+    '''Calculate a range of `count` positions centered around `center` spaced at
+    `step` units apart.'''
+    divisions = np.arange (count)
+    divisions -= (count - 1) / 2 # Shift center to 0
+    divisions *= step # Adjust spacing
+    divisions += center # Re-center
     return divisions
 
   def plot (self, true_scale=False, show=True):

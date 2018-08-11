@@ -2,7 +2,7 @@
 #include "vector_functions_extended.hpp"
 
 template <class scalar_t>
-__global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__restrict__ output_buffer)
+__global__ void projection_kernel (const Simulator<scalar_t> args, scalar_t *__restrict__ output_buffer)
 {
   /*
     Grid Dimensions Computation Layout:
@@ -12,6 +12,12 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
       threadIdx.x: scatterer index-offset
     blockIdx.y: transmitter sub-element index
     blockIdx.z: receiver sub-element index
+
+    Look at the output of `nvcc --resource-usage`.
+    This kernel uses no shared memory. Only registers limit occupancy.
+    So long as the register usage is <= 32 (reported per thread)
+    then occupancy is maximized (at 64 warps per block).
+    Use the Occupancy calculator excel sheet under OpenBCSim/utilities.
   */
 
   // 1. Calculate scatterer index.
@@ -41,7 +47,7 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
   // 5. Calculate total travel distance: distance(transmitter, scatterer) + distance(scatterer, receiver).
   const scalar_t travel_distance = dist (transmitter, scatterer) + dist (scatterer, receiver);
 
-  const double two_sigma_squared = 2.0f * .001 * .001;
+  /*const double two_sigma_squared = 2.0f * .001 * .001;
   const double lateral_dist = scatterer.x - receiver.x;
   const double w = exp (-lateral_dist * lateral_dist / two_sigma_squared);
 
@@ -49,9 +55,8 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
   const auto output_idx = 2 * (args.num_time_samples * blockIdx.z + (static_cast<int> (projection_idx + .5) % args.num_time_samples));
   const scalar_t value = w * args.scatterer_amplitude[scatterer_idx] * args.scatterer_x[scatterer_idx];
   // atomicAdd (&output_buffer[output_idx + 0], scatterer_idx);
-  atomicAdd (&output_buffer[output_idx + 0], value);
+  atomicAdd (&output_buffer[output_idx + 0], value);*/
 
-  /*
   // 6. Calculate the transmitter and receiver element indices (as opposed to the sub-element indices above)
   const auto transmitter_element_idx = transmitter_idx / (args.transmitter.num_subdivisions);
   const auto receiver_element_idx = receiver_idx / (args.receiver.num_subdivisions);
@@ -61,12 +66,15 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
   const scalar_t receiver_delay = args.receiver.delay[receiver_element_idx];
   const scalar_t delay = transmitter_delay + receiver_delay;
   const scalar_t fractional_idx = args.sampling_frequency * travel_distance / args.speed_of_sound;
-  // Need to dot with radial unit vector for sign... (TODO)
-  const auto projection_idx = static_cast<int> (fractional_idx + delay + 0.5);
+  const auto projection_idx = static_cast<unsigned> (fractional_idx + delay + 0.5);
 
-  // 8. Return early if projection lands outside scan region.
-  // Scatterer is either too deep or "behind" the plane of the transducer element.
-  if (projection_idx < 0 || projection_idx >= args.num_time_samples)
+  /*
+    8. Return early if projection lands outside scan region (i.e. scatterer is too deep).
+    Note: We do not check if a scatterer lies "behind" the transducer.
+    It is assumed the transmitter and receiver lie in the nonpositive-z half-region
+    and that the scatterers all lie in the positive-z half-region.
+  */
+  if (projection_idx >= args.num_time_samples)
     return;
 
   // 9 Calculate phase factor.
@@ -93,17 +101,39 @@ __global__ void projection_kernel (const Simulation<scalar_t> args, scalar_t *__
   const scalar_t amplitude = args.scatterer_amplitude[scatterer_idx];
   const scalar2<scalar_t> output = weight * amplitude;
   atomicAdd (&output_buffer[output_idx + 0], output.x);
-  atomicAdd (&output_buffer[output_idx + 1], output.y);*/
+  atomicAdd (&output_buffer[output_idx + 1], output.y);
 }
 
 template <class scalar_t>
-void launch_projection_kernel (const Simulation<scalar_t> &args, scalar_t *output_buffer,
+void launch_projection_kernel (const Simulator<scalar_t> &args, scalar_t *output_buffer,
                                dim3 grid, dim3 block, size_t shared_bytes, cudaStream_t stream)
 {
+  cudaFuncSetCacheConfig (projection_kernel<scalar_t>, cudaFuncCachePreferL1);
   projection_kernel<scalar_t><<<grid, block, shared_bytes, stream>>> (args, output_buffer);
 }
 
-template void launch_projection_kernel (const Simulation<float> &args, float *output_buffer,
+#include <iostream>
+void reset_device ()
+{
+  auto code = cudaDeviceReset ();
+  if (code != cudaSuccess)
+  {
+    std::cerr << "cudaDeviceReset failed." << std::endl;
+    std::cerr << "CUDA Error (" << code << "): " << cudaGetErrorString (code) << std::endl;
+  }
+}
+
+void synchronize ()
+{
+  auto code = cudaDeviceSynchronize ();
+  if (code != cudaSuccess)
+  {
+    std::cerr << "cudaDeviceReset failed." << std::endl;
+    std::cerr << "CUDA Error (" << code << "): " << cudaGetErrorString (code) << std::endl;
+  }
+}
+
+template void launch_projection_kernel (const Simulator<float> &args, float *output_buffer,
                                         dim3 grid, dim3 block, size_t shared_bytes, cudaStream_t stream);
-template void launch_projection_kernel (const Simulation<double> &args, double *output_buffer,
+template void launch_projection_kernel (const Simulator<double> &args, double *output_buffer,
                                         dim3 grid, dim3 block, size_t shared_bytes, cudaStream_t stream);

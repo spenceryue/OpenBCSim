@@ -15,7 +15,7 @@ setup (
         ],
         'nvcc': [
           '-arch=sm_61',
-          '--nvlink-options=-v'
+          '-use_fast_math',
         ]
       }
     ),
