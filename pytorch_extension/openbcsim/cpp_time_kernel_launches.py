@@ -9,19 +9,22 @@ assert all (x.exists () for x in lib)
 
 os.environ['PATH'] += ';' + ';'.join ([str (x) for x in lib])
 
-exe = Path ('build/openbcsim.exe')
+exe = Path ('build/test_module.exe')
 assert exe.exists ()
 
 def run_once (num_elements):
   import tee
   import time
   tic = time.clock ()
-  tee.tee (f'{exe} {num_elements}')
+  # 0 means don't use PyTorch
+  with_pytorch = 0
+  num_scatterers = int (1e6)
+  tee.tee (f'{exe} {with_pytorch} {num_scatterers} {num_elements}')
   return time.clock () - tic
 
 import time_kernel_launches as tm
 tm.run_once = run_once
-tm.main (start=1000, stop=2001, out='logs/times.1k_to_2k.100k_scatterers.json')
+tm.main (out='logs/times.no_pytorch.grid_stride_loop.1M_scatterers.json')
 
 r'''
 Run the following commands first if executing directly from command line:

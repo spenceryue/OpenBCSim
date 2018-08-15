@@ -12,6 +12,7 @@
       "-I$project_base_path",
       "-isystem$project_base_path/ExternalLibs/boost_1_67_0",
       "-isystem$project_base_path/ExternalLibs/hdf5-1.8.13/include",
+      "-isystem$project_base_path/ExternalLibs/pybind11/include",
       "-isystemC:\\Users\\spenc\\Anaconda3\\pkgs\\pytorch-0.4.0-py36_cuda80_cudnn7he774522_1\\Lib\\site-packages\\torch\\lib\\include",
       "-isystemC:\\Users\\spenc\\Anaconda3\\include",
       "-isystemC:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v9.0\\include",

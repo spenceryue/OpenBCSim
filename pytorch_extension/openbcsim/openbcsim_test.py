@@ -1,5 +1,6 @@
 from unittest import TestCase
 import torch
+import sys; sys.path.append ('build')
 import openbcsim as bc
 
 class Test (TestCase):
@@ -9,3 +10,10 @@ class Test (TestCase):
     args = bc.Simulator_float (1,1,1,1,1,t,t,1,a,a,a,a,1)
     bc.launch_float (args);
     self.assertTrue (1)
+
+print (bc.DeviceProperties ().__dict__)
+print (dir (bc.DeviceProperties ()))
+d = bc.DeviceProperties ()
+for key in dir (d):
+  if not key.startswith ('__'):
+    print (key, ': ', getattr (d, key))

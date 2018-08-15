@@ -5,9 +5,10 @@ def build (args):
   import time
   from pathlib import Path
   from tee import tee
+  import os
 
-  BUILD_DIR = args.BUILD_DIR or Path ('build')
-  LOGS_DIR = args.LOGS_DIR or Path ('logs')
+  BUILD_DIR = args.BUILD_DIR or Path ('build').resolve ()
+  LOGS_DIR = args.LOGS_DIR or Path ('logs').resolve ()
 
   def try_mkdir (path, except_callback=None):
     try:
@@ -19,8 +20,13 @@ def build (args):
   try_mkdir (BUILD_DIR)
   try_mkdir (LOGS_DIR)
 
-  cpp_in = args.cpp_in or [r'openbcsim_module.cpp']
-  cpp_out = args.cpp_out or str (BUILD_DIR / 'openbcsim_module.obj')
+  # cpp_in = args.cpp_in or [r'openbcsim_module.cpp', 'device_properties.cpp', 'test_module.cpp'])
+  cpp_in = args.cpp_in or [x for x in [*Path ().glob ('*.cpp'),
+                           *Path ().glob ('*.h'), *Path ().glob ('*.hpp')]]
+  cpp_in = [f'{Path (x).resolve ()}' for x in cpp_in]
+  # cpp_out = args.cpp_out or str (BUILD_DIR / 'openbcsim_module.o')
+  cpp_out = args.cpp_out or ''
+  cpp_out = f'{Path (cpp_out).resolve ()}' if cpp_out else ''
   cpp_cmd = args.cpp_cmd or [
       r'clang++',
       r'-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include',
@@ -33,35 +39,43 @@ def build (args):
       r'-Wall',
       r'-O3' if (args.optimize) else (''), # Costs 3 extra seconds
     ]
+  cpp_flags = args.cpp_flags or []
   cpp_cmd = [
       *(x for x in cpp_cmd if x),
-      r'-o',
-      cpp_out,
+      *((rf'-o', cpp_out) if cpp_out else ()),
       r'-c',
-      *cpp_in,
+      *cpp_flags,
+      *[x for x in cpp_in if x.endswith ('.cpp')],
   ]
 
-  cuda_in = args.cuda_in or ['openbcsim_kernel.cu']
-  cuda_out = args.cuda_out or str (BUILD_DIR / 'openbcsim_kernel.obj')
+  # cuda_in = args.cuda_in or ['openbcsim_kernel.cu']
+  cuda_in = args.cuda_in or [x for x in [*Path ().glob ('*.cu'),
+                             *Path ().glob ('*.cuh')]]
+  cuda_in = [f'{Path (x).resolve ()}' for x in cuda_in]
+  # cuda_out = args.cuda_out or str (BUILD_DIR / 'openbcsim_kernel.o')
+  cuda_out = args.cuda_out or ''
+  cuda_out = f'{Path (cuda_out).resolve ()}' if cuda_out else ''
   cuda_cmd = args.cuda_cmd or [
       r'nvcc',
       r'-arch=sm_61',
       r'-use_fast_math',
       r'--resource-usage',
     ]
+  cuda_flags = args.cuda_flags or []
   cuda_cmd = [
       *(x for x in cuda_cmd if x),
-      r'-o',
-      cuda_out,
+      *((rf'-o', cuda_out) if cuda_out else ()),
       r'-c',
-      *cuda_in,
+      *cuda_flags,
+      *[x for x in cuda_in if x.endswith ('.cu')],
   ]
 
-  link_in = args.link_in or [cpp_out, cuda_out]
+  link_in = args.link_in or [x for x in [*BUILD_DIR.glob ('*.o')]]
+  link_in = [f'{Path (x).resolve ()}' for x in link_in]
   if not args.executable:
-    link_out = args.link_out or str (BUILD_DIR / 'openbcsim.pyd')
+    link_out = args.link_out or 'openbcsim.pyd'
   else:
-    link_out = args.link_out or str (BUILD_DIR / 'openbcsim.exe')
+    link_out = args.link_out or 'openbcsim.exe'
   link_cmd = args.link_cmd or [
       r'clang++',
       r'-shared' if (not args.executable) else (''),
@@ -80,10 +94,12 @@ def build (args):
       r'-l cudart',
       r'-l ATen',
     ]
+  link_flags = args.link_flags or []
   link_cmd = [
       *(x for x in link_cmd if x),
       r'-o',
       link_out,
+      *link_flags,
       *link_in,
   ]
 
@@ -182,6 +198,8 @@ def build (args):
   tic = start
   count = 0
   try:
+    os.chdir (BUILD_DIR)
+
     cpp_build_dict = needs_building (*cpp_in, enable=args.cpp, build_dict=cpp_build_dict, silent=True)
     if cpp_build_dict:
       cmd, step, log = cpp_cmd, 'Compile C++', (LOGS_DIR / 'cpp.log')
@@ -204,7 +222,9 @@ def build (args):
       count += 1
 
   except sub.CalledProcessError as e:
+    import sys
     show_status (1, step, log, tic, after='')
+    sys.exit (1)
 
   else:
     if count == 0:
@@ -273,72 +293,93 @@ if __name__ == '__main__':
                        help='Build executable (otherwise *.pyd module).',
                        dest='executable',
                       )
-  parser.add_argument ('-B', '-BUILD_DIR',
+  parser.add_argument ('-BUILD_DIR',
                        default=None,
                        type=str,
                        metavar='path',
                        dest='BUILD_DIR',
                       )
-  parser.add_argument ('-L', '-LOGS_DIR',
+  parser.add_argument ('-LOGS_DIR',
                        default=None,
                        type=str,
                        metavar='path',
                        dest='LOGS_DIR',
                       )
-  parser.add_argument ('-1', '-cpp_in',
+  parser.add_argument ('-cpp_in',
                        default=None,
                        type=str,
                        metavar='files',
                        nargs='+',
                        dest='cpp_in',
                       )
-  parser.add_argument ('-2', '-cpp_out',
+  parser.add_argument ('-cpp_out',
                        default=None,
                        type=str,
                        metavar='name',
                        dest='cpp_out',
                       )
-  parser.add_argument ('-3', '-cpp_cmd',
+  parser.add_argument ('-cpp_flags',
+                       default=None,
+                       type=lambda x: x.split (','),
+                       help='Comma separated list of flags',
+                       metavar='flag,flag,...',
+                       dest='cpp_flags',
+                      )
+  parser.add_argument ('-cpp_cmd',
                        default=None,
                        type=from_file,
                        help='Path to command (file).',
                        metavar='<path to file>',
                        dest='cpp_cmd',
                       )
-  parser.add_argument ('-4', '-cuda_in',
+  parser.add_argument ('-cuda_in',
                        default=None,
                        type=str,
                        metavar='files',
                        nargs='+',
                        dest='cuda_in',
                       )
-  parser.add_argument ('-5', '-cuda_out',
+  parser.add_argument ('-cuda_out',
                        default=None,
                        type=str,
                        metavar='name',
                        dest='cuda_out',
                       )
-  parser.add_argument ('-6', '-cuda_cmd',
+  parser.add_argument ('-cuda_flags',
+                       default=None,
+                       type=lambda x: x.split (','),
+                       help='Comma separated list of flags',
+                       metavar='flag,flag,...',
+                       dest='cuda_flags',
+                      )
+  parser.add_argument ('-cuda_cmd',
                        default=None,
                        type=from_file,
                        help='Path to command (file).',
                        metavar='<path to file>',
                        dest='cuda_cmd',
                       )
-  parser.add_argument ('-7', '-link_in',
+  parser.add_argument ('-link_in',
                        default=None,
                        type=str,
                        metavar='files',
                        nargs='+',
                        dest='link_in',
                       )
-  parser.add_argument ('-8', '-link_out',
+  parser.add_argument ('-link_out',
                        default=None,
                        type=str,
                        metavar='name',
                        dest='link_out',
                       )
-  parser.add_argument ('-9', '-link_cmd',
+  parser.add_argument ('-link_flags',
+                       default=None,
+                       type=lambda x: x.split (','),
+                       help='Comma separated list of flags',
+                       metavar='flag,flag,...',
+                       dest='link_flags',
+                      )
+  parser.add_argument ('-link_cmd',
                        default=None,
                        type=from_file,
                        help='Path to command (file).',
@@ -356,4 +397,169 @@ if __name__ == '__main__':
         args.__dict__[k] = True
 
   # print (args)
-  build (args)
+  # build (args)
+  print ("Don't use. Run CMake instead.")
+
+
+'''  project (OpenBCSim LANGUAGES CXX CUDA)
+
+
+  # Build modes
+  set (CMAKE_CONFIGURATION_TYPES
+    Debug Release
+    CACHE
+    TYPE
+    INTERNAL
+    FORCE
+  )
+  # Default install directory
+  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set (CMAKE_INSTALL_PREFIX
+      "../install"
+      CACHE
+      PATH
+      "The install directory is useful for automatically copying all built files of the project to one place for testing."
+      FORCE
+    )
+  endif ()
+  # Source headers
+  include_directories (${PROJECT_SOURCE_DIR})
+
+
+  # Found CUDA?
+  if (NOT CUDA_FOUND)
+    message (FATAL_ERROR "CUDA not found.")
+  else ()
+    message (STATUS "Found CUDA version: ${CUDA_VERSION}")
+  endif ()
+  # Found Python?
+  find_package (Python3 COMPONENTS Interpreter Development)
+  if (NOT Python3_FOUND)
+    message (FATAL_ERROR "Python3 not found.")
+  else ()
+    message (STATUS "Found Python3 version: ${Python3_VERSION}")
+  endif ()
+  # Found PyTorch?
+  set (PyTorch_ROOT
+    "NOT SET"
+    CACHE
+    PATH
+    "Where PyTorch is installed e.g. C:\\Users\\spenc\\Anaconda3\\lib\\site-packages\\torch"
+  )
+  if (NOT EXISTS "${PyTorch_ROOT}/lib/include/ATen/ATen.h")
+    message (FATAL_ERROR "Invalid PyTorch root directory. Should be able to find: ${PyTorch_ROOT}/lib/include/ATen/ATen.h")
+  else ()
+    # Find PyTorch version
+    # https://stackoverflow.com/a/13037728/3624264
+    # https://stackoverflow.com/a/5023579/3624264
+    execute_process (COMMAND
+      cmd /c set /p version= <${PyTorch_ROOT}/version.py && echo %version%
+      OUTPUT_VARIABLE PyTorch_VERSION
+    )
+    message (STATUS "Found PyTorch version: ${PyTorch_VERSION}")
+    # Set PyTorch variables
+    set (PyTorch_LIBRARIES
+      "${PyTorch_ROOT}/lib/_C"
+      "${PyTorch_ROOT}/lib/ATen"
+    )
+    set (PyTorch_INCLUDE_DIRS
+      "${PyTorch_ROOT}/lib/include"
+      "${PyTorch_ROOT}/lib/include/TH"
+      "${PyTorch_ROOT}/lib/include/THC"
+    )
+  endif ()
+
+
+  # CUDA kernel
+  add_library (cuda_kernel
+    openbcsim_kernel.cu
+    openbcsim_kernel.cuh
+    vector_functions_extended.cuh
+  )
+  set_target_properties (cuda_kernel
+    PROPERTIES
+    CUDA_NVCC_FLAGS_DEFAULT
+      "-arch=sm_61     \
+       -use_fast_math  \
+       --resource-usage"
+  )
+
+
+  # Python module
+  add_library (python_module
+    SHARED
+    openbcsim_module.cpp
+    openbcsim_module.h
+    device_properties.cpp
+    device_properties.h
+    base.h
+    utils.h
+    data_types.h
+  )
+  # Add -I flags
+  target_include_directories (python_module
+    PUBLIC
+    ${Python3_INCLUDE_DIRS}
+    ${PyTorch_INCLUDE_DIRS}
+  )
+  # Add -D defines or equivalent
+  target_compile_definitions (python_module
+    PRIVATE
+    DTORCH_EXTENSION_NAME=python_module
+  )
+  # Pass flags to the compiler
+  target_compile_options (python_module
+    PRIVATE
+    -std=c++17
+    -Wall
+    -O3
+  )
+  # Add relevant -l switches
+  target_link_libraries (python_module
+    PUBLIC
+    ${Python3_LIBRARIES}
+    ${PyTorch_LIBRARIES}
+    PRIVATE
+    cuda_kernel
+  )
+  # Use C++17
+  target_compile_features (python_module
+    PUBLIC
+    CXX_STANDARD 17
+  )
+  if (WIN32)
+    # Set target extension to *.pyd
+    set_target_properties (python_module
+      PROPERTIES
+      SUFFIX ".pyd"
+    )
+  endif()
+
+
+  # Test program
+  add_executable (test_python_module
+    test_python_module.cpp
+    pretty_print.h
+  )
+  # Link with Python module
+  target_link_libraries (test_python_module
+    python_module
+  )
+  # Use C++17
+  target_compile_features (test_python_module
+    CXX_STANDARD 17
+  )
+  if (WIN32)
+    # Set target extension to *.exe
+    set_target_properties (test_python_module
+      PROPERTIES
+      SUFFIX ".exe"
+    )
+  endif()
+
+
+  # Add test(s)
+  include (CTest)
+  add_test (test_python_module test_python_module --command-line-switch)
+
+'''

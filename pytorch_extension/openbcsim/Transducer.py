@@ -34,7 +34,7 @@ class Transducer:
     # Length of arrays
     self.num_elements = num_elements
     self.num_subelements = num_subelements
-    self.num_subdivisions = num_subelements // num_elements
+    self.division_factor = num_subelements // num_elements
 
     # Center frequency
     self.center_frequency = center_frequency
@@ -103,7 +103,7 @@ class Transducer:
       return constructor (
         num_elements = self.num_elements,
         num_subelements = self.num_subelements,
-        num_subdivisions = self.num_subdivisions,
+        division_factor = self.division_factor,
         x = self.x,
         y = self.y,
         z = self.z,
@@ -114,7 +114,7 @@ class Transducer:
     except Exception as e:
       # Dump everything... (Look for a type error)
       print ({key: (type (getattr (self, key)), getattr (self, key)) for key in [
-              'num_elements', 'num_subelements', 'num_subdivisions', 'x', 'y',
+              'num_elements', 'num_subelements', 'division_factor', 'x', 'y',
               'z', 'delay', 'apodization', 'center_frequency'
             ]})
       raise e
