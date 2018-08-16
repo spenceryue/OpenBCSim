@@ -12,15 +12,15 @@ DeviceProperties &get_properties (int device)
   return props;
 }
 
-#define DEVICE_PROPERTY(name, description)                                                 \
-  Class.def_property_readonly (#name,                                                      \
-                               [](const DeviceProperties &self) {                          \
-                                 return sanitize_property (self, &DeviceProperties::name); \
-                               },                                                          \
+#define DEVICE_PROPERTY(name, description)                                               \
+  Class.def_property_readonly (#name,                                                    \
+                               [](const DeviceProperties &self) {                        \
+                                 return sanitize_member (self, &DeviceProperties::name); \
+                               },                                                        \
                                description);
 
 #define DEVICE_DICT_ENTRY(name, _) \
-  Class.attr ("__dict__")[#name] = sanitize_property (self, &DeviceProperties::name);
+  Class.attr ("__dict__")[#name] = sanitize_member (self, &DeviceProperties::name);
 
 void bind_DeviceProperties (py::module m)
 {

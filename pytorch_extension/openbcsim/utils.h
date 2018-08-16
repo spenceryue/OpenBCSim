@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #define CHECK_CUDA(x) AT_ASSERT ((x).type ().is_cuda (), #x " must be a CUDA tensor")
 #define CHECK_CONTIGUOUS(x) AT_ASSERT ((x).is_contiguous (), #x " must be contiguous")
@@ -25,24 +26,24 @@ inline auto with_signature (ReturnType (*function) (ArgTypes...))
 }
 
 // Convert class member to a compatible pybind11 binding type.
-// Note: std::is_base_of_v not supported... even with clang 6.0 on Windows. (Bug?) Must use is_base_of<>::value.
-template <class Self, class PropertyType, class Base, std::enable_if_t<std::is_base_of<Base, Self>::value, int> = 0>
-inline auto sanitize_property (const Self &self, PropertyType Base::*property)
+// Note: `std::is_base_of_v` not supported... even with clang 6.0 on Windows. (Bug?) Must use `is_base_of<>::value`.
+template <class Self, class Member, class Base, std::enable_if_t<std::is_base_of<Base, Self>::value, int> = 0>
+inline auto sanitize_member (const Self &self, Member Base::*member)
 {
   using namespace std;
-  if constexpr (is_same_v<remove_all_extents_t<PropertyType>, char>)
+  if constexpr (is_same_v<remove_all_extents_t<Member>, char>)
   {
-    return string (self.*property);
+    return string (self.*member);
   }
-  else if constexpr (is_array_v<PropertyType>)
+  else if constexpr (is_array_v<Member>)
   {
-    auto length = extent_v<PropertyType>;
-    using element_type = remove_all_extents_t<PropertyType>;
-    return vector<element_type> (self.*property, self.*property + length);
+    auto length = extent_v<Member>;
+    using Element = remove_all_extents_t<Member>;
+    return vector<Element> (self.*member, self.*member + length);
   }
   else
   {
-    return self.*property;
+    return self.*member;
   }
 }
 

@@ -5,6 +5,7 @@ template <class scalar_t>
 Transducer<scalar_t> create (unsigned num_elements,
                              unsigned num_subelements,
                              unsigned division_factor,
+                             unsigned num_scans,
                              at::Tensor x,
                              at::Tensor y,
                              at::Tensor z,
@@ -19,15 +20,16 @@ Transducer<scalar_t> create (unsigned num_elements,
   CHECK_INPUT (apodization);
 
   Transducer<scalar_t> result;
-  /* 1 */ result.num_elements = num_elements;
-  /* 2 */ result.num_subelements = num_subelements;
-  /* 3 */ result.division_factor = division_factor;
-  /* 4 */ result.x = x.data<scalar_t> ();
-  /* 5 */ result.y = y.data<scalar_t> ();
-  /* 6 */ result.z = z.data<scalar_t> ();
-  /* 7 */ result.delay = delay.data<scalar_t> ();
-  /* 8 */ result.apodization = apodization.data<scalar_t> ();
-  /* 9 */ result.center_frequency = center_frequency;
+  /*  1 */ result.num_elements = num_elements;
+  /*  2 */ result.num_subelements = num_subelements;
+  /*  3 */ result.division_factor = division_factor;
+  /*  4 */ result.num_scans = num_scans;
+  /*  5 */ result.x = x.data<scalar_t> ();
+  /*  6 */ result.y = y.data<scalar_t> ();
+  /*  7 */ result.z = z.data<scalar_t> ();
+  /*  8 */ result.delay = delay.data<scalar_t> ();
+  /*  9 */ result.apodization = apodization.data<scalar_t> ();
+  /* 10 */ result.center_frequency = center_frequency;
 
   return result;
 }
@@ -79,7 +81,11 @@ at::Tensor launch (const Simulator<scalar_t> &args, int scatterer_blocks_factor,
   // Must use int64_t[] to match at::IntList constructor.
   // (The zeros() function takes a sizes argument of type at::IntList.)
   // If get "out of memory" error, log arguments to make sure they converted properly...
-  const int64_t sizes[] = {args.receiver.num_subelements * args.num_time_samples * 2};
+  // Example: (200 scans) x (200 elements) x (2 * (9e-2 m) / (1540 m/s) * (100e6 samples/s))
+  //          = 200 * 200 * 2 * 9e-2 / 1540 * 100e6
+  //          ~ 1,870,129,872 bytes (assuming float)
+  //          = 1.87 GB
+  const int64_t sizes[] = {args.transmitter.num_scans, args.receiver.num_elements, args.num_time_samples, 2};
 
   // Need to use `torch::` namespace instead of `at::` here. (Why...?)
   // https://github.com/pytorch/pytorch/issues/6103#issuecomment-377312709
@@ -156,6 +162,7 @@ static void bind_OpenBCSim (py::module &m, const std::string &type_string)
             "num_elements"_a,
             "num_subelements"_a,
             "division_factor"_a,
+            "num_scans"_a,
             "x"_a,
             "y"_a,
             "z"_a,
@@ -165,6 +172,7 @@ static void bind_OpenBCSim (py::module &m, const std::string &type_string)
       .def_readonly ("num_elements", &Transducer<scalar_t>::num_elements)
       .def_readonly ("num_subelements", &Transducer<scalar_t>::num_subelements)
       .def_readonly ("division_factor", &Transducer<scalar_t>::division_factor)
+      .def_readonly ("num_scans", &Transducer<scalar_t>::num_scans)
       .def_readonly ("center_frequency", &Transducer<scalar_t>::center_frequency);
 
   py::class_<Simulator<scalar_t>> (m, ("Simulator_" + type_string).c_str (), "Struct with simulation parameters.",

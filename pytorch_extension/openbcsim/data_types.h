@@ -9,15 +9,16 @@
 template <class scalar_t>
 struct Transducer
 {
-  /* 1 */ unsigned num_elements;    // Length of delay, apodization
-  /* 2 */ unsigned num_subelements; // Length of x, y, z
-  /* 3 */ unsigned division_factor; // Equals `num_subelements / num_elements`
-  /* 4 */ const scalar_t *RESTRICT x;
-  /* 5 */ const scalar_t *RESTRICT y;
-  /* 6 */ const scalar_t *RESTRICT z;
-  /* 7 */ const scalar_t *RESTRICT delay;
-  /* 8 */ const scalar_t *RESTRICT apodization;
-  /* 9 */ scalar_t center_frequency;
+  /*  1 */ unsigned num_elements;    // Length of delay, apodization is `num_scans * num_elements`
+  /*  2 */ unsigned num_subelements; // Length of x, y, z
+  /*  3 */ unsigned division_factor; // Equals `num_subelements / num_elements`
+  /*  4 */ unsigned num_scans;       // Length of delay, apodization is `num_scans * num_elements`
+  /*  5 */ const scalar_t *RESTRICT x;
+  /*  6 */ const scalar_t *RESTRICT y;
+  /*  7 */ const scalar_t *RESTRICT z;
+  /*  8 */ const scalar_t *RESTRICT delay;
+  /*  9 */ const scalar_t *RESTRICT apodization;
+  /* 10 */ scalar_t center_frequency;
 };
 
 template <class scalar_t>

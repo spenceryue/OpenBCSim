@@ -41,6 +41,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   block ("Num elems.") << "  " << num_elements << endl;
   unsigned num_subelements = num_elements;
   unsigned division_factor = 1;
+  unsigned num_scans = 1;
   at::Tensor x = torch::CUDA (s_type).arange (static_cast<int> (num_elements));
   x -= (num_elements - 1) / 2.0;
   x *= .5e-3;
@@ -49,7 +50,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   at::Tensor delay = torch::CUDA (s_type).zeros ({num_elements});
   at::Tensor apodization = torch::CUDA (s_type).ones ({num_elements});
   scalar_t center_frequency = 3.5e6;
-  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, division_factor, x, y, z, delay,
+  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, division_factor, num_scans, x, y, z, delay,
                                               apodization, center_frequency);
   timestamp () << "  created Transducer" << endl;
 
@@ -88,7 +89,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   auto grid_y = receiver_threads;
   auto grid_z = transmitter_threads;
 
-  block ("Out elems.", 11) << "  {:,}"_s.format (result.sizes ()[0]) << endl;
+  block ("Out elems.", 11) << "  {}"_s.format (result.sizes ()) << endl;
   block ("Time samps.", 11) << "  {:,}"_s.format (num_time_samples) << endl;
   block ("Scatterers", 11) << "  {:,}"_s.format (num_scatterers) << endl;
   block ("Threads", 11) << "  {:,}"_s.format (static_cast<long long> (grid_x) * grid_y * grid_z * threads_per_block)
@@ -191,6 +192,7 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   Transducer<scalar_t> tx;
   tx.num_subelements = num_elements;
   tx.division_factor = 1;
+  tx.num_scans = 1;
   auto X = CUDA_buffer::arange (num_elements);
   X -= (num_elements - 1) / 2.0;
   X *= .5e-3;
@@ -240,7 +242,7 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   timestamp () << "  created Simulator" << endl;
 
   // Launch kernel
-  auto RESULT = CUDA_buffer::zeros (sim.receiver.num_subelements * sim.num_time_samples * 2);
+  auto RESULT = CUDA_buffer::zeros (sim.transmitter.num_scans * sim.receiver.num_elements * sim.num_time_samples * 2);
   RESULT.to_device ();
   launch<scalar_t> (sim, RESULT.gpu.get (), scatterer_blocks_factor, receiver_threads, transmitter_threads);
   timestamp () << "  launched" << endl;

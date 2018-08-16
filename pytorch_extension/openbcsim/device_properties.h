@@ -1,9 +1,6 @@
 #pragma once
 #include "base.h" // Must go first
 
-#include <string>
-#include <vector>
-
 /* https://docs.nvidia.com/cuda/archive/9.0/cuda-runtime-api/structcudaDeviceProp.html */
 
 // clang-format off
