@@ -8,7 +8,7 @@
 template <class scalar_t>
 Transducer<scalar_t> create (unsigned num_elements,
                              unsigned num_subelements,
-                             unsigned division_factor,
+                             unsigned subdivision_factor,
                              unsigned num_scans,
                              at::Tensor x,
                              at::Tensor y,

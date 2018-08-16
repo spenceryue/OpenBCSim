@@ -38,7 +38,7 @@ class Simulator:
     self.receiver = (receiver) if (receiver is not None) else (transmitter)
 
     # Check that the transducers have the same `tensor_type`.
-    if not self.transmitter.same_tensor_type (self.receiver):
+    if not self.transmitter.has_same_tensor_type (self.receiver):
       msg = 'Transmitter and receiver `Transducer` instances must have the ' \
           'same tensor_type (i.e. dtype and device).'
       msg += f'\nTransmitter tensor_type:  {self.transmitter.tensor_type}'

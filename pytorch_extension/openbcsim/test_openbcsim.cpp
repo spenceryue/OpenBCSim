@@ -40,7 +40,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   // Initializing Transducer
   block ("Num elems.") << "  " << num_elements << endl;
   unsigned num_subelements = num_elements;
-  unsigned division_factor = 1;
+  unsigned subdivision_factor = 1;
   unsigned num_scans = 1;
   at::Tensor x = torch::CUDA (s_type).arange (static_cast<int> (num_elements));
   x -= (num_elements - 1) / 2.0;
@@ -50,7 +50,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   at::Tensor delay = torch::CUDA (s_type).zeros ({num_elements});
   at::Tensor apodization = torch::CUDA (s_type).ones ({num_elements});
   scalar_t center_frequency = 3.5e6;
-  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, division_factor, num_scans, x, y, z, delay,
+  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, subdivision_factor, num_scans, x, y, z, delay,
                                               apodization, center_frequency);
   timestamp () << "  created Transducer" << endl;
 
@@ -191,7 +191,7 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   block ("Num elems.") << "  " << num_elements << endl;
   Transducer<scalar_t> tx;
   tx.num_subelements = num_elements;
-  tx.division_factor = 1;
+  tx.subdivision_factor = 1;
   tx.num_scans = 1;
   auto X = CUDA_buffer::arange (num_elements);
   X -= (num_elements - 1) / 2.0;

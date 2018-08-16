@@ -56,7 +56,7 @@ __global__ void projection_kernel (const Simulator<scalar_t> args, scalar_t *RES
 
       // 5. Get receiver element index.
       // Note: `receiver_element_idx` is the element index (as opposed to sub-element index above).
-      const unsigned receiver_element_idx = receiver_idx / (args.receiver.division_factor);
+      const unsigned receiver_element_idx = receiver_idx / (args.receiver.subdivision_factor);
 
       // 6. Calculate index-offset into `output_buffer[][receiver_element_idx][][]` (second dimension).
       const unsigned output_idx_1 = (2 * args.num_time_samples) * receiver_element_idx;
@@ -76,7 +76,7 @@ __global__ void projection_kernel (const Simulator<scalar_t> args, scalar_t *RES
 
         // 9. Get transmitter element index.
         // Note: `transmitter_element_idx` is the element index (as opposed to sub-element index above).
-        const unsigned transmitter_element_idx = transmitter_idx / (args.transmitter.division_factor);
+        const unsigned transmitter_element_idx = transmitter_idx / (args.transmitter.subdivision_factor);
 
         for (unsigned scan_idx = 0;
              scan_idx < args.transmitter.num_scans;

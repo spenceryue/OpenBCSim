@@ -4,7 +4,7 @@
 template <class scalar_t>
 Transducer<scalar_t> create (unsigned num_elements,
                              unsigned num_subelements,
-                             unsigned division_factor,
+                             unsigned subdivision_factor,
                              unsigned num_scans,
                              at::Tensor x,
                              at::Tensor y,
@@ -22,7 +22,7 @@ Transducer<scalar_t> create (unsigned num_elements,
   Transducer<scalar_t> result;
   /*  1 */ result.num_elements = num_elements;
   /*  2 */ result.num_subelements = num_subelements;
-  /*  3 */ result.division_factor = division_factor;
+  /*  3 */ result.subdivision_factor = subdivision_factor;
   /*  4 */ result.num_scans = num_scans;
   /*  5 */ result.x = x.data<scalar_t> ();
   /*  6 */ result.y = y.data<scalar_t> ();
@@ -161,7 +161,7 @@ static void bind_OpenBCSim (py::module &m, const std::string &type_string)
       .def (py::init (with_signature<Transducer<scalar_t>> (create<scalar_t>)),
             "num_elements"_a,
             "num_subelements"_a,
-            "division_factor"_a,
+            "subdivision_factor"_a,
             "num_scans"_a,
             "x"_a,
             "y"_a,
@@ -171,7 +171,7 @@ static void bind_OpenBCSim (py::module &m, const std::string &type_string)
             "center_frequency"_a)
       .def_readonly ("num_elements", &Transducer<scalar_t>::num_elements)
       .def_readonly ("num_subelements", &Transducer<scalar_t>::num_subelements)
-      .def_readonly ("division_factor", &Transducer<scalar_t>::division_factor)
+      .def_readonly ("subdivision_factor", &Transducer<scalar_t>::subdivision_factor)
       .def_readonly ("num_scans", &Transducer<scalar_t>::num_scans)
       .def_readonly ("center_frequency", &Transducer<scalar_t>::center_frequency);
 

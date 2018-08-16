@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import openbcsim # Must come after `import torch`
 
+
 class Transducer:
   '''Base class for describing a transducer.'''
 
@@ -34,7 +35,8 @@ class Transducer:
     # Length of arrays
     self.num_elements = num_elements
     self.num_subelements = num_subelements
-    self.division_factor = num_subelements // num_elements
+    self.subdivision_factor = num_subelements // num_elements
+    # self.num_scans defined through @property
 
     # Center frequency
     self.center_frequency = center_frequency
@@ -56,11 +58,37 @@ class Transducer:
     self.check_shape (['x', 'y', 'z'], [num_subelements])
     self.check_shape (['delay', 'apodization'], [num_elements])
 
+  @property
+  def num_scans(self):
+    return self.delay.shape[0] if self.delay is not None else 0
+
+  @num_scans.setter
+  def num_scans(self, _):
+    msg = 'Don\'t try to set the number of scans through this property.\n'
+    msg += 'The number of scans is implicitly determined from the first '
+           'dimension of self.delay (or equivalently of self.apodization).'
+    raise AttributeError (msg)
+
+  def has_same_tensor_type (self, other):
+    return (self.tensor_type.dtype == other.tensor_type.dtype) and \
+         (self.tensor_type.device == other.tensor_type.device)
+
+  def is_compatible (self, tensor):
+    try:
+      return (self.dtype == tensor.dtype) and (self.device == tensor.device)
+    except:
+      return False
+
   def new_tensor (self, data, **kwargs):
     '''Call `torch.Tensor.new_tensor` with `self.tensor_type` as the
-    reference tensor if `data` is not `None`.'''
+    reference tensor if `data` is not `None`.
+    If the data is already a tensor compatible with tensor_type then do
+    not make a new copy.'''
     if data is not None:
-      return self.tensor_type.new_tensor (data, **kwargs)
+      if self.is_compatible (data):
+        return data
+      else:
+        return self.tensor_type.new_tensor (data, **kwargs)
 
   def new_ones (self, size, **kwargs):
     '''Shortcut to calling `self.tensor_type.new_ones (...)`.'''
@@ -83,10 +111,6 @@ class Transducer:
         msg = f'Shape of self.{attr} {shape} does not match desired true shape {true_shape}.'
         raise ValueError (msg)
 
-  def same_tensor_type (self, other):
-    return (self.tensor_type.dtype == other.tensor_type.dtype) and \
-         (self.tensor_type.device == other.tensor_type.device)
-
   def select_by_type (self, *functions):
     types = [torch.float32, torch.float64];
     for i,dtype in enumerate (types):
@@ -103,7 +127,8 @@ class Transducer:
       return constructor (
         num_elements = self.num_elements,
         num_subelements = self.num_subelements,
-        division_factor = self.division_factor,
+        subdivision_factor = self.subdivision_factor,
+        num_scans = self.num_scans,
         x = self.x,
         y = self.y,
         z = self.z,
@@ -114,8 +139,8 @@ class Transducer:
     except Exception as e:
       # Dump everything... (Look for a type error)
       print ({key: (type (getattr (self, key)), getattr (self, key)) for key in [
-              'num_elements', 'num_subelements', 'division_factor', 'x', 'y',
-              'z', 'delay', 'apodization', 'center_frequency'
+              'num_elements', 'num_subelements', 'subdivision_factor', 'num_scans',
+              'x', 'y', 'z', 'delay', 'apodization', 'center_frequency'
             ]})
       raise e
 
