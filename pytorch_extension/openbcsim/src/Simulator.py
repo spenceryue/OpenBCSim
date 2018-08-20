@@ -1,6 +1,7 @@
 import torch
-import openbcsim # Must come after `import torch`
+import openbcsim  # Must come after `import torch`
 import Transducer
+
 
 class Simulator:
   '''Data and parameters needed to run a simulation.'''
@@ -91,12 +92,14 @@ class Simulator:
     pi = np.pi
     ref = pow (10.0, bwr / 20.0)
     a = -(np.pi * fc * bw) ** 2 / (4.0 * np.log (ref))
-    time_sigma = 1/np.sqrt (2*a)
-    time = np.arange (-num_sigmas*time_sigma, num_sigmas*time_sigma, 1/fs)
+    time_sigma = 1 / np.sqrt (2 * a)
+    time = np.arange (-num_sigmas * time_sigma,
+                      num_sigmas * time_sigma, 1 / fs)
 
     if plot:
       # Plot the excitation signal
-      excitation, envelope  = gausspulse(time, fc=fc, bw=bw, bwr=bwr, retenv=True)
+      excitation, envelope = gausspulse(
+          time, fc=fc, bw=bw, bwr=bwr, retenv=True)
       plt.plot(envelope, 'g--', excitation)
       plt.title ('Excitation Signal', fontsize=20, pad=20)
       plt.xlabel (r'Time [$\mu$s]', fontsize=14, labelpad=10)
@@ -108,14 +111,14 @@ class Simulator:
       plt.yticks ([])
       plt.show ()
     else:
-      excitation  = gausspulse(time, fc=fc, bw=bw, bwr=bwr)
+      excitation = gausspulse(time, fc=fc, bw=bw, bwr=bwr)
 
     # Set the excitation signal
     self.excitation = self.new_tensor (excitation)
 
   @staticmethod
   def compute_time_samples (scan_depth, speed_of_sound, sampling_frequency):
-    return int (2 * scan_depth / speed_of_sound * sampling_frequency + .5);
+    return int (2 * scan_depth / speed_of_sound * sampling_frequency + .5)
 
   def load_field_ii_scatterers (self, filepath, verbose=True):
     '''Load scatterer data from a *.mat file from a Field II example.
@@ -126,22 +129,22 @@ class Simulator:
       print (f'Loading Field II scatterer data from {filepath}')
     mat = spio.loadmat (filepath)
     pos, amp = mat['phantom_positions'], mat['phantom_amplitudes']
-    self.scatterer_x = self.new_tensor (pos[:,0])
-    self.scatterer_y = self.new_tensor (pos[:,1])
-    self.scatterer_z = self.new_tensor (pos[:,2])
+    self.scatterer_x = self.new_tensor (pos[:, 0])
+    self.scatterer_y = self.new_tensor (pos[:, 1])
+    self.scatterer_z = self.new_tensor (pos[:, 2])
     self.scatterer_amplitude = self.new_tensor (amp.reshape (-1))
     self.num_scatterers = self.scatterer_x.nelement ()
     self.check_shape (
         ['scatterer_x', 'scatterer_y', 'scatterer_z', 'scatterer_amplitude'],
         [self.num_scatterers]
-      )
+    )
     if verbose:
-      print (f'Scatterer data loaded. Total # scatterers: {self.num_scatterers:,}')
-
+      print (
+          f'Scatterer data loaded. Total # scatterers: {self.num_scatterers:,}')
 
   def select_by_type (self, *functions):
-    types = [torch.float32, torch.float64];
-    for i,T in enumerate (types):
+    types = [torch.float32, torch.float64]
+    for i, T in enumerate (types):
       if self.dtype is T:
         return functions[i]
     raise TypeError (f'No matching type for: {self.dtype}')
@@ -150,28 +153,28 @@ class Simulator:
     constructor = self.select_by_type (
         openbcsim.Simulator_float,
         openbcsim.Simulator_double
-      )
+    )
     try:
       return constructor (
-          sampling_frequency = self.sampling_frequency,
-          decimation = self.decimation,
-          scan_depth = self.scan_depth,
-          speed_of_sound = self.speed_of_sound,
-          attenuation = self.attenuation,
-          transmitter = self.transmitter.to_struct (),
-          receiver = self.receiver.to_struct (),
-          num_time_samples = self.num_time_samples,
-          scatterer_x = self.scatterer_x,
-          scatterer_y = self.scatterer_y,
-          scatterer_z = self.scatterer_z,
-          scatterer_amplitude = self.scatterer_amplitude,
-          num_scatterers = self.num_scatterers,
-        )
+          sampling_frequency=self.sampling_frequency,
+          decimation=self.decimation,
+          scan_depth=self.scan_depth,
+          speed_of_sound=self.speed_of_sound,
+          attenuation=self.attenuation,
+          transmitter=self.transmitter.to_struct (),
+          receiver=self.receiver.to_struct (),
+          num_time_samples=self.num_time_samples,
+          scatterer_x=self.scatterer_x,
+          scatterer_y=self.scatterer_y,
+          scatterer_z=self.scatterer_z,
+          scatterer_amplitude=self.scatterer_amplitude,
+          num_scatterers=self.num_scatterers,
+      )
     except Exception as e:
       if isinstance (e, AttributeError):
         raise RuntimeError ('Make sure to set the scatterer data first!\n'
                             '(Call `self.load_field_ii_scatterers()`.)'
-                           )
+                            )
       else:
         # Dump everything... (Look for a type error)
         print ({key: (type (getattr (self, key)), getattr (self, key)) for key in [
@@ -179,21 +182,22 @@ class Simulator:
                 'attenuation', 'transmitter', 'receiver', 'num_time_samples',
                 'scatterer_x', 'scatterer_y', 'scatterer_z', 'scatterer_amplitude',
                 'num_scatterers',
-              ]})
+                ]})
         raise e
 
   def launch (self, silent=False):
     '''Launch CUDA kernel to simulate a frame.'''
     import time
     import os
-    os.environ['CUDA_LAUNCH_BLOCKING'] = '1' # To track the CUDA errors
+    os.environ['CUDA_LAUNCH_BLOCKING'] = '1'  # To track the CUDA errors
 
     tic = time.clock ()
-    simulate = self.select_by_type (openbcsim.launch_float, openbcsim.launch_double)
+    simulate = self.select_by_type (
+        openbcsim.launch_float, openbcsim.launch_double)
     try:
       result = simulate (self.to_struct ())
       torch.cuda.synchronize ()
-      [x for x in result if False] # Read to trigger cudaMemcpy
+      [x for x in result if False]  # Read to trigger cudaMemcpy
     except Exception as e:
       msg = 'See CUDA documentation for list of error codes:\n'
       msg += 'https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g3f51e3575c2178246db0a94a430e0038'
@@ -202,10 +206,10 @@ class Simulator:
     else:
       self.toc = time.clock () - tic
       self.perf = {
-        'seconds': self.toc,
-        'Theoretical memory bandwidth': 4004e6 * (192/8) * 2 / 1e9,
-        'Actual memory bandwidth': result.numel () * 4 * (1 + self.dtype is torch.float64) * 2 / toc,
-        'Threads per second': stats (silent=True)['CUDA threads'] / toc,
+          'seconds': self.toc,
+          'Theoretical memory bandwidth': 4004e6 * (192 / 8) * 2 / 1e9,
+          'Actual memory bandwidth': result.numel () * 4 * (1 + self.dtype is torch.float64) * 2 / toc,
+          'Threads per second': stats (silent=True)['CUDA threads'] / toc,
       }
       if not silent:
         msg = '''\
@@ -222,14 +226,14 @@ Threads per second: {Threads per second:.1f}\
     '''Launch stats.'''
     from math import ceil
     self.stats = {
-        'Output buffer elements':     2 * self.num_time_samples * self.receiver.num_subelements,
-        'Time samples':               self.num_time_samples,
-        'Transmitter subelements':    self.transmitter.num_subelements,
-        'Receiver subelements':       self.receiver.num_subelements,
-        'Scatterer samples':          self.num_scatterers,
-        'CUDA threads':               1024 * ceil (self.num_scatterers/1024) * self.transmitter.num_subelements * self.receiver.num_subelements,
-        'CUDA blocks':                self.num_scatterers * self.transmitter.num_subelements * self.receiver.num_subelements // 1024,
-      }
+        'Output buffer elements': 2 * self.num_time_samples * self.receiver.num_subelements,
+        'Time samples': self.num_time_samples,
+        'Transmitter subelements': self.transmitter.num_subelements,
+        'Receiver subelements': self.receiver.num_subelements,
+        'Scatterer samples': self.num_scatterers,
+        'CUDA threads': 1024 * ceil (self.num_scatterers / 1024) * self.transmitter.num_subelements * self.receiver.num_subelements,
+        'CUDA blocks': self.num_scatterers * self.transmitter.num_subelements * self.receiver.num_subelements // 1024,
+    }
 
     if not silent:
       msg = '''\

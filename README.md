@@ -1,10 +1,10 @@
 # PyTorch Interface for OpenBCSim
 This project has diverged significantly from the original OpenBCSim. The aims are to provide:
- - A CUDA implementation of the Spatial Impulse Response algorithm ([used by Field II](https://field-ii.dk/documents/jaj_springer_2002.pdf)).
- - A Python calling interface with GPU memory management done by PyTorch tensors (project is a [PyTorch extension](https://pytorch.org/tutorials/advanced/cpp_extension.html)).
+ - A CUDA implementation of the Spatial Impulse Response algorithm ([as used by Field II](https://field-ii.dk/documents/jaj_springer_2002.pdf)).
+ - A Python interface with PyTorch tensors to manage GPU memory (project is built as a [PyTorch extension](https://pytorch.org/tutorials/advanced/cpp_extension.html)).
  - A planar wave beamforming reference implementation.
 
-Most of the new code for this project is under `pytorch_extension/openbcsim`.
+The new code for this project is under [`pytorch_extension/openbcsim`](pytorch_extension/openbcsim).
 
 ---
 
