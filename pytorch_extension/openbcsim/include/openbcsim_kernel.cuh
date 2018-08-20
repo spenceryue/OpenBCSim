@@ -1,5 +1,6 @@
 #pragma once
 #include "data_types.h"
+#include "export_macros.h"
 #include <cuda_runtime_api.h>
 
 template <class scalar_t>

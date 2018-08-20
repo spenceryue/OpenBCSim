@@ -87,5 +87,5 @@ struct DeviceProperties : cudaDeviceProp
   DeviceProperties (const cudaDeviceProp &properties) : cudaDeviceProp (properties) {}
 };
 
-DeviceProperties &get_properties (int device = 0);
+DLL_PUBLIC DeviceProperties &get_properties (int device = 0);
 void bind_DeviceProperties (py::module m);

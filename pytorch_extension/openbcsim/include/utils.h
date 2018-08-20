@@ -1,5 +1,6 @@
 #pragma once
 // Requires: base.h
+#include "export_macros.h"
 #include <cuda_runtime_api.h>
 #include <exception>
 #include <iostream>

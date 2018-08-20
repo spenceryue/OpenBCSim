@@ -1,0 +1,124 @@
+clang++ ^
+-fuse-ld=lld ^
+-flto ^
+-L C:\Users\spenc\Anaconda3\libs ^
+-L C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib ^
+-L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" ^
+-L "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64" ^
+-l msvcrt ^
+-l _C ^
+-l cudart ^
+-l ATen ^
+-l build\openbcsim_module.cp36-win_amd64.lib ^
+-o ^
+bla.exe ^
+build\CMakeFiles\test_openbcsim.dir\test_openbcsim.cpp.obj
+
+
+clang++ ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\TH ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\THC ^
+-I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include" ^
+-I C:\Users\spenc\Anaconda3\include ^
+-DTORCH_EXTENSION_NAME=openbcsim ^
+-std=c++17 ^
+-c ^
+openbcsim_module.cpp ^
+device_properties.cpp
+
+-shared ^
+-o openbcsim_kernel.dll ^
+nvcc ^
+-dlink ^
+-arch=sm_61 ^
+-use_fast_math ^
+openbcsim_kernel.cu
+
+-Wl,/export:?synchronize@@YAXXZ ^
+-Wl,/export:synchronize ^
+
+-nostdinc++ ^
+-Wl,/defaultlib:msvcrt ^
+
+clang++ ^
+-fuse-ld=lld ^
+-shared ^
+-D_DLL ^
+-flto ^
+-fvisibility=default ^
+-I C:\Users\spenc\Anaconda3\include ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\TH ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\THC ^
+-I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include" ^
+-L C:\Users\spenc\Anaconda3\libs ^
+-L C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib ^
+-L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" ^
+-L "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64" ^
+-l msvcrt ^
+-l _C ^
+-l cudart ^
+-l ATen ^
+-o openbcsim.pyd ^
+-DTORCH_EXTENSION_NAME=openbcsim ^
+-std=c++17 ^
+-Wno-microsoft-unqualified-friend ^
+a_dlink.obj ^
+openbcsim_module.cpp ^
+device_properties.cpp
+
+-l openbcsim_kernel ^
+
+
+openbcsim_kernel.obj ^
+-Wl,/export:synchronize ^
+-Wl,/export:get_properties ^
+-Wl,/export:??$launch@M@@YAXAEBU?$Simulator@M@@PEAMHII@Z ^
+
+openbcsim_module.o ^
+device_properties.o
+
+
+clang++ ^
+-fuse-ld=lld ^
+-flto ^
+-I C:\Users\spenc\Anaconda3\include ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\TH ^
+-I C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib\include\THC ^
+-I "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\include" ^
+-L C:\Users\spenc\Anaconda3\libs ^
+-L C:\Users\spenc\Anaconda3\lib\site-packages\torch\lib ^
+-L "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\lib\x64" ^
+-L "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64" ^
+-l msvcrt ^
+-l _C ^
+-l cudart ^
+-l ATen ^
+-l openbcsim ^
+-o ^
+bla.exe ^
+-v ^
+test_openbcsim.cpp
+
+
+C:\LLVM\bin\clang++.exe ^
+-O3 -DNDEBUG ^
+-fuse-ld=lld ^
+build/CMakeFiles/test_openbcsim.dir/test_openbcsim.cpp.obj ^
+-o test_openbcsim.exe ^
+-LC:/PROGRA~2/MICROS~1.0/VC/LIB/amd64 ^
+-LC:/PROGRA~1/NVIDIA~2/CUDA/v9.0/lib/x64 ^
+build/openbcsim_module.cp36-win_amd64.lib ^
+C:/Users/spenc/Anaconda3/libs/python36.lib ^
+C:/Users/spenc/Anaconda3/Lib/site-packages/torch/lib/_C.lib ^
+C:/Users/spenc/Anaconda3/Lib/site-packages/torch/lib/ATen.lib ^
+-lmsvcrt.lib ^
+-lcudart.lib
+
+
+-L "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB\amd64" ^
+-L "C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\ucrt\x64" ^
+-L "C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x64" ^
+-L "C:\Program Files (x86)\Windows Kits\10\lib\10.0.14393.0\um\x64" ^

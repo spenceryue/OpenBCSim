@@ -1,12 +1,14 @@
 #include "device_properties.h"
 
-DeviceProperties &get_properties (int device)
+DLL_PUBLIC DeviceProperties &get_properties (int device)
 {
   static DeviceProperties props;
   static int device_ = -1;
   if (device != device_)
   {
-    checkCall (cudaGetDeviceProperties (&props, device));
+    cudaDeviceProp tmp;
+    checkCall (cudaGetDeviceProperties (&tmp, device));
+    props = tmp;
     device_ = device;
   }
   return props;
@@ -20,25 +22,27 @@ DeviceProperties &get_properties (int device)
                                description);
 
 #define DEVICE_DICT_ENTRY(name, _) \
-  Class.attr ("__dict__")[#name] = sanitize_member (self, &DeviceProperties::name);
+  __dict__[#name] = sanitize_member (self, &DeviceProperties::name);
 
 void bind_DeviceProperties (py::module m)
 {
-  auto Class = py::class_<DeviceProperties> (m, "DeviceProperties", "Struct with CUDA device properties.",
+  auto Class = py::class_<DeviceProperties> (m, "DeviceProperties",
+                                             "Struct with CUDA device properties.\n"
+                                             "Call __repr__() to populate __dict__.",
                                              py::dynamic_attr ());
   Class.def (py::init ([](int device = 0) {
-               auto copy = DeviceProperties (get_properties (device));
-               return copy;
+               return DeviceProperties (get_properties (device));
              }),
              "device"_a = 0);
+
   FORALL_DEVICE_PROPERTIES (DEVICE_PROPERTY)
 
   Class.def ("__repr__", [=](const DeviceProperties &self) {
-    auto dict = py::cast (self).attr ("__dict__");
-    if (py::len (dict) == 0)
+    auto __dict__ = py::cast (self).attr ("__dict__");
+    if (py::len (__dict__) == 0)
     {
       FORALL_DEVICE_PROPERTIES (DEVICE_DICT_ENTRY)
     }
-    return py::str (dict);
+    return py::str (__dict__);
   });
 }

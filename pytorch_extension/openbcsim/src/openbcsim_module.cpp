@@ -2,16 +2,16 @@
 #include <string>
 
 template <class scalar_t>
-Transducer<scalar_t> create (unsigned num_elements,
-                             unsigned num_subelements,
-                             unsigned subdivision_factor,
-                             unsigned num_scans,
-                             at::Tensor x,
-                             at::Tensor y,
-                             at::Tensor z,
-                             at::Tensor delay,
-                             at::Tensor apodization,
-                             scalar_t center_frequency)
+DLL_PUBLIC Transducer<scalar_t> create (unsigned num_elements,
+                                        unsigned num_subelements,
+                                        unsigned subdivision_factor,
+                                        unsigned num_scans,
+                                        at::Tensor x,
+                                        at::Tensor y,
+                                        at::Tensor z,
+                                        at::Tensor delay,
+                                        at::Tensor apodization,
+                                        scalar_t center_frequency)
 {
   CHECK_INPUT (x);
   CHECK_INPUT (y);
@@ -35,19 +35,19 @@ Transducer<scalar_t> create (unsigned num_elements,
 }
 
 template <class scalar_t>
-Simulator<scalar_t> create (scalar_t sampling_frequency,
-                            unsigned decimation,
-                            scalar_t scan_depth,
-                            scalar_t speed_of_sound,
-                            scalar_t attenuation,
-                            Transducer<scalar_t> &transmitter,
-                            Transducer<scalar_t> &receiver,
-                            unsigned num_time_samples,
-                            at::Tensor scatterer_x,
-                            at::Tensor scatterer_y,
-                            at::Tensor scatterer_z,
-                            at::Tensor scatterer_amplitude,
-                            unsigned num_scatterers)
+DLL_PUBLIC Simulator<scalar_t> create (scalar_t sampling_frequency,
+                                       unsigned decimation,
+                                       scalar_t scan_depth,
+                                       scalar_t speed_of_sound,
+                                       scalar_t attenuation,
+                                       Transducer<scalar_t> &transmitter,
+                                       Transducer<scalar_t> &receiver,
+                                       unsigned num_time_samples,
+                                       at::Tensor scatterer_x,
+                                       at::Tensor scatterer_y,
+                                       at::Tensor scatterer_z,
+                                       at::Tensor scatterer_amplitude,
+                                       unsigned num_scatterers)
 {
   CHECK_INPUT (scatterer_x);
   CHECK_INPUT (scatterer_y);
@@ -73,8 +73,8 @@ Simulator<scalar_t> create (scalar_t sampling_frequency,
 }
 
 template <class scalar_t>
-at::Tensor launch (const Simulator<scalar_t> &args, int scatterer_blocks_factor, unsigned receiver_threads,
-                   unsigned transmitter_threads)
+DLL_PUBLIC at::Tensor launch (const Simulator<scalar_t> &args, int scatterer_blocks_factor, unsigned receiver_threads,
+                              unsigned transmitter_threads)
 {
   const at::ScalarType s_type = (std::is_same_v<scalar_t, float>) ? (at::kFloat) : (at::kDouble);
 
@@ -113,10 +113,12 @@ at::Tensor launch (const Simulator<scalar_t> &args, int scatterer_blocks_factor,
 }
 
 template <class scalar_t>
-void launch (const Simulator<scalar_t> &args, scalar_t *output_buffer, int scatterer_blocks_factor,
-             unsigned receiver_threads, unsigned transmitter_threads)
+DLL_PUBLIC void launch (const Simulator<scalar_t> &args, scalar_t *output_buffer, int scatterer_blocks_factor,
+                        unsigned receiver_threads, unsigned transmitter_threads)
 {
   const dim3 block = {get_properties ().maxThreadsPerBlock};
+  // scatterer_blocks_factor controls the number of gridDim.x blocks launched:
+  // gridDim.x = scatterer_blocks_factor * (number of SMs on device)
   if (scatterer_blocks_factor > 0)
   {
     const dim3 grid = {scatterer_blocks_factor * get_properties ().multiProcessorCount,
@@ -135,17 +137,17 @@ void launch (const Simulator<scalar_t> &args, scalar_t *output_buffer, int scatt
   }
 }
 
-template void launch<float> (const Simulator<float> &args, float *output_buffer, int scatterer_blocks_factor,
-                             unsigned receiver_threads, unsigned transmitter_threads);
-template void launch<double> (const Simulator<double> &args, double *output_buffer, int scatterer_blocks_factor,
-                              unsigned receiver_threads, unsigned transmitter_threads);
+template DLL_PUBLIC void launch<float> (const Simulator<float> &args, float *output_buffer, int scatterer_blocks_factor,
+                                        unsigned receiver_threads, unsigned transmitter_threads);
+template DLL_PUBLIC void launch<double> (const Simulator<double> &args, double *output_buffer, int scatterer_blocks_factor,
+                                         unsigned receiver_threads, unsigned transmitter_threads);
 
-void reset_device ()
+DLL_PUBLIC void reset_device ()
 {
   checkCall (cudaDeviceReset ());
 }
 
-void synchronize ()
+DLL_PUBLIC void synchronize ()
 {
   checkCall (cudaDeviceSynchronize ());
 }

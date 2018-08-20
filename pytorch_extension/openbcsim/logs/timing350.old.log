@@ -1,0 +1,37 @@
+
+============================================================
+
+Loading Field II scatterer data from C:\Users\spenc\Desktop\Experiments\ftp_files\cyst_phantom\pht_data.mat
+Scatterer data loaded. Total # scatterers: 100,000
+Output buffer elements     8,181,600       = 2 x [Time samples] x [Receiver subelements] -- `2 x` because data is complex
+Time samples               11,688         
+Transmitter subelements    350            
+Receiver subelements       350            
+Scatterer samples          100,000        
+CUDA threads               12,293,120,000  = 1024 * ceil([Scatterer samples] / 1024) x [Transmitter subelements] x [Receiver subelements]
+CUDA blocks                11,962,890      = [CUDA threads] / 1024    
+120.8 seconds
+torch.Size([8181600])
+
+============================================================
+
+num_elements=350 --> 120.8 seconds
+
+============================================================
+
+Loading Field II scatterer data from C:\Users\spenc\Desktop\Experiments\ftp_files\cyst_phantom\pht_data.mat
+Scatterer data loaded. Total # scatterers: 100,000
+Output buffer elements     16,363,200      = 2 x [Time samples] x [Receiver subelements] -- `2 x` because data is complex
+Time samples               11,688         
+Transmitter subelements    700            
+Receiver subelements       700            
+Scatterer samples          100,000        
+CUDA threads               49,172,480,000  = 1024 * ceil([Scatterer samples] / 1024) x [Transmitter subelements] x [Receiver subelements]
+CUDA blocks                47,851,562      = [CUDA threads] / 1024    
+262.9 seconds
+torch.Size([16363200])
+
+============================================================
+
+num_elements=700 --> 262.9 seconds
+Finished timing after 386.2 seconds.

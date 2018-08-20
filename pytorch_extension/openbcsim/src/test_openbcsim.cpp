@@ -24,18 +24,8 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   timestamp () << "  launched interpreter" << endl;
   py::object torch = py::module::import ("torch");
   timestamp () << "  imported torch (version: " << py::cast<string> (torch.attr ("__version__")) << ")" << endl;
-  // torch.attr ("cuda").attr ("init") ();
-  // timestamp () << "  torch.cuda.init ()" << endl;
-
-  py::object openbcsim = py::module::import ("openbcsim");
-  timestamp () << "  imported openbcsim (doc: " << py::cast<string> (openbcsim.attr ("__doc__")) << ")" << endl;
-  // for (auto item : )
-  // {
-  auto tmp = DeviceProperties (get_properties ());
-  cout << py::str (py::cast (tmp).attr ("major")) << endl;
-  cout << tmp.ECCEnabled << " " << tmp.major << "." << tmp.minor << " " << tmp.name << endl;
-  // }
-  return;
+  torch.attr ("cuda").attr ("init") ();
+  timestamp () << "  torch.cuda.init ()" << endl;
 
   // Initializing Transducer
   block ("Num elems.") << "  " << num_elements << endl;
@@ -327,7 +317,7 @@ int main (int argc, const char *argv[])
   }
   else
   {
-    cout << "  WITHOUT\n"
+    cout << "  WITHOUT PYTORCH\n"
          << endl;
     without_pytorch<float> (num_scatterers, num_elements, scatterer_blocks_factor, receiver_threads, transmitter_threads);
   }
