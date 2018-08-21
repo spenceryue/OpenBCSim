@@ -99,7 +99,8 @@ target_link_libraries (test_openbcsim
 
 
 # Install
-install (TARGETS openbcsim_module test_openbcsim DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install (TARGETS openbcsim_module test_openbcsim DESTINATION ".")
+install (FILES "Simulator.py" "Transducer.py" DESTINATION ".")
 
 
 # Define pieces used to write set_runtime_paths script.
@@ -127,6 +128,7 @@ set (runtime_paths
   "${Python3_ROOT}/Library/bin"
   "${Python3_ROOT}/libs"
 )
+file (TO_CMAKE_PATH "${runtime_paths}" runtime_paths)
 set (set_runtime_paths "${PROJECT_SOURCE_DIR}/scripts/SET_RUNTIME_PATHS${EXT}")
 file (WRITE "${set_runtime_paths}" "${FIRST_LINE}\n")
 file (APPEND "${set_runtime_paths}" "${COMMENT} These paths need to be added to PATH before running tests.\n")
@@ -150,13 +152,21 @@ message (STATUS "Paths needed to run test_openbcsim.exe saved to '${set_runtime_
 
 
 # Add test(s). Add runtime paths to PATH for each test.
-string (REPLACE ";" "${SEP}" runtime_paths "${runtime_paths}")
-LOG (runtime_paths)
-add_test (test_openbcsim
-  # test_openbcsim 1 1 1
-  test_openbcsim
+set (PATH "$ENV{PATH}")
+file (TO_CMAKE_PATH "${PATH}" PATH)
+string (REPLACE ";" "${SEP}" PATH "${PATH}${SEP}${runtime_paths}${SEP}${CMAKE_CURRENT_BINARY_DIR}")
+string (REPLACE ";" "\\;" PATH "${PATH}")
+# add_test (test_openbcsim
+#   test_openbcsim 1 1 1
+# )
+add_test (
+  NAME test_extension
+  COMMAND python "${PROJECT_SOURCE_DIR}/scripts/test_extension.py"
 )
-set_tests_properties (test_openbcsim
+set_tests_properties (
+  # test_openbcsim
+  test_extension
   PROPERTIES
-  ENVIRONMENT "PATH=$ENV{PATH}${SEP}${runtime_paths}"
+  ENVIRONMENT
+  "PATH=${PATH}"
 )

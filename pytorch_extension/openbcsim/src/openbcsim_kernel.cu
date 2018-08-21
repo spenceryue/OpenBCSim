@@ -1,6 +1,7 @@
 #include "openbcsim_kernel.cuh"
 #include "vector_functions_extended.cuh"
 
+// Forward declaration
 template <class scalar_t>
 __device__ __forceinline__ void do_time_projection (const Simulator<scalar_t> &args,
                                                     scalar_t *RESTRICT output_buffer,

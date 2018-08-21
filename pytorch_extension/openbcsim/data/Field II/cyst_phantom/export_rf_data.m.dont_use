@@ -1,0 +1,21 @@
+fs=100e6;
+no_lines = 50;              %  Number of lines in image
+
+file = fopen ('rf_data_export/rf_data.csv','wt');
+for i = 1:no_lines
+
+  %  Load the result
+
+  cmd=['load rf_data/rf_ln', num2str(i), '.mat'];
+  disp (cmd)
+  eval (cmd)
+  rf_data = abs(hilbert([zeros(round(tstart*fs),1); rf_data]));
+  rf_data = rf_data * 1e22; % scale for precision
+  for j = 1:numel (rf_data) - 1
+    fprintf (file, '%.10f,', rf_data (j));
+  end
+  fprintf (file, '%.10f\n', rf_data (end));
+end
+fclose(file);
+
+% In the end no difference from using scipy to load a the rf_data in Python...

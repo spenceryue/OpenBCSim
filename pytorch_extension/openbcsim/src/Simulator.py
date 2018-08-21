@@ -1,6 +1,6 @@
 import torch
-import openbcsim  # Must come after `import torch`
-import Transducer
+import openbcsim as bc  # Must come after `import torch`
+from Transducer import *
 
 
 class Simulator:
@@ -8,7 +8,7 @@ class Simulator:
 
   def __init__ (self, sampling_frequency=100e6, decimation=10,
                 scan_depth=9e-2, speed_of_sound=1540, attenuation=.7,
-                transmitter=Transducer.Transducer (), receiver=None):
+                transmitter=Transducer (), receiver=None):
     '''The value of `sampling_frequency / decimation` tells how many
     samples to record per a second of simulation (Hz).
 
@@ -151,8 +151,8 @@ class Simulator:
 
   def to_struct (self):
     constructor = self.select_by_type (
-        openbcsim.Simulator_float,
-        openbcsim.Simulator_double
+        bc.Simulator_float,
+        bc.Simulator_double
     )
     try:
       return constructor (
@@ -192,8 +192,7 @@ class Simulator:
     os.environ['CUDA_LAUNCH_BLOCKING'] = '1'  # To track the CUDA errors
 
     tic = time.clock ()
-    simulate = self.select_by_type (
-        openbcsim.launch_float, openbcsim.launch_double)
+    simulate = self.select_by_type (bc.launch_float, bc.launch_double)
     try:
       result = simulate (self.to_struct ())
       torch.cuda.synchronize ()
@@ -205,17 +204,21 @@ class Simulator:
       raise e
     else:
       self.toc = time.clock () - tic
+      props = bc.DeviceProperties ()
+      memoryClockRate = props.memoryClockRate * 1000  # convert from kHz to Hz
+      memoryBusWidth = props.memoryBusWidth / 8  # bits to bytes
+      sizeof_elem = 4 if (self.dtype is torch.float32) else 8  # bytes per element in `result`
       self.perf = {
           'seconds': self.toc,
-          'Theoretical memory bandwidth': 4004e6 * (192 / 8) * 2 / 1e9,
-          'Actual memory bandwidth': result.numel () * 4 * (1 + self.dtype is torch.float64) * 2 / toc,
-          'Threads per second': stats (silent=True)['CUDA threads'] / toc,
+          'Theoretical memory bandwidth': memoryClockRate * (memoryBusWidth) * 2 / 1e9,
+          'Actual memory bandwidth': result.numel () * sizeof_elem * 2 / 1e9 / self.toc,
+          'Threads per second': self.stats (silent=True)['CUDA threads'] / self.toc,
       }
       if not silent:
         msg = '''\
-{seconds:.1f} seconds
-Theoretical memory bandwidth: {Theoretical memory bandwidth:.1f}
-Actual memory bandwidth: {Actual memory bandwidth:.1f}
+{seconds:.2f} seconds
+Theoretical memory bandwidth: {Theoretical memory bandwidth:.1f} GB/s
+Actual memory bandwidth: {Actual memory bandwidth:.2f} GB/s
 Threads per second: {Threads per second:.1f}\
 '''.format (**self.perf)
         print (msg)
@@ -256,7 +259,7 @@ CUDA blocks                {CUDA blocks:<15,} = [CUDA threads] / 1024\
   def reset_device ():
     '''Doesn't work :(. (Trying to recover from error without restarting
     notebook.'''
-    openbcsim.reset_device ()
+    bc.reset_device ()
     torch.cuda.empty_cache ()
     import importlib
     importlib.reload (torch)

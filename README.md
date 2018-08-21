@@ -1,6 +1,6 @@
 # PyTorch Interface for OpenBCSim
 This project has diverged significantly from the original OpenBCSim. The aims are to provide:
- - A CUDA implementation of the Spatial Impulse Response algorithm ([as used by Field II](https://field-ii.dk/documents/jaj_springer_2002.pdf)).
+ - A CUDA implementation of the Spatial Impulse Response algorithm ([as used by Field II](https://field-ii.dk/?background.html), see also [here](https://field-ii.dk/documents/jaj_springer_2002.pdf)).
  - A Python interface with PyTorch tensors to manage GPU memory (project is built as a [PyTorch extension](https://pytorch.org/tutorials/advanced/cpp_extension.html)).
  - A planar wave beamforming reference implementation.
 
@@ -8,7 +8,7 @@ The new code for this project is under [`pytorch_extension/openbcsim`](pytorch_e
 
 ---
 
-### _(Original README of)_<br> OpenBCSim
+### _(Original README of)_ OpenBCSim
 This project is a fast C++/CUDA open-source implementation of an ultrasound simulator based on the COLE algorithm as published by Gao et al. in "A fast convolution-based methodology to simulate
 2-D/3-D cardiac ultrasound images.", IEEE TUFFC 2009.
 

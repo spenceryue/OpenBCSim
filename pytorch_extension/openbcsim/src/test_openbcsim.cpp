@@ -27,6 +27,11 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   torch.attr ("cuda").attr ("init") ();
   timestamp () << "  torch.cuda.init ()" << endl;
 
+  // Crashes
+  auto p = DeviceProperties (get_properties ());
+  py::print (py::cast (p));
+  return;
+
   // Initializing Transducer
   block ("Num elems.") << "  " << num_elements << endl;
   unsigned num_subelements = num_elements;
@@ -79,7 +84,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   auto grid_y = receiver_threads;
   auto grid_z = transmitter_threads;
 
-  block ("Out elems.", 11) << "  {}"_s.format (result.sizes ()) << endl;
+  block ("Out elems.", 11) << "  " << result.sizes () << endl;
   block ("Time samps.", 11) << "  {:,}"_s.format (num_time_samples) << endl;
   block ("Scatterers", 11) << "  {:,}"_s.format (num_scatterers) << endl;
   block ("Threads", 11) << "  {:,}"_s.format (static_cast<long long> (grid_x) * grid_y * grid_z * threads_per_block)
@@ -93,7 +98,9 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   timestamp () << "  synchronized" << endl;
 
   // Print output
-  block ("Result") << "  " << py::str (py::cast (result)) << endl;
+  // py::print (py::cast (result));
+  // block ("Result") << "  " << string (py::str (py::cast (result).attr ("__repr__") ())) << endl;
+  block ("Result") << "  " << py::cast<string> (py::str (py::cast (result))) << endl;
   timestamp () << "  printed" << endl;
 
   // Report total time
@@ -322,20 +329,3 @@ int main (int argc, const char *argv[])
     without_pytorch<float> (num_scatterers, num_elements, scatterer_blocks_factor, receiver_threads, transmitter_threads);
   }
 }
-
-/*
-BUILD COMMANDS:
-==============
-python fast_build.py -O
-python fast_build.py -Oe -cpp_in test_module.cpp -cpp_out build\test_module.o -link_in build\openbcsim_kernel.o build\openbcsim_module.o build\test_module.o -link_out build\test_module.exe
-
-ADD THE FOLLOWING TO PATH:
-==========================
-set path=%path%;C:\Users\spenc\Anaconda3\pkgs\pytorch-0.4.0-py36_cuda80_cudnn7he774522_1\Lib\site-packages\torch
-set path=%path%;C:\Users\spenc\Anaconda3\pkgs\pytorch-0.4.0-py36_cuda80_cudnn7he774522_1\Lib\site-packages\torch\lib;C:\Users\spenc\Anaconda3\Library\bin
-set path=%path%;C:\Users\spenc\Anaconda3\libs
-
-RUN:
-====
-build\test_module.exe -h
-*/

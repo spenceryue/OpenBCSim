@@ -44,3 +44,4 @@ ExternalLibs/boost_1_67_0/*
 ExternalLibs/pybind11
 **/*.egg-info/
 install
+**/rf_data
