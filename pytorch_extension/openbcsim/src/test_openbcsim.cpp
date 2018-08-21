@@ -27,11 +27,6 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   torch.attr ("cuda").attr ("init") ();
   timestamp () << "  torch.cuda.init ()" << endl;
 
-  // Crashes
-  auto p = DeviceProperties (get_properties ());
-  py::print (py::cast (p));
-  return;
-
   // Initializing Transducer
   block ("Num elems.") << "  " << num_elements << endl;
   unsigned num_subelements = num_elements;
@@ -98,9 +93,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   timestamp () << "  synchronized" << endl;
 
   // Print output
-  // py::print (py::cast (result));
-  // block ("Result") << "  " << string (py::str (py::cast (result).attr ("__repr__") ())) << endl;
-  block ("Result") << "  " << py::cast<string> (py::str (py::cast (result))) << endl;
+  block ("Result") << "  " << py::str (py::cast (result)) << endl;
   timestamp () << "  printed" << endl;
 
   // Report total time
@@ -118,9 +111,8 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   cout.imbue (LOCALE);
 
   static const auto cuda_deleter = [](scalar_t *pointer) {
-    using namespace std;
-    cout << "Cuda pointer freed!" << endl;
-    cudaFree (pointer);
+    // cout << "Cuda pointer freed!" << endl;
+    checkCall (cudaFree (pointer));
   };
 
   struct CUDA_buffer
@@ -137,6 +129,10 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
       void *gpu_;
       checkCall (cudaMalloc (&gpu_, length * sizeof (scalar_t)));
       gpu.reset ((scalar_t *)gpu_);
+      // save (cout);
+      // restore (cout, DEFAULT);
+      // cout << "Cuda pointer allocated: " << showbase << hex << gpu.get () << endl;
+      // restore (cout);
     }
     CUDA_buffer (size_t length, scalar_t value) : CUDA_buffer (length)
     {
@@ -187,6 +183,7 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   // Initializing Transducer
   block ("Num elems.") << "  " << num_elements << endl;
   Transducer<scalar_t> tx;
+  tx.num_elements = num_elements;
   tx.num_subelements = num_elements;
   tx.subdivision_factor = 1;
   tx.num_scans = 1;
@@ -272,6 +269,7 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   // Print output
   block ("Result") << "  [";
   copy (RESULT.cpu.get (), RESULT.cpu.get () + 5, ostream_iterator<scalar_t> (cout, ", "));
+  cout << "..., ";
   copy (RESULT.cpu_end - 5, RESULT.cpu_end, ostream_iterator<scalar_t> (cout, ", "));
   cout << "]" << endl;
   timestamp () << "  printed" << endl;

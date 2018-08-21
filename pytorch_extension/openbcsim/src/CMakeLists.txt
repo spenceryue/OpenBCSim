@@ -99,8 +99,8 @@ target_link_libraries (test_openbcsim
 
 
 # Install
-install (TARGETS openbcsim_module test_openbcsim DESTINATION ".")
-install (FILES "Simulator.py" "Transducer.py" DESTINATION ".")
+install (TARGETS openbcsim_module test_openbcsim DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install (FILES "Simulator.py" "Transducer.py" DESTINATION "${CMAKE_INSTALL_PREFIX}")
 
 
 # Define pieces used to write set_runtime_paths script.
@@ -156,15 +156,27 @@ set (PATH "$ENV{PATH}")
 file (TO_CMAKE_PATH "${PATH}" PATH)
 string (REPLACE ";" "${SEP}" PATH "${PATH}${SEP}${runtime_paths}${SEP}${CMAKE_CURRENT_BINARY_DIR}")
 string (REPLACE ";" "\\;" PATH "${PATH}")
-# add_test (test_openbcsim
-#   test_openbcsim 1 1 1
-# )
+add_test (test_openbcsim_1
+  test_openbcsim 1 1 1
+)
+add_test (test_openbcsim_2
+  test_openbcsim 0 1 1
+)
+add_test (test_openbcsim_3
+  test_openbcsim 1 100000 200
+)
+add_test (test_openbcsim_4
+  test_openbcsim 0 100000 200
+)
 add_test (
   NAME test_extension
   COMMAND python "${PROJECT_SOURCE_DIR}/scripts/test_extension.py"
 )
 set_tests_properties (
-  # test_openbcsim
+  test_openbcsim_1
+  test_openbcsim_2
+  test_openbcsim_3
+  test_openbcsim_4
   test_extension
   PROPERTIES
   ENVIRONMENT

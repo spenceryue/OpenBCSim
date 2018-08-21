@@ -27,6 +27,20 @@ class TestDeviceProperties (unittest.TestCase):
           print ('...')
     self.assertTrue (dict_ == a.__dict__)
 
+  def test_getitiem (self):
+    import sys
+    sys.path.append ('../install')
+    import torch
+    import openbcsim as bc
+    a = bc.DeviceProperties ()
+
+    # Initialize __dict__ by calling __repr__()
+    str (a)
+
+    values = [a[key] for key in a.__dict__]
+    print (values)
+    self.assertEqual (values, list (a.__dict__.values ()))
+
 
 class TestSimulator (unittest.TestCase):
   def test_launch (self):

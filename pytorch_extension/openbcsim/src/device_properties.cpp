@@ -45,4 +45,8 @@ void bind_DeviceProperties (py::module m)
     }
     return py::str (__dict__);
   });
+
+  Class.def ("__getitem__", [](const DeviceProperties &self, py::object key) {
+    return py::cast (self).attr ("__dict__")[key];
+  });
 }
