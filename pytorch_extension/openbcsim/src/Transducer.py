@@ -263,7 +263,7 @@ class LinearTransducer (Transducer):
 
     if self.num_elements > 1:
       # Label first and last transducer element ('Start' and 'Stop').
-      ax.text (self.x[0], self.y[0], self.z[0], 'o Start',
+      ax.text (self.x[0], self.y[0], self.z[0], '● Start',
                fontsize=14, weight='bold', color='red')
       if true_scale:
         # Scale axes to true proportions (if `true_scale` set).
@@ -274,17 +274,20 @@ class LinearTransducer (Transducer):
         # Label transducer elements.
         stride = self.num_elements * self.num_sub_x // 6
         stride = max (stride, 1)
-        for i in range (stride, self.num_subelements, stride):
+        for i in range (stride, self.num_subelements - 1, stride):
           ax.text (self.x[i], self.y[i], self.z[i],
                    f'o {i}', fontsize=12, color='red')
         # Warn that axes are not to scale.
         ax.text2D (1, 0, '(Axes not plotted to scale.)', transform=ax.transAxes,
                    ha='right', fontsize=12, color='red')
-      ax.text (self.x[-1], self.y[-1], self.z[-1], 'o Stop',
+      ax.text (self.x[-1], self.y[-1], self.z[-1], '● Stop',
                fontsize=14, weight='bold', color='red')
     else:
       # Special case when there's only one element
       ax.scatter (self.x, self.y, self.z, c='red', s=50)
+
+    try:
+      ax.scatter ()
 
     # Label axes and convert tick values to millimeters.
     ax.set_xlabel ('x [mm]', color='red', fontsize=16, labelpad=10)
@@ -309,3 +312,65 @@ class LinearTransducer (Transducer):
       plt.show()
     else:
       return fig, ax
+
+  def set_delays (self, *, map_func=None, focal_points=None, speed_of_sound=1540):
+    '''Give a set of focal points to scan for. The total number of focal points determines
+    the value of `num_scans`.
+    Calculates the delays needed for each focal point.
+    Each focal point should be a triple (x,y,z) in the same coordinate system as the
+    Transducer elements:
+      +x is lateral -- parallel to Transducer
+      +y is elevational -- vertical out of the imaging plane
+      +z is depthwise -- into the tissue
+    `focal_points` defaults to the last seen set of focal points if `None`. See
+    `map_focal_points()`.
+    `speed_of_sound` is in meters/sec.
+    This function accepts keyword arguments only.
+    '''
+
+    if map_func is None:
+      def map_func (X, Y, Z, focus):
+        distance = ((X - focus[0])**2 + (Y - focus[1])**2 + (Z - focus[2])**2)**.5
+        delay = (distance - distance.min ()) / speed_of_sound
+        return delay
+
+    self.delays = self.map_focal_points (map_func, focal_points)
+
+    return self.delays
+
+  def set_apodization (self, *, map_func=None, focal_points=None):
+    '''Passing no arguments will yield uniform apodization matching the shape of
+    `self.delays`.
+    This function accepts keyword arguments only.
+    '''
+    if map_func is None:
+      # Uniform apodization, match shape of self.delays
+      self.apodization = self.new_ones (self.delays.shape)
+    else:
+      self.apodization = self.map_focal_points (map_func, focal_points)
+
+    return self.apodization
+
+  def map_focal_points (self, map_func, focal_points=None):
+    '''Applies `map_func` to arguments:
+        X = array of transducer element position x-coordinates
+        Y = array of transducer element position y-coordinates
+        Z = array of transducer element position z-coordinates
+        focus = position of a focal point: (x,y,z)
+    Equivalent to the following:
+        result[scan_idx] = map_func (X, Y, Z, focal_points[scan_idx])
+    `map_func` should output a Tensor with shape (len (X),).
+    `focal_points` defaults to the last seen set of focal points if `None`.
+    `result` returned is a Tensor with shape (len (focal_points), self.num_elements).
+    '''
+
+    if focal_points is not None:
+      self.focal_points = focal_points
+
+    II = slice (self.subdivision_factor // 2, self.num_subelements, self.subdivision_factor)
+    result = [*map (lambda point:
+                    map_func (self.x[II], self.y[II], self.z[II], point).reshape (1, -1),
+                    self.focal_points)]
+    result = torch.cat (result, dim=0)
+
+    return result

@@ -126,7 +126,7 @@ class Simulator:
     `self.scatterer_amplitude`.'''
     import scipy.io as spio
     if verbose:
-      print (f'Loading Field II scatterer data from {filepath}')
+      print (f'Loading Field II scatterer data from "{filepath}"')
     mat = spio.loadmat (filepath)
     pos, amp = mat['phantom_positions'], mat['phantom_amplitudes']
     self.scatterer_x = self.new_tensor (pos[:, 0])
@@ -185,18 +185,28 @@ class Simulator:
                 ]})
         raise e
 
-  def launch (self, silent=False):
+  def launch (self,
+              scatterer_blocks_factor=32,
+              receiver_threads=1,
+              transmitter_threads=1,
+              silent=False):
     '''Launch CUDA kernel to simulate a frame.'''
     import time
     import os
     os.environ['CUDA_LAUNCH_BLOCKING'] = '1'  # To track the CUDA errors
 
     tic = time.clock ()
-    simulate = self.select_by_type (bc.launch_float, bc.launch_double)
+    launch_ = self.select_by_type (bc.launch_float, bc.launch_double)
     try:
-      result = simulate (self.to_struct ())
+      self.result = launch_ (
+          self.to_struct (),
+          scatterer_blocks_factor=scatterer_blocks_factor,
+          receiver_threads=receiver_threads,
+          transmitter_threads=transmitter_threads
+      )
+      self.result = self.convolve (self.result)
       torch.cuda.synchronize ()
-      [x for x in result if False]  # Read to trigger cudaMemcpy
+      [x for x in self.result if False]  # Read to trigger cudaMemcpy
     except Exception as e:
       msg = 'See CUDA documentation for list of error codes:\n'
       msg += 'https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g3f51e3575c2178246db0a94a430e0038'
@@ -207,11 +217,13 @@ class Simulator:
       props = bc.DeviceProperties ()
       memoryClockRate = props.memoryClockRate * 1000  # convert from kHz to Hz
       memoryBusWidth = props.memoryBusWidth / 8  # bits to bytes
-      sizeof_elem = 4 if (self.dtype is torch.float32) else 8  # bytes per element in `result`
+      sizeof_elem = 4 if (self.dtype is torch.float32) else 8  # bytes per element in `self.result`
+      double_data_rate = 2
+      num_transfers = 2
       self.perf = {
           'seconds': self.toc,
-          'Theoretical memory bandwidth': memoryClockRate * (memoryBusWidth) * 2 / 1e9,
-          'Actual memory bandwidth': result.numel () * sizeof_elem * 2 / 1e9 / self.toc,
+          'Theoretical memory bandwidth': memoryClockRate * memoryBusWidth * double_data_rate / 1e9,
+          'Actual memory bandwidth': self.result.numel () * sizeof_elem * num_transfers / 1e9 / self.toc,
           'Threads per second': self.stats (silent=True)['CUDA threads'] / self.toc,
       }
       if not silent:
@@ -223,7 +235,26 @@ Threads per second: {Threads per second:.1f}\
 '''.format (**self.perf)
         print (msg)
 
-    return result
+    return self.result
+
+  def convolve (self, projected_data):
+    '''Apply excitation to projected time points via convolution (done in frequency domain).'''
+
+    N = self.num_time_samples
+
+    kernel = self.new_zeros ([N, 2])
+    n = self.excitation.numel ()
+    kernel[:n, 0] = self.excitation
+    kernel = torch.rfft (kernel, 1, onesided=False)
+
+    projected_data = torch.fft (projected_data, 1)
+    output *= kernel / N
+    num_transfers = 2
+    output = torch.ifft (output, 1)
+    num_transfers = 2
+
+    return output
+    num_transfers = 2
 
   def stats (self, silent=False):
     '''Launch stats.'''
@@ -246,9 +277,11 @@ Output buffer elements     {Output buffer elements:<15,} = \
 Time samples               {Time samples:<15,}
 Transmitter subelements    {Transmitter subelements:<15,}
 Receiver subelements       {Receiver subelements:<15,}
+num_transfers = 2
 Scatterer samples          {Scatterer samples:<15,}
 CUDA threads               {CUDA threads:<15,} = \
 1024 * ceil([Scatterer samples] / 1024) x [Transmitter subelements] x [Receiver subelements]
+num_transfers = 2
 CUDA blocks                {CUDA blocks:<15,} = [CUDA threads] / 1024\
 '''.format (**self.stats)
       print (msg)
