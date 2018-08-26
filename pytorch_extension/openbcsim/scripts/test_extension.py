@@ -7,8 +7,8 @@ class TestDeviceProperties (unittest.TestCase):
     import sys
     sys.path.append ('../install')
     import torch
-    import openbcsim as bc
-    a = bc.DeviceProperties ()
+    import openbcsim
+    a = openbcsim.DeviceProperties ()
 
     # __dict__ starts off empty
     self.assertFalse (a.__dict__)
@@ -31,8 +31,8 @@ class TestDeviceProperties (unittest.TestCase):
     import sys
     sys.path.append ('../install')
     import torch
-    import openbcsim as bc
-    a = bc.DeviceProperties ()
+    import openbcsim as openbcsim
+    a = openbcsim.DeviceProperties ()
 
     # Initialize __dict__ by calling __repr__()
     str (a)
@@ -48,8 +48,11 @@ class TestSimulator (unittest.TestCase):
     sys.path.append ('../src')
     import Simulator as bc
     tx = bc.Transducer ()
-    sim = bc.Simulator (transmitter=tx)
+    sim = bc.Simulator (tx=tx)
     sim.load_field_ii_scatterers ('../data/Field II/cyst_phantom/pht_data.mat')
+    sim.set_gaussian_excitation ()
+    print (bc.openbcsim.make_shape (sim.to_struct ()))
+    print (bc.openbcsim.make_grid ())
     result = sim.launch ()
     print (result.shape)
     print (result)
@@ -60,9 +63,12 @@ class TestSimulator (unittest.TestCase):
     sys.path.append ('../src')
     import Simulator as bc
     tx = bc.LinearTransducer (num_elements=192)
-    print ('tx.num_scans:', tx.num_scans)
-    sim = bc.Simulator (transmitter=tx)
+    print ('tx.num_focal_points:', tx.num_focal_points)
+    sim = bc.Simulator (tx=tx)
     sim.load_field_ii_scatterers ('../data/Field II/cyst_phantom/pht_data.mat')
+    sim.set_gaussian_excitation ()
+    print (bc.openbcsim.make_shape (sim.to_struct ()))
+    print (bc.openbcsim.make_grid ())
     result = sim.launch ()
     print (result.shape)
     print (result)

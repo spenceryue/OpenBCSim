@@ -7,8 +7,8 @@
 #include <pybind11/embed.h> // everything needed for embedding Python interpreter
 
 template <class scalar_t>
-void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_blocks_factor, unsigned receiver_threads,
-                   unsigned transmitter_threads)
+void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_blocks_factor, unsigned rx_blocks,
+                   unsigned tx_blocks)
 {
   using namespace std;
   using namespace pretty;
@@ -31,7 +31,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   block ("Num elems.") << "  " << num_elements << endl;
   unsigned num_subelements = num_elements;
   unsigned subdivision_factor = 1;
-  unsigned num_scans = 1;
+  unsigned num_focal_points = 1;
   at::Tensor x = torch::CUDA (s_type).arange (static_cast<int> (num_elements));
   x -= (num_elements - 1) / 2.0;
   x *= .5e-3;
@@ -40,7 +40,7 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   at::Tensor delay = torch::CUDA (s_type).zeros ({num_elements});
   at::Tensor apodization = torch::CUDA (s_type).ones ({num_elements});
   scalar_t center_frequency = 3.5e6;
-  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, subdivision_factor, num_scans, x, y, z, delay,
+  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, subdivision_factor, num_focal_points, x, y, z, delay,
                                               apodization, center_frequency);
   timestamp () << "  created Transducer" << endl;
 
@@ -50,8 +50,8 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   scalar_t scan_depth = 9e-2;
   scalar_t speed_of_sound = 1540;
   scalar_t attenuation = .7;
-  Transducer<scalar_t> &transmitter = tx;
-  Transducer<scalar_t> &receiver = tx;
+  // Transducer<scalar_t> &tx = tx;
+  Transducer<scalar_t> &rx = tx;
   unsigned num_time_samples = static_cast<int> (2 * scan_depth / speed_of_sound * sampling_frequency + .5);
   at::Tensor scatterer_x = torch::CUDA (s_type).arange (num_scatterers);
   scatterer_x -= (num_scatterers - 1) / 2.0;      // Center at 0
@@ -61,32 +61,26 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   scatterer_z *= 9e-2 / (num_scatterers - 1); // Adjust spacing
   at::Tensor scatterer_amplitude = torch::CUDA (s_type).ones ({num_scatterers});
   Simulator<scalar_t> sim = create<scalar_t> (sampling_frequency, decimation, scan_depth, speed_of_sound, attenuation,
-                                              transmitter, receiver, num_time_samples, scatterer_x, scatterer_y,
+                                              tx, rx, num_time_samples, scatterer_x, scatterer_y,
                                               scatterer_z, scatterer_amplitude, num_scatterers);
   timestamp () << "  created Simulator" << endl;
 
   // Launch kernel
-  auto result = launch<scalar_t> (sim, scatterer_blocks_factor, receiver_threads, transmitter_threads);
+  dim3 grid = make_grid (scatterer_blocks_factor, rx_blocks, tx_blocks);
+  auto result = launch<scalar_t> (sim, grid);
   timestamp () << "  launched" << endl;
 
   // Verbose stats
   auto threads_per_block = get_properties ().maxThreadsPerBlock;
-  auto grid_x = (num_scatterers + threads_per_block - 1) / threads_per_block;
-  if (scatterer_blocks_factor > 0)
-  {
-    grid_x = scatterer_blocks_factor * get_properties ().multiProcessorCount;
-  }
-  auto grid_y = receiver_threads;
-  auto grid_z = transmitter_threads;
 
   block ("Out elems.", 11) << "  " << result.sizes () << endl;
   block ("Time samps.", 11) << "  {:,}"_s.format (num_time_samples) << endl;
   block ("Scatterers", 11) << "  {:,}"_s.format (num_scatterers) << endl;
-  block ("Threads", 11) << "  {:,}"_s.format (static_cast<long long> (grid_x) * grid_y * grid_z * threads_per_block)
+  block ("Threads", 11) << "  {:,}"_s.format (static_cast<long long> (grid.x) * grid.y * grid.z * threads_per_block)
                         << endl;
-  block ("Blocks", 11) << "  {:,}"_s.format (static_cast<long long> (grid_x) * grid_y * grid_z) << endl;
-  block ("Rx threads", 11) << "  {:,}"_s.format (receiver_threads) << endl;
-  block ("Tx threads", 11) << "  {:,}"_s.format (transmitter_threads) << endl;
+  block ("Blocks", 11) << "  {:,}"_s.format (static_cast<long long> (grid.x) * grid.y * grid.z) << endl;
+  block ("Rx threads", 11) << "  {:,}"_s.format (rx_blocks) << endl;
+  block ("Tx threads", 11) << "  {:,}"_s.format (tx_blocks) << endl;
 
   // Wait for kernel
   synchronize ();
@@ -101,9 +95,11 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   timestamp () << "  TOTAL" << endl;
 }
 
+FORMAT_ITERABLE (std::array<int64_t, 4>)
+
 template <class scalar_t>
-void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_blocks_factor, unsigned receiver_threads,
-                      unsigned transmitter_threads)
+void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_blocks_factor, unsigned rx_blocks,
+                      unsigned tx_blocks)
 {
   using namespace std;
   using namespace pretty;
@@ -186,7 +182,7 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   tx.num_elements = num_elements;
   tx.num_subelements = num_elements;
   tx.subdivision_factor = 1;
-  tx.num_scans = 1;
+  tx.num_focal_points = 1;
   auto X = CUDA_buffer::arange (num_elements);
   X -= (num_elements - 1) / 2.0;
   X *= .5e-3;
@@ -214,8 +210,8 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   sim.scan_depth = 9e-2;
   sim.speed_of_sound = 1540;
   sim.attenuation = .7;
-  sim.transmitter = tx;
-  sim.receiver = tx;
+  sim.tx = tx;
+  sim.rx = tx;
   sim.num_time_samples = static_cast<int> (2 * sim.scan_depth / sim.speed_of_sound * sim.sampling_frequency + .5);
   auto SCATTERER_X = CUDA_buffer::arange (num_scatterers);
   SCATTERER_X -= (num_scatterers - 1) / 2.0;      // Center at 0
@@ -236,28 +232,24 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   timestamp () << "  created Simulator" << endl;
 
   // Launch kernel
-  auto RESULT = CUDA_buffer::zeros (sim.transmitter.num_scans * sim.receiver.num_elements * sim.num_time_samples * 2);
+  auto shape = make_shape (sim);
+  auto RESULT = CUDA_buffer::zeros (accumulate (shape.begin (), shape.end (), 1,
+                                                [](unsigned a, unsigned b) { return a * b; }));
   RESULT.to_device ();
-  launch<scalar_t> (sim, RESULT.gpu.get (), scatterer_blocks_factor, receiver_threads, transmitter_threads);
+  dim3 grid = make_grid (scatterer_blocks_factor, rx_blocks, tx_blocks);
+  launch_projection_kernel<scalar_t> (sim, RESULT.gpu.get (), grid);
   timestamp () << "  launched" << endl;
 
   // Verbose stats
   auto threads_per_block = get_properties ().maxThreadsPerBlock;
-  auto grid_x = (num_scatterers + threads_per_block - 1) / threads_per_block;
-  if (scatterer_blocks_factor > 0)
-  {
-    grid_x = scatterer_blocks_factor * get_properties ().multiProcessorCount;
-  }
-  auto grid_y = receiver_threads;
-  auto grid_z = transmitter_threads;
 
-  block ("Out elems.", 11) << "  " << RESULT.length << endl;
+  block ("Out elems.", 11) << "  " << shape << endl;
   block ("Time samps.", 11) << "  " << sim.num_time_samples << endl;
   block ("Scatterers", 11) << "  " << sim.num_scatterers << endl;
-  block ("Threads", 11) << "  " << static_cast<long long> (grid_x) * grid_y * grid_z * threads_per_block << endl;
-  block ("Blocks", 11) << "  " << static_cast<long long> (grid_x) * grid_y * grid_z << endl;
-  block ("Rx threads", 11) << "  " << receiver_threads << endl;
-  block ("Tx threads", 11) << "  " << transmitter_threads << endl;
+  block ("Threads", 11) << "  " << static_cast<long long> (grid.x) * grid.y * grid.z * threads_per_block << endl;
+  block ("Blocks", 11) << "  " << static_cast<long long> (grid.x) * grid.y * grid.z << endl;
+  block ("Rx threads", 11) << "  " << rx_blocks << endl;
+  block ("Tx threads", 11) << "  " << tx_blocks << endl;
 
   // Wait for kernel
   synchronize ();
@@ -287,8 +279,8 @@ int main (int argc, const char *argv[])
   if (argc < 4)
   {
     cerr << endl;
-    cerr << "  Usage: " << argv[0] << " <use_pytorch> <num_scatterers> <num_elements> [scatterer_blocks_factor]"
-                                      " [receiver_threads] [transmitter_threads]"
+    cerr << "  Usage: " << argv[0] << " <use_pytorch> <num_scatterers> <num_elements> [scatterer_blocks_factor=32]"
+                                      " [rx_blocks=1] [tx_blocks=1]"
          << endl;
     return 1;
   }
@@ -301,22 +293,22 @@ int main (int argc, const char *argv[])
   {
     scatterer_blocks_factor = stoi (*arg++);
   }
-  int receiver_threads = 1;
+  int rx_blocks = 1;
   if (arg < argv + argc)
   {
-    receiver_threads = stoi (*arg++);
+    rx_blocks = stoi (*arg++);
   }
-  int transmitter_threads = 1;
+  int tx_blocks = 1;
   if (arg < argv + argc)
   {
-    transmitter_threads = stoi (*arg++);
+    tx_blocks = stoi (*arg++);
   }
 
   if (use_pytorch)
   {
     cout << "  WITH PYTORCH\n"
          << endl;
-    with_pytorch<float> (num_scatterers, num_elements, scatterer_blocks_factor, receiver_threads, transmitter_threads);
+    with_pytorch<float> (num_scatterers, num_elements, scatterer_blocks_factor, rx_blocks, tx_blocks);
     cout << "\n============================================================\n"
          << endl;
   }
@@ -324,6 +316,6 @@ int main (int argc, const char *argv[])
   {
     cout << "  WITHOUT PYTORCH\n"
          << endl;
-    without_pytorch<float> (num_scatterers, num_elements, scatterer_blocks_factor, receiver_threads, transmitter_threads);
+    without_pytorch<float> (num_scatterers, num_elements, scatterer_blocks_factor, rx_blocks, tx_blocks);
   }
 }

@@ -2,12 +2,25 @@
 - [x] In `Simulator.py`, separate `simulate()` into `project()` and `convolve()` steps.
   - [x] Currently, we only have `project()` being launched. `convolve()`'s job is to convolve
     - [ ] Test it
-  - [ ] Do Hilbert transform in convolve step
+  - [x] Do Hilbert transform in convolve step
 - [x] Add `LinearTransducer` feature: set focal sequence. Give a set of focal points to scan for. The total number of focal points determines the value of `num_scans`.
-    <STOPPED HERE 8/22/18>
-  - [ ] Test it
-- [ ] Allow option in `launch` to sum along receiver element dimension and allocate a smaller buffer.
-  the projected scatterer time points with the excitation signal.
+- [x] Allow option in `launch` to sum along receiver element dimension and allocate a smaller buffer.
+  - [x] Nevermind, don't. This would prevent doing any post-processing tricks like dynamic focusing on receive.
+- [x] Expose grid/block/shared mem/stream calling interface of `launch` directly to Python.
+  - [x] Update `Simulator.py` to call `make_shape` and `make_grid` for reporting stats.
+- [x] Rename `transmitter` and `receiver` members of `Simulator<scalar_t>` to `tx` and `rx`.
+- [ ] Test it
+  - [ ] Call `set_delays` and `set_apodization` for some given `focal_points`.
+    - [ ] Specifically, use 50 lines at 60mm depth (or whatever Field II used), uniform apodization.
+    - [ ] Use apodization to set an F-number for transmit? (N_active=64)
+      - [ ] Use Hanning window
+    - [ ] Use dynamic focusing on reception
+  - [ ] Modify `visualize` to render the Tensor output by `launch`.
+  - [ ] Compare with the results from previous `cyst_phantom` notebook.
+   - [ ] Same not same? Can we say kernel behaves correctly (as expected)?
+  - [ ] Set unfocused and capture planar wave.
+   - [ ] Apply NUFFT to simulated data. Plot and compare.
+  <STOPPED HERE 8/26/18>
 - [x] Configure CTest to call `test_openbcsim.exe` with various arguments.
   - [x] Currently, getting `Exit code 0xc0000135` error. Why aren't the runtime libraries being found?
     - [x] Because semicolons were expanding `PATH` into a list in `set_test_properties()`

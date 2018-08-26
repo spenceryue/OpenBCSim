@@ -9,10 +9,10 @@
 template <class scalar_t>
 struct Transducer
 {
-  /*  1 */ unsigned num_elements;       // Length of delay, apodization is `num_scans * num_elements`
+  /*  1 */ unsigned num_elements;       // Length of delay, apodization is `num_focal_points * num_elements`
   /*  2 */ unsigned num_subelements;    // Length of x, y, z
   /*  3 */ unsigned subdivision_factor; // Equals `num_subelements / num_elements`
-  /*  4 */ unsigned num_scans;          // Length of delay, apodization is `num_scans * num_elements`
+  /*  4 */ unsigned num_focal_points;   // Length of delay, apodization is `num_focal_points * num_elements`
   /*  5 */ const scalar_t *RESTRICT x;
   /*  6 */ const scalar_t *RESTRICT y;
   /*  7 */ const scalar_t *RESTRICT z;
@@ -35,8 +35,8 @@ struct Simulator
   /*  3 */ scalar_t scan_depth;
   /*  4 */ scalar_t speed_of_sound;
   /*  5 */ scalar_t attenuation;
-  /*  6 */ Transducer<scalar_t> transmitter;
-  /*  7 */ Transducer<scalar_t> receiver;
+  /*  6 */ Transducer<scalar_t> tx;
+  /*  7 */ Transducer<scalar_t> rx;
   /*  8 */ unsigned num_time_samples;
   /*  9 */ const scalar_t *RESTRICT scatterer_x;
   /* 10 */ const scalar_t *RESTRICT scatterer_y;

@@ -28,13 +28,15 @@
    Should see something like this:
    ![cmake.png](misc/cmake.png)
 4. Build binaries: `cmake --build build`.
-5. Run tests: `ninja -C build test` (or `cd build && ctest`).
+5. Run tests: `ninja -Cbuild test` (or `cd build && ctest`).
    - If get test failed with [`Exit code 0xc0000135`](https://msdn.microsoft.com/en-us/library/cc704588.aspx) it means a runtime library is missing.
    Check the script outputted to `scripts/SET_RUNTIME_PATHS.(bat|sh)` by CMake to make sure those paths exist.
 6. Use the extension in Python: `import torch; import openbcsim`.
    - `import torch` must come first or there will be a "missing DLL" error.
    - Add path containing `openbcsim.<version>.pyd` (i.e. `pytorch_extension/openbcsim/build/src`) to `PYTHONPATH` environment variable for Python to find it.
      - Or keep `openbcsim.<version>.pyd` in the same directory Python is started in.
+       - Use the `install` build target to put all the needed files in one place:
+       `ninja -Cbuild install`.
 
    Should see something like this:
    ![openbcsim.png](misc/openbcsim.png)

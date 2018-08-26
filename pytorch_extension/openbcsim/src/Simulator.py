@@ -1,5 +1,5 @@
 import torch
-import openbcsim as bc  # Must come after `import torch`
+import openbcsim  # Must come after `import torch`
 from Transducer import *
 
 
@@ -8,23 +8,23 @@ class Simulator:
 
   def __init__ (self, sampling_frequency=100e6, decimation=10,
                 scan_depth=9e-2, speed_of_sound=1540, attenuation=.7,
-                transmitter=Transducer (), receiver=None):
+                tx=Transducer (), rx=None):
     '''The value of `sampling_frequency / decimation` tells how many
     samples to record per a second of simulation (Hz).
 
-    `center_frequency` (Hz) describes the carrier wave frequency of the `transmitter`
+    `center_frequency` (Hz) describes the carrier wave frequency of the `tx`
     transducer.
     `attenuation` is the decrease in amplitude of the signal over distance travelled in dB/MHz/cm.
     `scan_depth` is how deep into the tissue (m) to simulate.
     `speed_of_sound` is the uniform speed assumed to be constant throughout the tissue (m/s).
-    `transmitter` and `receiver` are `Transducer` instances (possibly the same instance) that
+    `tx` and `rx` are `Transducer` instances (possibly the same instance) that
     describe the element geometry and delay/apodization settings of the transducer(s) used to
     transmit and receive the ultrasound signal.
 
-    `receiver` defaults to the same instance as `transmitter` if not given.
+    `rx` defaults to the same instance as `tx` if not given.
 
-    The `tensor_type` attribute (specifying the dtype and device of all tensors owned) of the
-    transmitter and receiver must be the same.
+    The `tensor_type` attribute (specifying the dtype and device of all tensors owned) of
+    `tx` and `rx` must be the same.
     '''
 
     # Store parameters given.
@@ -35,20 +35,20 @@ class Simulator:
     self.attenuation = attenuation
 
     # Save transducers.
-    self.transmitter = transmitter
-    self.receiver = (receiver) if (receiver is not None) else (transmitter)
+    self.tx = tx
+    self.rx = (rx) if (rx is not None) else (tx)
 
     # Check that the transducers have the same `tensor_type`.
-    if not self.transmitter.has_same_tensor_type (self.receiver):
-      msg = 'Transmitter and receiver `Transducer` instances must have the ' \
+    if not self.tx.has_same_tensor_type (self.rx):
+      msg = 'Transmitter and rx `Transducer` instances must have the ' \
           'same tensor_type (i.e. dtype and device).'
-      msg += f'\nTransmitter tensor_type:  {self.transmitter.tensor_type}'
-      msg += f'\nReceiver tensor_type:     {self.receiver.tensor_type}'
+      msg += f'\nTransmitter tensor_type:  {self.tx.tensor_type}'
+      msg += f'\nReceiver tensor_type:     {self.rx.tensor_type}'
       raise ValueError (msg)
     else:
-      self.dtype = self.transmitter.dtype
-      self.device = self.transmitter.device
-      self.tensor_type = self.transmitter.tensor_type
+      self.dtype = self.tx.dtype
+      self.device = self.tx.device
+      self.tensor_type = self.tx.tensor_type
 
     # Compute number of time samples needed.
     self.num_time_samples = self.compute_time_samples (self.scan_depth,
@@ -56,9 +56,9 @@ class Simulator:
                                                        self.sampling_frequency)
 
     # Bind these tensor constructors for convenience.
-    self.new_tensor = transmitter.new_tensor
-    self.new_ones = transmitter.new_ones
-    self.new_zeros = transmitter.new_zeros
+    self.new_tensor = tx.new_tensor
+    self.new_ones = tx.new_ones
+    self.new_zeros = tx.new_zeros
 
   def check_shape (self, attributes, true_shape):
     '''Check that the list of `attributes` (given by their string names) have the desired `true_shape`.'''
@@ -72,10 +72,10 @@ class Simulator:
         msg = f'Shape of self.{attr} {shape} does not match desired true shape {true_shape}.'
         raise ValueError (msg)
 
-  def set_gaussian_excitation (self, bw=.5, bwr=-6, num_sigmas=3, plot=True):
+  def set_gaussian_excitation (self, plot=False, bw=.5, bwr=-6, num_sigmas=3):
     '''Define the ultrasound excitation signal.
     `bw` is the fractional bandwidth (between 0 and 1) of the Gaussian modulating
-    signal relative to the transmitter center frequency.
+    signal relative to `tx.center_frequency.
     `bwr` is the reference level at which the fractional bandwidth is calculated (dB).
     (See scipy.signal.gausspulse.)
     `num_sigmas` is how many standard deviations outwards from the center to sample in either direction.'''
@@ -83,13 +83,12 @@ class Simulator:
     from scipy.signal import gausspulse
     import matplotlib.pyplot as plt
 
-    fc = self.transmitter.center_frequency
+    fc = self.tx.center_frequency
     fs = self.sampling_frequency
 
     # https://github.com/scipy/scipy/blob/14142ff70d84a6ce74044a27919c850e893648f7/scipy/signal/waveforms.py#L232
     # exp(-a t^2) <->  sqrt(pi/a) exp(-pi^2/a * f^2)  = g(f)
     bwr = -6
-    pi = np.pi
     ref = pow (10.0, bwr / 20.0)
     a = -(np.pi * fc * bw) ** 2 / (4.0 * np.log (ref))
     time_sigma = 1 / np.sqrt (2 * a)
@@ -151,8 +150,8 @@ class Simulator:
 
   def to_struct (self):
     constructor = self.select_by_type (
-        bc.Simulator_float,
-        bc.Simulator_double
+        openbcsim.Simulator_float,
+        openbcsim.Simulator_double
     )
     try:
       return constructor (
@@ -161,8 +160,8 @@ class Simulator:
           scan_depth=self.scan_depth,
           speed_of_sound=self.speed_of_sound,
           attenuation=self.attenuation,
-          transmitter=self.transmitter.to_struct (),
-          receiver=self.receiver.to_struct (),
+          tx=self.tx.to_struct (),
+          rx=self.rx.to_struct (),
           num_time_samples=self.num_time_samples,
           scatterer_x=self.scatterer_x,
           scatterer_y=self.scatterer_y,
@@ -179,7 +178,7 @@ class Simulator:
         # Dump everything... (Look for a type error)
         print ({key: (type (getattr (self, key)), getattr (self, key)) for key in [
                 'sampling_frequency', 'decimation', 'scan_depth', 'speed_of_sound',
-                'attenuation', 'transmitter', 'receiver', 'num_time_samples',
+                'attenuation', 'tx', 'rx', 'num_time_samples',
                 'scatterer_x', 'scatterer_y', 'scatterer_z', 'scatterer_amplitude',
                 'num_scatterers',
                 ]})
@@ -187,26 +186,34 @@ class Simulator:
 
   def launch (self,
               scatterer_blocks_factor=32,
-              receiver_threads=1,
-              transmitter_threads=1,
-              silent=False):
+              rx_blocks=1,
+              tx_blocks=1,
+              convolve=True,
+              demodulate=True,
+              dry_run=False,
+              silent=False,
+              ):
     '''Launch CUDA kernel to simulate a frame.'''
     import time
     import os
     os.environ['CUDA_LAUNCH_BLOCKING'] = '1'  # To track the CUDA errors
 
     tic = time.clock ()
-    launch_ = self.select_by_type (bc.launch_float, bc.launch_double)
     try:
-      self.result = launch_ (
-          self.to_struct (),
-          scatterer_blocks_factor=scatterer_blocks_factor,
-          receiver_threads=receiver_threads,
-          transmitter_threads=transmitter_threads
+      self.grid = openbcsim.make_grid (
+          scatterer_blocks_factor,
+          rx_blocks,
+          tx_blocks,
       )
-      self.result = self.convolve (self.result)
-      torch.cuda.synchronize ()
-      [x for x in self.result if False]  # Read to trigger cudaMemcpy
+      if not dry_run:
+        self.result = openbcsim.launch (
+            self.to_struct (),
+            grid=self.grid,
+        )
+        if convolve:
+          self.result = self.convolve (self.result, demodulate=demodulate)
+        torch.cuda.synchronize ()
+        [x for x in self.result if False]  # Read to trigger cudaMemcpy
     except Exception as e:
       msg = 'See CUDA documentation for list of error codes:\n'
       msg += 'https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g3f51e3575c2178246db0a94a430e0038'
@@ -214,7 +221,7 @@ class Simulator:
       raise e
     else:
       self.toc = time.clock () - tic
-      props = bc.DeviceProperties ()
+      props = openbcsim.DeviceProperties ()
       memoryClockRate = props.memoryClockRate * 1000  # convert from kHz to Hz
       memoryBusWidth = props.memoryBusWidth / 8  # bits to bytes
       sizeof_elem = 4 if (self.dtype is torch.float32) else 8  # bytes per element in `self.result`
@@ -230,14 +237,14 @@ class Simulator:
         msg = '''\
 {seconds:.2f} seconds
 Theoretical memory bandwidth: {Theoretical memory bandwidth:.1f} GB/s
-Actual memory bandwidth: {Actual memory bandwidth:.2f} GB/s
+Actual memory bandwidth: {Actual memory bandwidth:.3f} GB/s
 Threads per second: {Threads per second:.1f}\
 '''.format (**self.perf)
         print (msg)
 
     return self.result
 
-  def convolve (self, projected_data):
+  def convolve (self, projected_data, demodulate=True):
     '''Apply excitation to projected time points via convolution (done in frequency domain).'''
 
     N = self.num_time_samples
@@ -245,44 +252,84 @@ Threads per second: {Threads per second:.1f}\
     kernel = self.new_zeros ([N, 2])
     n = self.excitation.numel ()
     kernel[:n, 0] = self.excitation
-    kernel = torch.rfft (kernel, 1, onesided=False)
+    kernel = torch.fft (kernel, 1)
 
     projected_data = torch.fft (projected_data, 1)
-    output *= kernel / N
-    num_transfers = 2
-    output = torch.ifft (output, 1)
-    num_transfers = 2
+    output = projected_data * kernel / N
+    if demodulate:
+      output = self.analytic_signal (output)
 
+    output = torch.ifft (output, 1)
     return output
-    num_transfers = 2
+
+  @staticmethod
+  def analytic_signal (spectrum):
+    '''Returns `X[k] + i * H{X}[k]` where
+    - `X[k]` is the frequency spectrum of the signal,
+    - `i` is `sqrt(-1)`,
+    - `H{X}[k]` is the frequency spectrum of the Hilbert transform of the signal.
+
+    Effectively:
+    - Positive frequency components (`i=1...N/2-1` of `i=0...N-1`, for N even)
+    are doubled.
+    - Negative frequency components (`i=N/2+1...N-1`, for N even) are zeroed.
+
+    Operates on the second to last dimension of `spectrum`. Assumes last dimension (of
+    length 2) is for the complex and imaginary components.
+
+    Examples
+    ===
+    N=5
+    component: 0 1 2 3 4
+    "sign":    0 + + - -
+
+    N=4
+    component: 0 1 2 3
+    "sign":    0 + 0 -
+
+    N=3
+    component: 0 1 2
+    "sign":    0 + -
+    '''
+
+    N = spectrum.shape[-2]
+
+    # Round odd N up
+    positive = slice (1, (N + 1) // 2)  # ex: N=3 -> [1:2], N=4 -> [1:2], N=5 -> [1:3]
+    # Round odd N down
+    negative = slice (N // 2 + 1, N)    # ex: N=3 -> [2:3], N=4 -> [3:4]. N=5 -> [3:5]
+
+    spectrum[..., positive, :] *= 2
+    spectrum[..., negative, :] = 0
+
+    return spectrum
 
   def stats (self, silent=False):
     '''Launch stats.'''
-    from math import ceil
+    from functools import reduce
+    shape = openbcsim.make_shape (self.to_struct ())
+    num_blocks = reduce (lambda a, b: a * b, self.grid)
     self.stats = {
-        'Output buffer elements': 2 * self.num_time_samples * self.receiver.num_subelements,
+        'Output buffer shape': shape,
         'Time samples': self.num_time_samples,
-        'Transmitter subelements': self.transmitter.num_subelements,
-        'Receiver subelements': self.receiver.num_subelements,
+        'Transmitter subelements': self.tx.num_subelements,
+        'Receiver subelements': self.rx.num_subelements,
         'Scatterer samples': self.num_scatterers,
-        'CUDA threads': 1024 * ceil (self.num_scatterers / 1024) * self.transmitter.num_subelements * self.receiver.num_subelements,
-        'CUDA blocks': self.num_scatterers * self.transmitter.num_subelements * self.receiver.num_subelements // 1024,
+        'CUDA blocks': self.grid,
+        'CUDA threads': openbcsim.DeviceProperties ().maxThreadsPerBlock * num_blocks,
     }
 
     if not silent:
       msg = '''\
-Output buffer elements     {Output buffer elements:<15,} = \
-2 x [Time samples] x [Receiver subelements] \
--- `2 x` because data is complex
+Output buffer shape        {Output buffer shape:<15} = \
+[Focal points] x [Receiver elements] x [Time samples] x [Components (2, real/imag)]
 Time samples               {Time samples:<15,}
 Transmitter subelements    {Transmitter subelements:<15,}
 Receiver subelements       {Receiver subelements:<15,}
-num_transfers = 2
 Scatterer samples          {Scatterer samples:<15,}
+CUDA blocks                {CUDA blocks:<15,}\
 CUDA threads               {CUDA threads:<15,} = \
-1024 * ceil([Scatterer samples] / 1024) x [Transmitter subelements] x [Receiver subelements]
-num_transfers = 2
-CUDA blocks                {CUDA blocks:<15,} = [CUDA threads] / 1024\
+[Max threads/block] x [Total blocks in grid]
 '''.format (**self.stats)
       print (msg)
 
@@ -292,7 +339,7 @@ CUDA blocks                {CUDA blocks:<15,} = [CUDA threads] / 1024\
   def reset_device ():
     '''Doesn't work :(. (Trying to recover from error without restarting
     notebook.'''
-    bc.reset_device ()
+    openbcsim.reset_device ()
     torch.cuda.empty_cache ()
     import importlib
     importlib.reload (torch)

@@ -36,7 +36,7 @@ class Transducer:
     self.num_elements = num_elements
     self.num_subelements = num_subelements
     self.subdivision_factor = num_subelements // num_elements
-    # self.num_scans defined through @property
+    # self.num_focal_points defined through @property
 
     # Center frequency
     self.center_frequency = center_frequency
@@ -71,14 +71,14 @@ class Transducer:
     self.check_shape (['delay', 'apodization'], [num_elements])
 
   @property
-  def num_scans(self):
-    if len (self.delay.shape) == 1:
+  def num_focal_points(self):
+    try:
+      return len (self.focal_points)
+    except AttributeError:
       return 1
-    else:
-      return self.delay.shape[0] if self.delay is not None else 0
 
-  @num_scans.setter
-  def num_scans(self, _):
+  @num_focal_points.setter
+  def num_focal_points(self, _):
     msg = 'Don\'t try to set the number of scans through this property.\n'
     msg += 'The number of scans is implicitly determined from the first ' \
            'dimension of self.delay (or equivalently of self.apodization).'
@@ -143,7 +143,7 @@ class Transducer:
           num_elements=self.num_elements,
           num_subelements=self.num_subelements,
           subdivision_factor=self.subdivision_factor,
-          num_scans=self.num_scans,
+          num_focal_points=self.num_focal_points,
           x=self.x,
           y=self.y,
           z=self.z,
@@ -154,7 +154,7 @@ class Transducer:
     except Exception as e:
       # Dump everything... (Look for a type error)
       print ({key: (type (getattr (self, key)), getattr (self, key)) for key in [
-              'num_elements', 'num_subelements', 'subdivision_factor', 'num_scans',
+              'num_elements', 'num_subelements', 'subdivision_factor', 'num_focal_points',
               'x', 'y', 'z', 'delay', 'apodization', 'center_frequency'
               ]})
       raise e
@@ -169,6 +169,74 @@ class Transducer:
     template = ', '.join (f'{arg}={{{arg}!r}}' for arg in constructor_args)
 
     return message.format (template).format (**self.__dict__)
+
+  def set_delays (self, *, map_func=None, focal_points=None, speed_of_sound=1540):
+    '''Give a set of focal points to scan for. The total number of focal points determines
+    the value of `num_focal_points`.
+    Calculates the delays needed for each focal point.
+    Each focal point should be a triple (x,y,z) in the same coordinate system as the
+    Transducer elements:
+      +x is lateral -- parallel to Transducer
+      +y is elevational -- vertical out of the imaging plane
+      +z is depthwise -- into the tissue
+    `focal_points` defaults to the last seen set of focal points if `None`. See
+    `map_focal_points()`.
+    `speed_of_sound` is in meters/sec.
+    This function accepts keyword arguments only.
+    A negative delay is equivalent to an "advance" in time.
+    '''
+
+    if map_func is None:
+      def map_func (X, Y, Z, focus):
+        distance = ((X - focus[0])**2 + (Y - focus[1])**2 + (Z - focus[2])**2)**.5
+        # Note: This returns non-positive delays, which corresponds to "advances" in time.
+        delay = -(distance - distance.min ()) / speed_of_sound
+        return delay
+
+    self.delays = self.map_focal_points (map_func, focal_points)
+
+    return self.delays
+
+  def set_apodization (self, *, map_func=None, focal_points=None):
+    '''Passing no arguments will yield uniform apodization matching the shape of
+    `self.delays`.
+    This function accepts keyword arguments only.
+    '''
+    if map_func is None:
+      # Uniform apodization, match shape of self.delays
+      self.apodization = self.new_ones (self.delays.shape)
+    else:
+      self.apodization = self.map_focal_points (map_func, focal_points)
+
+    return self.apodization
+
+  def map_focal_points (self, map_func, focal_points=None):
+    '''Applies `map_func` to arguments:
+        X = array of transducer element position x-coordinates
+        Y = array of transducer element position y-coordinates
+        Z = array of transducer element position z-coordinates
+        focus = position of a focal point: (x,y,z)
+    Equivalent to the following:
+        result[scan_idx] = map_func (X, Y, Z, focal_points[scan_idx])
+    `map_func` should output a Tensor with shape (len (X),).
+    `focal_points` defaults to the last seen set of focal points if `None`.
+    `result` returned is a Tensor with shape (len (focal_points), self.num_elements).
+
+    Essentially, this is a helper function that indexes into transducer *element* positions
+    instead of *subelement* positions (which would be what one gets if one loops over the
+    positions without a stride).
+    '''
+
+    if focal_points is not None:
+      self.focal_points = focal_points
+
+    II = slice (self.subdivision_factor // 2, self.num_subelements, self.subdivision_factor)
+    result = [*map (lambda point:
+                    map_func (self.x[II], self.y[II], self.z[II], point).reshape (1, -1),
+                    self.focal_points)]
+    result = torch.cat (result, dim=0)
+
+    return result
 
 
 class LinearTransducer (Transducer):
@@ -261,6 +329,12 @@ class LinearTransducer (Transducer):
     ax.scatter (self.x, self.y, self.z, c=np.arange (
         self.num_subelements), s=5, cmap='plasma')
 
+    try:
+      x, y, z = zip (self.focal_points)
+      ax.scatter (x, y, z, c='red', s=5)
+    except AttributeError:
+      pass
+
     if self.num_elements > 1:
       # Label first and last transducer element ('Start' and 'Stop').
       ax.text (self.x[0], self.y[0], self.z[0], '● Start',
@@ -276,7 +350,7 @@ class LinearTransducer (Transducer):
         stride = max (stride, 1)
         for i in range (stride, self.num_subelements - 1, stride):
           ax.text (self.x[i], self.y[i], self.z[i],
-                   f'o {i}', fontsize=12, color='red')
+                   f'● {i}', fontsize=12, color='red')
         # Warn that axes are not to scale.
         ax.text2D (1, 0, '(Axes not plotted to scale.)', transform=ax.transAxes,
                    ha='right', fontsize=12, color='red')
@@ -285,9 +359,6 @@ class LinearTransducer (Transducer):
     else:
       # Special case when there's only one element
       ax.scatter (self.x, self.y, self.z, c='red', s=50)
-
-    try:
-      ax.scatter ()
 
     # Label axes and convert tick values to millimeters.
     ax.set_xlabel ('x [mm]', color='red', fontsize=16, labelpad=10)
@@ -312,65 +383,3 @@ class LinearTransducer (Transducer):
       plt.show()
     else:
       return fig, ax
-
-  def set_delays (self, *, map_func=None, focal_points=None, speed_of_sound=1540):
-    '''Give a set of focal points to scan for. The total number of focal points determines
-    the value of `num_scans`.
-    Calculates the delays needed for each focal point.
-    Each focal point should be a triple (x,y,z) in the same coordinate system as the
-    Transducer elements:
-      +x is lateral -- parallel to Transducer
-      +y is elevational -- vertical out of the imaging plane
-      +z is depthwise -- into the tissue
-    `focal_points` defaults to the last seen set of focal points if `None`. See
-    `map_focal_points()`.
-    `speed_of_sound` is in meters/sec.
-    This function accepts keyword arguments only.
-    '''
-
-    if map_func is None:
-      def map_func (X, Y, Z, focus):
-        distance = ((X - focus[0])**2 + (Y - focus[1])**2 + (Z - focus[2])**2)**.5
-        delay = (distance - distance.min ()) / speed_of_sound
-        return delay
-
-    self.delays = self.map_focal_points (map_func, focal_points)
-
-    return self.delays
-
-  def set_apodization (self, *, map_func=None, focal_points=None):
-    '''Passing no arguments will yield uniform apodization matching the shape of
-    `self.delays`.
-    This function accepts keyword arguments only.
-    '''
-    if map_func is None:
-      # Uniform apodization, match shape of self.delays
-      self.apodization = self.new_ones (self.delays.shape)
-    else:
-      self.apodization = self.map_focal_points (map_func, focal_points)
-
-    return self.apodization
-
-  def map_focal_points (self, map_func, focal_points=None):
-    '''Applies `map_func` to arguments:
-        X = array of transducer element position x-coordinates
-        Y = array of transducer element position y-coordinates
-        Z = array of transducer element position z-coordinates
-        focus = position of a focal point: (x,y,z)
-    Equivalent to the following:
-        result[scan_idx] = map_func (X, Y, Z, focal_points[scan_idx])
-    `map_func` should output a Tensor with shape (len (X),).
-    `focal_points` defaults to the last seen set of focal points if `None`.
-    `result` returned is a Tensor with shape (len (focal_points), self.num_elements).
-    '''
-
-    if focal_points is not None:
-      self.focal_points = focal_points
-
-    II = slice (self.subdivision_factor // 2, self.num_subelements, self.subdivision_factor)
-    result = [*map (lambda point:
-                    map_func (self.x[II], self.y[II], self.z[II], point).reshape (1, -1),
-                    self.focal_points)]
-    result = torch.cat (result, dim=0)
-
-    return result

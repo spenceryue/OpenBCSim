@@ -5,6 +5,7 @@
 #include <iostream>
 #include <locale>
 #include <sstream>
+#include <type_traits>
 
 namespace pretty
 {
@@ -48,5 +49,24 @@ static UNUSED void restore (ostream &o, ios &from = SAVE)
 {
   o.copyfmt (from);
 }
+
+#define FORMAT_ITERABLE(Class...)                                             \
+  namespace pretty                                                            \
+  {                                                                           \
+  template <class Iterable, enable_if_t<is_same_v<Iterable, Class>, int> = 0> \
+  ostream &operator<< (ostream &out, Iterable list)                           \
+  {                                                                           \
+    int i = 0;                                                                \
+    out << "[";                                                               \
+    for (auto e : list)                                                       \
+    {                                                                         \
+      if (i++ > 0)                                                            \
+        out << ", ";                                                          \
+      out << e;                                                               \
+    }                                                                         \
+    out << "]";                                                               \
+    return out;                                                               \
+  }                                                                           \
+  }
 
 } // namespace pretty

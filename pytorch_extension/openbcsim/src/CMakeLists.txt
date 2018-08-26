@@ -13,6 +13,11 @@ target_compile_options (openbcsim_kernel
   # Print per-thread register and memory usage
   --resource-usage
 )
+target_compile_definitions (openbcsim_kernel
+  PRIVATE
+  # Enable annotations of exports with __declspec(dllexport)
+  EXPORTING
+)
 target_include_directories (openbcsim_kernel
   PUBLIC
   ${CUDA_INCLUDE_DIRS}
@@ -99,8 +104,17 @@ target_link_libraries (test_openbcsim
 
 
 # Install
-install (TARGETS openbcsim_module test_openbcsim DESTINATION "${CMAKE_INSTALL_PREFIX}")
-install (FILES "Simulator.py" "Transducer.py" DESTINATION "${CMAKE_INSTALL_PREFIX}")
+install (TARGETS
+  openbcsim_module
+  test_openbcsim
+  RUNTIME
+    DESTINATION "${CMAKE_INSTALL_PREFIX}"
+)
+install (FILES
+  "Simulator.py"
+  "Transducer.py"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}"
+)
 
 
 # Define pieces used to write set_runtime_paths script.
