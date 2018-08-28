@@ -291,8 +291,7 @@ Threads per second: {Threads per second:.1f}\
     zeroed.
 
     Operates on the second to last dimension of `spectrum`. Assumes last
-    dimension (of
-    length 2) is for the complex and imaginary components.
+    dimension (of length 2) is for the complex and imaginary components.
 
     Examples
     ===
@@ -389,4 +388,4 @@ CUDA thread count          {CUDA thread count:<20,} = \
     # `!r` means convert with `repr(...)`.
     template = ', '.join (f'{arg}={{{arg}!r}}' for arg in constructor_args)
 
-    return message.format (template).format (**self.__dict__)
+    return message.format (template).format (**vars (self))

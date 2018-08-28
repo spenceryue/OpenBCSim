@@ -27,7 +27,7 @@ __global__ void projection_kernel (const Simulator<scalar_t> args, scalar_t *RES
             Loop over focal points (args.tx.num_focal_points):
               Do time projection
 
-    Note: The 3 outermost for-loops below follow the grid-stride-loop convention.
+    Note: The 3 outermost for-loops follow the grid-stride-loop convention.
     https://devblogs.nvidia.com/cuda-pro-tip-write-flexible-kernels-grid-stride-loops/
   */
 

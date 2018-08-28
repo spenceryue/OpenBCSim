@@ -1,7 +1,7 @@
 ## TODO
-- [x] In `Simulator.py`, inside `launch()` implement call to `convolve()`.
+- [x] In `Simulator.launch()` implement call to `convolve()`.
   - [x] Do Hilbert transform in convolve step
-- [x] Add `LinearTransducer` feature: set focal sequence. Give a set of focal points to scan for. The total number of focal points determines the value of `num_scans`.
+- [x] Add `LinearTransducer` feature: set focal sequence. Give a set of focal points to scan for. The total number of focal points determines the value of `num_focal_points`.
 - [x] Allow option in `launch` to sum along receiver element dimension and allocate a smaller buffer.
   - [x] Nevermind, don't. This would prevent doing any post-processing tricks like dynamic focusing on receive.
 - [x] Expose grid/block/shared mem/stream calling interface of `launch` directly to Python.
@@ -45,4 +45,6 @@
 - [x] Does anything work from Python side?
   - [x] Yes, seems able to launch and produce results.
 - [x] Implement `__getitem__` for `DeviceProperties`.
-- [ ] Package `openbcsim.<version>.pyd`, `Simulator.py`, `Transducer.py` into an easier to import unit.
+- [x] Package `openbcsim.<version>.pyd`, `Simulator.py`, `Transducer.py` into an easier to import unit.
+  - Just do `import sys; sys.path.append ('/path/to/install'); import Simulator as bc`
+  See `jupyter/Testing Extension.ipynb`.
