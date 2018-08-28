@@ -9,14 +9,14 @@ DLL_PUBLIC Transducer<scalar_t> create (unsigned num_elements,
                                         at::Tensor x,
                                         at::Tensor y,
                                         at::Tensor z,
-                                        at::Tensor delay,
+                                        at::Tensor delays,
                                         at::Tensor apodization,
                                         scalar_t center_frequency)
 {
   CHECK_INPUT (x);
   CHECK_INPUT (y);
   CHECK_INPUT (z);
-  CHECK_INPUT (delay);
+  CHECK_INPUT (delays);
   CHECK_INPUT (apodization);
 
   Transducer<scalar_t> result;
@@ -27,7 +27,7 @@ DLL_PUBLIC Transducer<scalar_t> create (unsigned num_elements,
   /*  5 */ result.x = x.data<scalar_t> ();
   /*  6 */ result.y = y.data<scalar_t> ();
   /*  7 */ result.z = z.data<scalar_t> ();
-  /*  8 */ result.delay = delay.data<scalar_t> ();
+  /*  8 */ result.delays = delays.data<scalar_t> ();
   /*  9 */ result.apodization = apodization.data<scalar_t> ();
   /* 10 */ result.center_frequency = center_frequency;
 
@@ -88,11 +88,11 @@ DLL_PUBLIC std::array<int64_t, 4> make_shape (const Simulator<scalar_t> &args)
     If get "out of memory" error, log arguments to make sure they converted properly...
   */
   /*
-    Example: (50 focal points) x (200 elements) x (2 * (9e-2 m) / (1540 m/s) * (100e6 samples/s))
-         = 50 * 200 * 2 * 9e-2 / 1540 * 100e6
-         = 116,883,117 samples
-         = 467,532,468 bytes (assuming float)
-         = 467.5 MB
+    Example: (50 focal points) x (200 elements) x (2 * (9e-2 m) / (1540 m/s) * (100e6 samples/s)) x (2 for real/imag)
+         = 50 * 200 * 2 * 9e-2 / 1540 * 100e6 * 2
+         = 233,766,234 samples
+         = 935,064,936 bytes (assuming float)
+         = 935 MB
   */
   return {args.tx.num_focal_points,
           args.rx.num_elements,
@@ -140,7 +140,7 @@ static void bind_openbcsim (py::module &m, const std::string &type_string)
             "x"_a,
             "y"_a,
             "z"_a,
-            "delay"_a,
+            "delays"_a,
             "apodization"_a,
             "center_frequency"_a)
       .def_readonly ("num_elements", &Transducer<scalar_t>::num_elements)

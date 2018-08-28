@@ -110,9 +110,9 @@ install (TARGETS
   RUNTIME
     DESTINATION "${CMAKE_INSTALL_PREFIX}"
 )
+file (GLOB py_files "${CMAKE_CURRENT_SOURCE_DIR}/*.py")
 install (FILES
-  "Simulator.py"
-  "Transducer.py"
+  ${py_files}
   DESTINATION "${CMAKE_INSTALL_PREFIX}"
 )
 

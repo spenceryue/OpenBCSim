@@ -16,7 +16,7 @@ struct Transducer
   /*  5 */ const scalar_t *RESTRICT x;
   /*  6 */ const scalar_t *RESTRICT y;
   /*  7 */ const scalar_t *RESTRICT z;
-  /*  8 */ const scalar_t *RESTRICT delay;
+  /*  8 */ const scalar_t *RESTRICT delays;
   /*  9 */ const scalar_t *RESTRICT apodization;
   /* 10 */ scalar_t center_frequency;
 };

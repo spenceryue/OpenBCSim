@@ -90,13 +90,13 @@ __global__ void projection_kernel (const Simulator<scalar_t> args, scalar_t *RES
           // e.g. `rx_delay[focus_idx % args.rx.num_focal_points][rx_element_idx]`.
           // Note: The focus_idx dimension modulus allows the receiver to have fewer scans than the transmitter.
           const unsigned i = (args.rx.num_elements) * (focus_idx % args.rx.num_focal_points) + rx_element_idx;
-          const scalar_t rx_delay = args.rx.delay[i];
+          const scalar_t rx_delay = args.rx.delays[i];
           const scalar_t rx_apodization = args.rx.apodization[i];
 
           // 12. Get transmitter delay, apodization
           // e.g. `tx_delay[focus_idx][tx_element_idx]`.
           const unsigned j = (args.tx.num_elements) * focus_idx + tx_element_idx;
-          const scalar_t tx_delay = args.tx.delay[j];
+          const scalar_t tx_delay = args.tx.delays[j];
           const scalar_t tx_apodization = args.tx.apodization[j];
 
           do_time_projection<scalar_t> (args,

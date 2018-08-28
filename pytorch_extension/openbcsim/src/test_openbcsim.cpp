@@ -37,10 +37,10 @@ void with_pytorch (int num_scatterers, unsigned num_elements, int scatterer_bloc
   x *= .5e-3;
   at::Tensor y = torch::CUDA (s_type).zeros ({num_elements});
   at::Tensor z = torch::CUDA (s_type).zeros ({num_elements});
-  at::Tensor delay = torch::CUDA (s_type).zeros ({num_elements});
+  at::Tensor delays = torch::CUDA (s_type).zeros ({num_elements});
   at::Tensor apodization = torch::CUDA (s_type).ones ({num_elements});
   scalar_t center_frequency = 3.5e6;
-  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, subdivision_factor, num_focal_points, x, y, z, delay,
+  Transducer<scalar_t> tx = create<scalar_t> (num_elements, num_subelements, subdivision_factor, num_focal_points, x, y, z, delays,
                                               apodization, center_frequency);
   timestamp () << "  created Transducer" << endl;
 
@@ -192,7 +192,7 @@ void without_pytorch (int num_scatterers, unsigned num_elements, int scatterer_b
   auto Z = CUDA_buffer::zeros (num_elements);
   tx.z = Z.gpu.get ();
   auto DELAY = CUDA_buffer::zeros (num_elements);
-  tx.delay = DELAY.gpu.get ();
+  tx.delays = DELAY.gpu.get ();
   auto APODIZATION = CUDA_buffer::ones (num_elements);
   tx.apodization = APODIZATION.gpu.get ();
   tx.center_frequency = 3.5e6;

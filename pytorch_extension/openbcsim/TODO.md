@@ -1,26 +1,38 @@
 ## TODO
-- [x] In `Simulator.py`, separate `simulate()` into `project()` and `convolve()` steps.
-  - [x] Currently, we only have `project()` being launched. `convolve()`'s job is to convolve
-    - [ ] Test it
+- [x] In `Simulator.py`, inside `launch()` implement call to `convolve()`.
   - [x] Do Hilbert transform in convolve step
 - [x] Add `LinearTransducer` feature: set focal sequence. Give a set of focal points to scan for. The total number of focal points determines the value of `num_scans`.
 - [x] Allow option in `launch` to sum along receiver element dimension and allocate a smaller buffer.
   - [x] Nevermind, don't. This would prevent doing any post-processing tricks like dynamic focusing on receive.
 - [x] Expose grid/block/shared mem/stream calling interface of `launch` directly to Python.
   - [x] Update `Simulator.py` to call `make_shape` and `make_grid` for reporting stats.
+- [x] Test `Transducer.plot` with `true_scale=True`.
 - [x] Rename `transmitter` and `receiver` members of `Simulator<scalar_t>` to `tx` and `rx`.
 - [ ] Test it
-  - [ ] Call `set_delays` and `set_apodization` for some given `focal_points`.
-    - [ ] Specifically, use 50 lines at 60mm depth (or whatever Field II used), uniform apodization.
-    - [ ] Use apodization to set an F-number for transmit? (N_active=64)
-      - [ ] Use Hanning window
+  - [ ] With 1 scan line
+    - Severe slow down... 123 seconds. (1920 subelement transducers)
+    - Was it because of `convolve()`?
+      - 453 seconds for 2 focal points `convolve=False`...
+    - 453 seconds for 2 focal points.
+    - Does it have to do with the fact there are 320,000 threads but only 100k scatterers?
+    - Is it because we use a copy of `tx`?
+      - I thought it was a shallow copy though... so probably not.
+    - Actually looking at old timing logs, 105 seconds for 2000 elements is very comparable...
+    - It would be a ton faster if I just keep a buffer at each scatterer element with the transmission signal. One scatterer would need `O(N + M)` distance calculations and `O(N * M)` (4 or 8-byte) writes, where N=`tx.num_subelements` and M=`rx.num_subelements` for a single scan. The writes would be coalesced too... so very efficient. Could also possiby use shared memory. This is opposed to the current strategy with `O(N * M)` for both distance calcuations and writes. The program is certainly not memory bound right now. (`output_buffer` for 1 focal point is 18 MB.) This reduction in FLOPS needed should directly address the issue.
+    - [ ] Implement coalescing at scatterer level i.e. separate transmit and receive distance calcuations (in `openbcsim_kernel.cu`).
+    <STOPPED HERE 8/28/18>
+  - [ ] With 50 scan lines
+  - [x] Call `set_delays` and `set_apodization` for some given `focal_points`.
+    - [x] Specifically, use 50 lines at 60mm depth (or whatever Field II used), uniform apodization.
+    - [x] Use apodization to set an F-number for transmit? (N_active=64)
+      - [x] Use Hanning window
     - [ ] Use dynamic focusing on reception
+    - [ ] Apply decimation
   - [ ] Modify `visualize` to render the Tensor output by `launch`.
   - [ ] Compare with the results from previous `cyst_phantom` notebook.
    - [ ] Same not same? Can we say kernel behaves correctly (as expected)?
   - [ ] Set unfocused and capture planar wave.
    - [ ] Apply NUFFT to simulated data. Plot and compare.
-  <STOPPED HERE 8/26/18>
 - [x] Configure CTest to call `test_openbcsim.exe` with various arguments.
   - [x] Currently, getting `Exit code 0xc0000135` error. Why aren't the runtime libraries being found?
     - [x] Because semicolons were expanding `PATH` into a list in `set_test_properties()`

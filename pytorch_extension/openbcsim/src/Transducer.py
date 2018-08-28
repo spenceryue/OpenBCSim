@@ -1,6 +1,7 @@
 import torch
 import openbcsim  # Must come after `import torch`
 import numpy as np
+from mpl_utils import rcParams
 
 
 class Transducer:
@@ -8,7 +9,7 @@ class Transducer:
 
   def __init__ (self, num_elements=1, num_subelements=1,
                 x=None, y=None, z=None,
-                delay=None, apodization=None,
+                delays=None, apodization=None,
                 center_frequency=3.5e6,
                 dtype=torch.float32, device='cuda'):
     '''Use one of the subclasses to fill in the arguments of this constructor
@@ -22,7 +23,7 @@ class Transducer:
     (for better accuracy).
     `x`, `y`, `z` are the arrays of coordinate positions of each subelement given
     in meters (m).
-    `delay` is an array of per-element delays (seconds).
+    `delays` is an array of per-element delays (seconds).
     `apodization` is an array of per-element apodization factors (i.e. amplitude
     scaling factor applied to the signal transmitted/received at a given element).
     `center_frequency` is the frequency of the carrier wave used to transmit or
@@ -51,8 +52,8 @@ class Transducer:
     self.y = self.new_tensor (y)
     self.z = self.new_tensor (z)
 
-    # Per-element delay and apodization
-    self.delay = self.new_tensor (delay)
+    # Per-element delays and apodization
+    self.delays = self.new_tensor (delays)
     self.apodization = self.new_tensor (apodization)
 
     # Fill with a default value if None
@@ -62,13 +63,13 @@ class Transducer:
       self.y = self.new_zeros (num_subelements)
     if self.z is None:
       self.z = self.new_zeros (num_subelements)
-    if self.delay is None:
-      self.delay = self.new_zeros (num_elements)
+    if self.delays is None:
+      self.delays = self.new_zeros (num_elements)
     if self.apodization is None:
       self.apodization = self.new_ones (num_elements)
 
     self.check_shape (['x', 'y', 'z'], [num_subelements])
-    self.check_shape (['delay', 'apodization'], [num_elements])
+    self.check_shape (['delays', 'apodization'], [num_elements])
 
   @property
   def num_focal_points(self):
@@ -81,7 +82,7 @@ class Transducer:
   def num_focal_points(self, _):
     msg = 'Don\'t try to set the number of scans through this property.\n'
     msg += 'The number of scans is implicitly determined from the first ' \
-           'dimension of self.delay (or equivalently of self.apodization).'
+           'dimension of `self.delays` (or equivalently of self.apodization).'
     raise AttributeError (msg)
 
   def has_same_tensor_type (self, other):
@@ -147,7 +148,7 @@ class Transducer:
           x=self.x,
           y=self.y,
           z=self.z,
-          delay=self.delay,
+          delays=self.delays,
           apodization=self.apodization,
           center_frequency=self.center_frequency,
       )
@@ -155,7 +156,7 @@ class Transducer:
       # Dump everything... (Look for a type error)
       print ({key: (type (getattr (self, key)), getattr (self, key)) for key in [
               'num_elements', 'num_subelements', 'subdivision_factor', 'num_focal_points',
-              'x', 'y', 'z', 'delay', 'apodization', 'center_frequency'
+              'x', 'y', 'z', 'delays', 'apodization', 'center_frequency'
               ]})
       raise e
 
@@ -166,21 +167,23 @@ class Transducer:
     constructor_args = inspect.signature (cls).parameters.keys ()
     message = cls.__name__ + ' ({})'
     # Note: `{{` escapes `{` and `}}` escapes `}`. (For reference: pyformat.info)
+    # `!r` means convert with `repr(...)`.
     template = ', '.join (f'{arg}={{{arg}!r}}' for arg in constructor_args)
 
     return message.format (template).format (**self.__dict__)
 
-  def set_delays (self, *, map_func=None, focal_points=None, speed_of_sound=1540):
-    '''Give a set of focal points to scan for. The total number of focal points determines
-    the value of `num_focal_points`.
-    Calculates the delays needed for each focal point.
-    Each focal point should be a triple (x,y,z) in the same coordinate system as the
-    Transducer elements:
-      +x is lateral -- parallel to Transducer
-      +y is elevational -- vertical out of the imaging plane
-      +z is depthwise -- into the tissue
-    `focal_points` defaults to the last seen set of focal points if `None`. See
-    `map_focal_points()`.
+  def set_delays (self, *, focal_points=None, map_func=None, speed_of_sound=1540):
+    '''Calculates the delays needed for each focal point.
+    Or specipy your own `map_func`. (See `map_focal_points()` for details.)
+    Give a set of focal points to scan for. The total number of focal
+    points determines the value of `num_focal_points`.
+    Each focal point should be a triple (x,y,z) in the same coordinate
+    system as the Transducer elements:
+      x is lateral -- corresponds to width-direction of image
+      y is elevational -- perpendicular to the imaging plane
+      z is depthwise -- height-direction of image plane
+    `focal_points` defaults to the last seen set of focal points if not
+    set. (See `map_focal_points()`.)
     `speed_of_sound` is in meters/sec.
     This function accepts keyword arguments only.
     A negative delay is equivalent to an "advance" in time.
@@ -190,14 +193,14 @@ class Transducer:
       def map_func (X, Y, Z, focus):
         distance = ((X - focus[0])**2 + (Y - focus[1])**2 + (Z - focus[2])**2)**.5
         # Note: This returns non-positive delays, which corresponds to "advances" in time.
-        delay = -(distance - distance.min ()) / speed_of_sound
-        return delay
+        delays = -(distance - distance.min ()) / speed_of_sound
+        return delays
 
     self.delays = self.map_focal_points (map_func, focal_points)
 
     return self.delays
 
-  def set_apodization (self, *, map_func=None, focal_points=None):
+  def set_apodization (self, *, focal_points=None, map_func=None):
     '''Passing no arguments will yield uniform apodization matching the shape of
     `self.delays`.
     This function accepts keyword arguments only.
@@ -219,12 +222,14 @@ class Transducer:
     Equivalent to the following:
         result[scan_idx] = map_func (X, Y, Z, focal_points[scan_idx])
     `map_func` should output a Tensor with shape (len (X),).
-    `focal_points` defaults to the last seen set of focal points if `None`.
-    `result` returned is a Tensor with shape (len (focal_points), self.num_elements).
+    `focal_points` defaults to the last seen set of focal points if
+    `None`.
+    `result` returned is a Tensor (or numpy array) with shape:
+      (len (focal_points), self.num_elements).
 
-    Essentially, this is a helper function that indexes into transducer *element* positions
-    instead of *subelement* positions (which would be what one gets if one loops over the
-    positions without a stride).
+    Essentially, this is a helper function that indexes into transducer
+    *element* positions instead of *subelement* positions (which would
+    be what one gets if one loops over the positions without a stride).
     '''
 
     if focal_points is not None:
@@ -232,11 +237,57 @@ class Transducer:
 
     II = slice (self.subdivision_factor // 2, self.num_subelements, self.subdivision_factor)
     result = [*map (lambda point:
-                    map_func (self.x[II], self.y[II], self.z[II], point).reshape (1, -1),
-                    self.focal_points)]
+                    self.new_tensor (
+                        map_func (self.x[II], self.y[II], self.z[II], point).reshape (1, -1)
+                    ),
+                    self.focal_points
+                    )]
     result = torch.cat (result, dim=0)
 
     return result
+
+  @rcParams ({'font.family': 'calibri'})
+  def plot_delays (self, show=True, stride=1):
+    from matplotlib import pyplot as plt
+    lines = plt.plot (np.arange (self.delays.shape[1]), self.delays.cpu ().numpy ()[::stride].T)
+
+    # Formatting
+    plt.title ('Delays', fontsize=20, pad=10)
+    plt.xlabel ('Element index', fontsize=14, labelpad=10)
+    plt.xticks (color='gray', fontsize=12)
+    plt.yticks (color='gray', fontsize=12)
+    plt.ylabel ('Time (sec)', fontsize=14, labelpad=10)
+    plt.grid (axis='y', color='gray', ls=':')
+    plt.gca ().set_facecolor ('white')
+
+    if show:
+      plt.show ()
+    else:
+      return lines
+
+  @rcParams ({'font.family': 'calibri'})
+  def plot_apodization (self, show=True, stride=1):
+    from matplotlib import pyplot as plt
+    lines = plt.plot (np.arange (
+        self.apodization.shape[1]), self.apodization.cpu ().numpy ()[::stride].T)
+
+    # Formatting
+    plt.title ('Apodization', fontsize=20, pad=10)
+    plt.xlabel ('Element index', fontsize=14, labelpad=10)
+    plt.xticks (color='gray', fontsize=12)
+    plt.yticks (color='gray', fontsize=12)
+    plt.ylabel ('Scale Factor', fontsize=14, labelpad=10)
+    plt.grid (axis='y', color='gray', ls=':')
+    plt.gca ().set_facecolor ('white')
+
+    if show:
+      plt.show ()
+    else:
+      return lines
+
+  def copy (self):
+    from copy import copy
+    return copy (self)
 
 
 class LinearTransducer (Transducer):
@@ -257,16 +308,16 @@ class LinearTransducer (Transducer):
     super ().__init__ (
         num_elements=num_elements,
         num_subelements=num_subelements,
-        x=x.reshape (-1),
-        y=y.reshape (-1),
-        z=z.reshape (-1),
+        x=x.reshape (-1, order='F'),  # Read elements in Fortran-style, first axis changes fastest
+        y=y.reshape (-1, order='F'),  # Read elements in Fortran-style, first axis changes fastest
+        z=z.reshape (-1, order='F'),  # Read elements in Fortran-style, first axis changes fastest
         center_frequency=center_frequency,
         dtype=dtype,
         device=device
     )
 
-    # Default to delay=0, apodization=1 for all elements
-    self.delay = self.new_zeros (num_elements)
+    # Default to delays=0, apodization=1 for all elements
+    self.delays = self.new_zeros (num_elements)
     self.apodization = self.new_ones (num_elements)
 
     # Record number of subelement divisions
@@ -318,27 +369,43 @@ class LinearTransducer (Transducer):
     divisions += center  # Re-center
     return divisions
 
-  def plot (self, true_scale=False, show=True):
+  @rcParams ({'font.family': 'calibri'})
+  def plot (self, true_scale=False, show=True, plot_focal_points=True):
     '''Plot the aperture elements in 3D.'''
     from matplotlib import pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.patheffects as PathEffects
+
+    x, y, z = self.x, self.y, self.z
+
+    if plot_focal_points and not hasattr (self, 'focal_points'):
+      msg = '`self.focal_points` not set.'
+      raise AttributeError (msg)
+
+    # If plotting focal points, need to swap y/z axes and negate x axis.
+    if plot_focal_points:
+      x = -x
+      y, z = z, y
 
     # Size figure and make scatter plot.
     fig = plt.figure (figsize=(12, 8))
     ax = fig.gca (projection='3d')
-    ax.scatter (self.x, self.y, self.z, c=np.arange (
-        self.num_subelements), s=5, cmap='plasma')
+    ax.scatter (x, y, z, s=5, color='gray', alpha=.3)
 
-    try:
-      x, y, z = zip (self.focal_points)
-      ax.scatter (x, y, z, c='red', s=5)
-    except AttributeError:
-      pass
+    # Plot `self.focal_points`
+    if plot_focal_points:
+      f_x, f_y, f_z = zip (*self.focal_points)
+      f_x = [-e for e in f_x]
+      ax.scatter (f_x, f_z, f_y, c='red', s=25, marker='d', label='Focal Points')
+      txt = ax.text (f_x[-1], f_z[-1], f_y[-1], '  Focus',
+                     fontsize=14, weight='bold', color='red')
+      txt.set_path_effects ([PathEffects.withStroke (linewidth=2, foreground='w')])
 
     if self.num_elements > 1:
       # Label first and last transducer element ('Start' and 'Stop').
-      ax.text (self.x[0], self.y[0], self.z[0], '● Start',
-               fontsize=14, weight='bold', color='red')
+      txt = ax.text (x[0], y[0], z[0], '  Start',
+                     fontsize=14, weight='bold', color='dodgerblue')
+      txt.set_path_effects ([PathEffects.withStroke (linewidth=2, foreground='w')])
       if true_scale:
         # Scale axes to true proportions (if `true_scale` set).
         limits = np.array (
@@ -346,38 +413,72 @@ class LinearTransducer (Transducer):
         ax.auto_scale_xyz(*[(limits.min (), limits.max ())] * 3)
       else:
         # Label transducer elements.
-        stride = self.num_elements * self.num_sub_x // 6
+        stride = self.num_elements * self.num_sub_x // 5
         stride = max (stride, 1)
+
+        # Make `x`, `y`, `z` back into the shape as returned by `linear_array()` using
+        # `.reshape (...).transpose (...)`.
+        # Then flatten in row-major (C-style) order, where the last dimension changes the fastest.
+        # (Was originally flattened in Fortran-style order.)
+        x, y, z = (e.reshape (-1, self.num_sub_y).transpose (0, 1).reshape (-1)
+                   for e in [x, y, z])
         for i in range (stride, self.num_subelements - 1, stride):
-          ax.text (self.x[i], self.y[i], self.z[i],
-                   f'● {i}', fontsize=12, color='red')
+          txt = ax.text (x[i], y[i], z[i], f'  {i}', fontsize=10, color='dodgerblue')
+          txt.set_path_effects ([PathEffects.withStroke (linewidth=2, foreground='w')])
+
+        # Highlight corresponding sampled elements in blue
+        highlight = slice (stride, self.num_subelements - 1, stride)
+        ax.scatter (x[0], y[0], z[0], label='Transducer Subelements',
+                    s=50, color='dodgerblue', edgecolor='w', alpha=1, linewidth=1)
+        ax.scatter (x[highlight], y[highlight], z[highlight],
+                    s=50, color='dodgerblue', edgecolor='w', alpha=1, linewidth=1)
+        ax.scatter (x[-1], y[-1], z[-1],
+                    s=50, color='dodgerblue', edgecolor='w', alpha=1, linewidth=1)
+
         # Warn that axes are not to scale.
         ax.text2D (1, 0, '(Axes not plotted to scale.)', transform=ax.transAxes,
-                   ha='right', fontsize=12, color='red')
-      ax.text (self.x[-1], self.y[-1], self.z[-1], '● Stop',
-               fontsize=14, weight='bold', color='red')
+                   ha='right', fontsize=12, color='gray')
+      txt = ax.text (x[-1], y[-1], z[-1], '  Stop',
+                     fontsize=14, weight='bold', color='dodgerblue')
+      txt.set_path_effects ([PathEffects.withStroke (linewidth=2, foreground='w')])
     else:
       # Special case when there's only one element
-      ax.scatter (self.x, self.y, self.z, c='red', s=50)
+      ax.scatter (x, y, z, c='red', s=50)
 
     # Label axes and convert tick values to millimeters.
-    ax.set_xlabel ('x [mm]', color='red', fontsize=16, labelpad=10)
+    ax.set_xlabel ('x [mm]', fontsize=16, labelpad=10)
     xticks = ax.get_xticks ()
-    ax.set_xticklabels ([f'{e*1000:.1f}' for e in xticks])
-    ax.set_ylabel ('y [mm]', color='red', fontsize=16, labelpad=10)
+    if plot_focal_points:
+      xticks = [-e for e in xticks]
+    ax.set_xticklabels ([f'{e*1000:.1f}' for e in xticks], fontsize=12, color='gray')
+    ylabel, zlabel = 'y [mm]', 'z [mm]'
+    if plot_focal_points:
+      ylabel, zlabel = zlabel, ylabel
+    ax.set_ylabel (ylabel, fontsize=16, labelpad=10)
     yticks = ax.get_yticks ()
-    ax.set_yticklabels ([f'{e*1000:.1f}' for e in yticks])
-    ax.set_zlabel ('z [mm]', color='red', fontsize=16, labelpad=10)
+    ax.set_yticklabels ([f'{e*1000:.1f}' for e in yticks], fontsize=12, color='gray')
+    ax.set_zlabel (zlabel, fontsize=16, labelpad=10)
     zticks = ax.get_zticks ()
-    ax.set_zticklabels ([f'{e*1000:.1f}' for e in zticks])
+    ax.set_zticklabels ([f'{e*1000:.1f}' for e in zticks], fontsize=12, color='gray')
 
     # Give the plot a title
-    ax.set_title ('Transducer Element Positions',
-                  color='red', fontsize=22, pad=50)
+    ax.set_title ('Transducer Element Positions', fontsize=24, pad=50)
 
     # Set the background color and view angle
+    plt.grid (axis='y', color='gray', ls=':')
     ax.set_facecolor ('white')
     ax.view_init (elev=45, azim=225)
+
+    # Format legend
+    legend = plt.legend (fontsize=12, frameon=True, edgecolor='k', facecolor='w', loc=3,
+                         bbox_to_anchor=(-.05, -.05))
+    plt.setp (legend.get_texts ()[-1], color='dodgerblue', alpha=.8)
+
+    # Change view, title padding, legend text if plotting focal points
+    if plot_focal_points:
+      ax.set_title ('Transducer Element Positions', fontsize=24, pad=45)
+      ax.view_init (elev=25, azim=45)
+      plt.setp (legend.get_texts ()[0], color='red', alpha=.8)
 
     if show:
       plt.show()
