@@ -18,14 +18,6 @@ target_compile_definitions (openbcsim_kernel
   # Enable annotations of exports with __declspec(dllexport)
   EXPORTING
 )
-target_include_directories (openbcsim_kernel
-  PUBLIC
-  ${CUDA_INCLUDE_DIRS}
-)
-target_link_libraries (openbcsim_kernel
-  PUBLIC
-  ${CUDA_LIBRARIES}
-)
 
 
 # Python module
