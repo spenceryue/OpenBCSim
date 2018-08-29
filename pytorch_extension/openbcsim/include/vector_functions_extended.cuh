@@ -23,22 +23,18 @@ __device__ auto exp_pi_i (double a)
   return result;
 }
 
-__device__ auto norm3d_s (float a, float b, float c)
+__device__ auto norm3d (float a, float b, float c)
 {
   return norm3df (a, b, c);
 }
-__device__ auto norm3d_s (double a, double b, double c)
+__device__ auto norm3d (double a, double b, double c)
 {
   return norm3d (a, b, c);
 }
 
-__device__ auto pow_s (float a, float b)
+__device__ auto pow (float a, float b)
 {
   return powf (a, b);
-}
-__device__ auto pow_s (double a, double b)
-{
-  return pow (a, b);
 }
 
 __device__ auto make_scalar3 (float a, float b, float c)
@@ -125,11 +121,11 @@ __device__ double dot (double3 a, double3 b)
 
 __device__ float norm (float3 a)
 {
-  return norm3d_s (a.x, a.y, a.z);
+  return norm3d (a.x, a.y, a.z);
 }
 __device__ double norm (double3 a)
 {
-  return norm3d_s (a.x, a.y, a.z);
+  return norm3d (a.x, a.y, a.z);
 }
 
 __device__ float dist (float3 a, float3 b)
